@@ -98,7 +98,7 @@ The project follows Agile methodology with the Scrum framework, which is managed
 ## Clone the repository
 ```bash
 git clone https://github.com/thamadhi/solar-panel-fault-mapping.git
-cd solar-pv-fault-detection
+cd solar-panel-fault-mapping
 ```
 
 # Install dependencies
