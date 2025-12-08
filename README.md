@@ -22,7 +22,7 @@
 | 1          | 20241004 | 2425445 | Tamadhi Liyanage                   |
 | 2          | 20241705 | 2506730 | Mohamed Razik Seyed Rumaiz         |
 | 3          | 20232954 | -       | R. M. Manuli Maneka Gokarella      |
-| 4          | 20241835 | -       | Dion Rasmika                       |
+| 4          | 20241835 | 2506738 | Dion Rasmika                       |
 
 ## 📌 Introduction
 This project develops an AI-driven system for automated detection, localisation, and diagnosis of solar photovoltaic (PV) systems. The system utilizies a multi-modal approach, combining both electrical and visual imagery to identify issues, assess the severity and provide actionable rectification guidance. This project iams to enhance the reliability and efficiency of solar farm operations by minimizing the diagnostic time, reduce downtime and preventing significant energy yield losses.
