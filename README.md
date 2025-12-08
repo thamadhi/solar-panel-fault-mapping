@@ -21,7 +21,7 @@
 |------------|----------|---------|------------------------------------|
 | 1          | 20241004 | 2425445 | Tamadhi Liyanage                   |
 | 2          | 20241705 | 2506730 | Mohamed Razik Seyed Rumaiz         |
-| 3          | 20232954 | -       | R. M. Manuli Maneka Gokarella      |
+| 3          | 20232954 | 2425574 | R. M. Manuli Maneka Gokarella      |
 | 4          | 20241835 | 2506738 | Dion Rasmika                       |
 
 ## 📌 Introduction
