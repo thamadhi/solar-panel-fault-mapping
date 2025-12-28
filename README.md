@@ -48,8 +48,8 @@ This component precisely locates the fault locations by fusing electrical patter
 ### Severity Analysis
 The component quantifies fault impact using regression models, predicting power degradation rates, energy losses, and financial implications. This allows prioritized maintenance scheduling based on how severe the fault is.
 
-### Rectification Recommendation System
-Using reinforcement learning optimization, this component provides actionable repair guidance by giving step-by-step instructions, required resources, safety protocols, and estimated downtime.
+### Rectification Recommendation
+Using reinforcement learning optimization and decision trees, this component provides actionable repair guidance by giving step-by-step instructions, required resources, safety protocols, and estimated downtime.
 
 ### Centralized Dashboard
 A Streamlit-based dashboard provides a user-friendly interface for operators to monitor system health, view fault reports, analyze historical trends, and access maintenance recommendations.
