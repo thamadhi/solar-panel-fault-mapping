@@ -74,15 +74,19 @@ The project follows Agile methodology with the Scrum framework, which is managed
 ## Folder Structure
 
 * [solar-pv-fault-detection](./)
-  * [data](./data) - Electrical & image datasets
+  * [dashboard](./data) - Main streamlit dashboard application
+  * [datasets](./data) - Electrical & image datasets
+  * [diagrams](./data) - UML diagrams used for designing
+  * [docs](./data) - Documents aligned with the project
+  * [manuals](./data) - Manuals used in simulating PV data
   * [models](./models) - Pre-trained ML/DL models
-  * [notebooks](./notebooks) - Colab notebooks
   * [src](./src) - Source code
     * [detection](./src/detection) - Fault detection feature
     * [localization](./src/localization) - Fault localization feature
     * [severity](./src/severity) - Fault severity analysis feature
     * [rectification](./src/rectification) - Rectification recommendation feature
-  * [dashboard](./dashboard) - Streamlit app
+  * [.gitignore](./.gitignore) - Git ignore
+  * [LICENSE](./LICENSE) - Project License
   * [requirements.txt](./requirements.txt) - Python dependencies
   * [README.md](./README.md) - Project documentation
 
