@@ -81,10 +81,10 @@ The project follows Agile methodology with the Scrum framework, which is managed
   * [manuals](./data) - Manuals used in simulating PV data
   * [models](./models) - Pre-trained ML/DL models
   * [src](./src) - Source code
-    * [detection](./src/detection) - Fault detection feature
-    * [localization](./src/localization) - Fault localization feature
-    * [severity](./src/severity) - Fault severity analysis feature
-    * [rectification](./src/rectification) - Rectification recommendation feature
+    * [detection](./src/fault-detection) - Fault detection feature
+    * [localization](./src/fault-localization) - Fault localization feature
+    * [severity](./src/fault-severity) - Fault severity analysis feature
+    * [rectification](./src/fault-rectification) - Rectification recommendation feature
   * [.gitignore](./.gitignore) - Git ignore
   * [LICENSE](./LICENSE) - Project License
   * [requirements.txt](./requirements.txt) - Python dependencies
