@@ -1,0 +1,3 @@
+https://www.kaggle.com/datasets/pkdarabi/solarpanel
+
+https://github.com/P-Darabi/SolarPanelsDefectDetector?tab=readme-ov-file
