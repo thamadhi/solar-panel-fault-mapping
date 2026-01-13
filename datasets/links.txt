@@ -1,3 +1,5 @@
 https://www.kaggle.com/datasets/pkdarabi/solarpanel
 
 https://github.com/P-Darabi/SolarPanelsDefectDetector?tab=readme-ov-file
+
+https://huggingface.co/datasets/seyeddd/Solar_PV_single_multi_hotspots
