@@ -1,4 +1,4 @@
-from abc import ABC, abstractclassmethod
+from abc import ABC, abstractmethod
 from core.logger import Logger
 from typing import Any
 
@@ -30,19 +30,19 @@ class AbstractComponentFlowHandler(ABC):
         self.present_results()
         return self.result
     
-    @abstractclassmethod
+    @abstractmethod
     def pre_process_data(self, image_data: Any, string_data: Any) -> None:
         """
         Prepare data before analysis.
         """
 
-    @abstractclassmethod
+    @abstractmethod
     def apply_model(self) -> None:
         """
         Apply model logic
         """
 
-    @abstractclassmethod
+    @abstractmethod
     def present_results(self) -> None:
         """
         Present analysis results
