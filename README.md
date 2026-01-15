@@ -75,6 +75,9 @@ The project follows Agile methodology with the Scrum framework, which is managed
 
 * [solar-pv-fault-detection](./)
   * [dashboard](./data) - Main streamlit dashboard application
+    * [core](./dashboard/core) - Core files
+    * [handlers](./dashboard/handlers) - Main component handlers
+    * [models](./dashboard/models) - Business related classes
   * [datasets](./data) - Electrical & image datasets
   * [diagrams](./data) - UML diagrams used for designing
   * [docs](./data) - Documents aligned with the project
@@ -85,10 +88,14 @@ The project follows Agile methodology with the Scrum framework, which is managed
     * [localization](./src/fault-localization) - Fault localization feature
     * [severity](./src/fault-severity) - Fault severity analysis feature
     * [rectification](./src/fault-rectification) - Rectification recommendation feature
-  * [.gitignore](./.gitignore) - Git ignore
-  * [LICENSE](./LICENSE) - Project License
-  * [requirements.txt](./requirements.txt) - Python dependencies
+  * [tests](./tests) - Component tests
+  * [.Rhistory](./.Rhistory) - Rhistory
   * [README.md](./README.md) - Project documentation
+  * [.gitignore](./.gitignore) - Git ignore
+  * [.CONTRIBUTING.md](./CONTRIBUTING.md) - Contributions
+  * [LICENSE](./LICENSE) - Project License
+  * [README.md](./README.md) - Project documentation
+  * [requirements.txt](./requirements.txt) - Python dependencies
 
 
 ## Models / Algorithms
