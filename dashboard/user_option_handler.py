@@ -13,11 +13,12 @@ class UserOptionHandler:
         self.__SeverityResult = AnalysisResult()
         self.__RectificationResult = AnalysisResult()
 
-    def solarOperatorControl(self) -> None:
+    def solarOperatorControl(self):
         print("Operator Mode")
 
-    def maintenanceTechControl(self) -> None:
+    def maintenanceTechControl(self):
         print("Tech Mode")
 
-    def fullControl(self) -> None:
+    def fullControl(self):
         print("Admin Mode")
+
