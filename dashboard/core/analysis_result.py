@@ -26,9 +26,44 @@ class AnalysisResult:
         result_readings : list
             Output readings related to the analysis
         """
-        
-        self.result = result
-        self.reading_confidence = reading_confidence
-        self.image_confidence = image_confidence
-        self.result_images = result_images or []
-        self.result_readings = result_readings or []
+
+        self.__result = result
+        self.__reading_confidence = reading_confidence
+        self.__image_confidence = image_confidence
+        self.__result_images = result_images or []
+        self.__result_readings = result_readings or []
+
+    @property
+    def result(self) -> str:
+        """
+        Returns the analysis result description
+        """
+        return self.__result
+
+    @property
+    def reading_confidence(self) -> float:
+        """
+        Returns the readings confidence
+        """
+        return self.__reading_confidence
+    
+    @property
+    def image_confidence(self) -> float:
+        """
+        Returns the hotspot(s) image confidence
+        """
+        return self.__image_confidence
+    
+    @property
+    def result_images(self) -> result_images:
+        """
+        Returns the results images
+        """
+        return self.__result_images
+    
+    @property
+    def result_readings(self) -> result_readings:
+        """
+        Returns the results electrical readings
+        """
+        return self.__result_readings
