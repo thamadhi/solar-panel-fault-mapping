@@ -103,7 +103,7 @@ The project follows Agile methodology with the Scrum framework, which is managed
 |--------------------------------|-------------------------------|
 | Fault Detection                | ANN / DenseNet                |
 | Fault Localization             | CNN + LSTM                    |
-| Severity                       | Decision Tree Regressor / Gradient Boosting |
+| Severity                       | XGBoost / Random Forest |
 | Rectification                  | Decision Tree / Deep Q-Learning |
 
 ## Clone the repository
