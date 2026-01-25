@@ -5,8 +5,8 @@
 - [Components](#components)
   - [Fault Detection](#fault-detection)
   - [Fault Localization](#fault-localization)
-  - [Severity Analysis](#severity-analysis)
-  - [Rectification Recommendation System](#rectification-recommendation-system)
+  - [Fault Severity](#fault-severity)
+  - [Fault Rectification](#fault-rectification)
   - [Centralized Dashboard](#centralized-dashboard)
 - [🛠 Tech Stack](#-tech-stack)
 - [Project Management Methodology](#project-management-methodology)
@@ -45,10 +45,10 @@ This component utilizes electrical data and drone imagery to identify various fa
 ### Fault Localization
 This component precisely locates the fault locations by fusing electrical pattern analysis with visual evidence from thermal and electroluminescence imagery. It produces an interactive fault map highlighting affected strings and modules.
 
-### Severity Analysis
+### Fault Severity
 The component quantifies fault impact using regression models, predicting power degradation rates, energy losses, and financial implications. This allows prioritized maintenance scheduling based on how severe the fault is.
 
-### Rectification Recommendation
+### Fault Rectification
 Using reinforcement learning optimization and decision trees, this component provides actionable repair guidance by giving step-by-step instructions, required resources, safety protocols, and estimated downtime.
 
 ### Centralized Dashboard
@@ -63,7 +63,7 @@ A Streamlit-based dashboard provides a user-friendly interface for operators to 
   - Scikit-learn (ML algorithms, preprocessing)
   - TensorFlow / PyTorch (deep learning models)
   - Google Colab (cloud-based notebooks)
-  - PyCharm (IDE for development & debugging)
+  - PyCharm, VS Code (IDE for development & debugging)
   - FastAPI (backend API integration)
   - Windows OS / MacOS (for high-performance computing)
   - LaTeX / Word / Notion (documentation)
