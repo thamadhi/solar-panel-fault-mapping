@@ -3,6 +3,14 @@ from abstract_component_flow_handler import AbstractComponentFlowHandler
 from core.analysis_result import AnalysisResult
 from core.logger import Logger
 from typing import Any
+from core.fault import Fault, Hotspot, ShortCircuit, OpenCircuit, Shadowing
+import tensorflow as tf
+import numpy as np
+import pandas as pd
+import cv2
+from sklearn.preprocessing import StandardScaler
+import os
+from tensorflow import keras
 
 class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
@@ -70,7 +78,7 @@ class ElectricalFaultDetector:
         self.__thresholds = {
             'open_circuit_current': 0.1,    # < 0.1A implies open circuit
             'short_circuit_current': 12.0,  # > 12.0A implies short circuit
-            'minimum_voltage': 5.0,         # Minimum expected voltage
+            'minimum_voltage': 5.0,        # Minimum expected voltage
         }
         # reference values for a healthy stirng
         self.__reference = {
@@ -121,3 +129,55 @@ class ImageHotspotDetector:
             'high_hotspot': 30
         }
         self.__logger = Logger.get_logger()
+
+
+class ElectricalANN:
+    """
+    Docstring for ElectricalANN
+    """
+
+    def __init__(self, model_path: str = "best_neural_network.h5"):
+        """
+        Docstring for __init__
+        
+        :param self: Description
+        :param model_path: Description
+        :type model_path: str
+        """
+
+        self.__model = self._load_ann_model(model_path)
+        self.__feature_names = ['']
+        self.__class_names = ['Healthy', 'Open Circuit', 'Short Circuit', 'Shading']
+        self.__logger = Logger.get_logger()
+        self.__scaler = StandardScaler()
+
+    def _load_ann_model(self, model_path: str) -> keras.Model:
+        """
+        Loads the saved best_neural_network.h5 model
+        """
+
+        try:
+            if os.path.exists(model_path):
+                model = keras.models.load_model(model_path)
+                self.__logger.info("ANN has been successfully loaded.")
+                return model
+            else:
+                self.__logger.error(f"ANN model not found at: {model_path}")
+        except FileNotFoundError as e:
+            self.__logger.error(f"Error loading ANN model: {e}")
+            return None
+        
+    def fit_scaler(self, training_data: List[Dict]) -> None:
+
+        if not training_data:
+            self.__logger.warning("No training data for scaler fitting.")
+            return
+        
+        features = self._extract_features(training_data)
+        self.__scaler.fit(training_data)
+
+    def _extract_features(self, data: List[Dict]) -> np.ndarray:
+        """
+        Extracts features from electrical data for ANN
+        """
+        pass
