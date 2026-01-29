@@ -1,6 +1,7 @@
 # Standard libraries
 import os
 from typing import Any, Dict, List, Optional
+from abc import ABC, abstractmethod
 
 # Computer vision and TensorFlow
 import cv2
@@ -18,6 +19,44 @@ from core.logger import Logger
 
 # <= 79 cols per line
 # Concurrency?
+
+class FaultDetectionStrategy(ABC):
+    @abstractmethod
+    def detect(self, data: Any) -> dict:
+        pass
+
+
+class FaultFactory:
+    @staticmethod
+    def create_fault(fault_name: str, confidence: float):
+        mapping = {
+            'Open Circuit': OpenCircuit,
+            'Short-Circuit': ShortCircuit,
+            'Shadowing': Shadowing,
+            'Hotspot': Hotspot,
+            'Normal Operation': Fault
+        }
+        return mapping.get(fault_name, Fault)(confidence)
+
+
+class DetectionContext:
+    """
+    Detection context defines the reference to the strategy
+    """
+    def __init__(self, strategy: FaultDetectionStrategy):
+        self.__strategy = strategy
+
+
+    def set_strategy(self, strategy: FaultDetectionStrategy) -> None:
+        """Allows replacing the strategy object at runtime"""
+        self.__strategy = strategy
+
+
+    def perform_detection(self, data: Any) -> dict:
+        """Method called by the context for fault detection"""
+        Logger.get_logger().info(f"Perfoming detection...")
+        return self.__strategy.detect(data)
+
 
 class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
@@ -44,7 +83,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         super().__init__()
         self.__electrical_ann = ElectricalANN(electrical_model_path)
         self.__image_detector = ImageHotspotDetector(image_model_path)
-        self.__faultType: Optional[object] = None  # Fault class object stored
+        # self.__faultType = FaultFactory.create_fault()
         self.__logger = Logger.get_logger()
         self.__processed_electrical_data: List[Dict] = []
         self.__processed_image_path: Optional[str] = None
@@ -52,6 +91,9 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
     # Implement overridden methods
     def pre_process_data(self, image_data: Any, string_data: Any) -> None:
+        """
+        
+        """
         self.__logger.info("Pre-processing data...")
 
         try:
