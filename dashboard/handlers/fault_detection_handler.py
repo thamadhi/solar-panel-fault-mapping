@@ -1,34 +1,46 @@
-# Import required libraries
-from typing import Optional, List, Dict # type hinting
-from abstract_component_flow_handler import AbstractComponentFlowHandler
-from core.analysis_result import AnalysisResult
-from core.logger import Logger
-from typing import Any
-from core.fault import Fault, Hotspot, ShortCircuit, OpenCircuit, Shadowing
-import tensorflow as tf
+# Standard libraries
+import os
+from typing import Any, Dict, List, Optional
+
+# Computer vision and TensorFlow
+import cv2
 import numpy as np
 import pandas as pd
-import cv2
+import tensorflow as tf
 from sklearn.preprocessing import StandardScaler
-import os
 from tensorflow import keras
+
+# Local/project imports
+from abstract_component_flow_handler import AbstractComponentFlowHandler
+from core.analysis_result import AnalysisResult
+from core.fault import Fault, Hotspot, OpenCircuit, Shadowing, ShortCircuit
+from core.logger import Logger
 
 # <= 79 cols per line
 # Concurrency?
 
 class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
-    To detect faults based on electrical data/images
+    To detect faults based on electrical data/images.
     
-    Responsibilities:
-        1. Process electrical data: Detect Open Circuit, 
-        Short Circuit, Shading
-        2. Process thermal images: Detect Hotspots Only
+    This called processes electrical data for detection of Open Circuit,
+    Short Circuit, Shading faults.
+    It also processes thermal images for the detection of Hotspots Only
     """
 
     def __init__(self,
                  electrical_model_path: str = "best_neural_network.h5",
-                 image_model_path: str = "tuned_model.keras"):
+                 image_model_path: str = "tuned_model.keras") -> None:
+        """
+        Initializes a FaultDetectionHandler with
+        
+        Args:
+            electrical_model_path (str):
+            image_model_path (str):
+
+        Returns:
+            None
+        """
         super().__init__()
         self.__electrical_ann = ElectricalANN(electrical_model_path)
         self.__image_detector = ImageHotspotDetector(image_model_path)
@@ -153,8 +165,9 @@ class ImageHotspotDetector:
     Detects hotspots from thermal images only
     """
 
-    def __init__(self):
+    def __init__(self, model_path: str = "tuned_model.keras"):
         self.__IMAGE_SIZE = (224, 224)  # Standard size for CNN models
+        self.__model = self._load_model(model_path)
 
         # Values greater in the values is the key name
         self.__TEMPERATURE_THRESHOLDS = {
@@ -164,12 +177,27 @@ class ImageHotspotDetector:
         }
         self.__logger = Logger.get_logger()
 
+
+    def _load_model(self, model_path: str) -> keras.Model:
+        """
+        Load the tuned DenseNet model
+        """
+        try:
+            if os.path.exists(model_path):
+                model = keras.models.load_model(model_path)
+                return model
+            else:
+                return None
+        except FileNotFoundError as e:
+            self.__logger.error(f"Error loading DenseNet model: {e}")
+            return None
+
     
     @property
     def get_IMAGE_SIZE(self) -> tuple:
         """Returns the image size for image processing as a tuple"""
         return self.__IMAGE_SIZE
-    
+
 
     @property
     def get_TEMPERATURE_THRESHOLDS(self) -> dict:
@@ -237,13 +265,39 @@ class ImageHotspotDetector:
                         'error': 'Image load failed'}
             
             # get predictions
+            predictions = self.__model.predict(image, verbse=0)[0]
+
+            # Binary classification
+            hotspot_confidence = float(predictions[0])
+            clean_confidence = float(predictions[1])
+
+            # Determine fault types
+            if hotspot_confidence > 0.5:
+                fault_type = 'Hotspot'
+                confidence = hotspot_confidence
+            else:
+                fault_type = 'Normal Operation'
+                confidence = clean_confidence
+
+            result = {
+                'fault_type': fault_type,
+                'confidence': confidence,
+                'hotspot_confidence': hotspot_confidence,
+                'clean_confidence': clean_confidence
+            }
+
+            self.__logger.info(f"Image prediction: {fault_type} ({confidence:.1f})")
+
+            return result
+
         except FileNotFoundError as e:
             self.__logger.error(f"Image detection error: {e}")
             return None
 
+
 class ElectricalANN:
     """
-    Docstring for ElectricalANN
+    Builds the ANN for electricla fault detection
     """
 
     def __init__(self, model_path: str = "best_neural_network.h5"):
@@ -289,7 +343,15 @@ class ElectricalANN:
         
 
     def fit_scaler(self, training_data: List[Dict]) -> None:
+        """
+        Used to fit a standard scaler for the user file input
+        
+        Args:
+            training_data (List[Dict]): The training data being scaled
 
+        Returns:
+            None
+        """
         if not training_data:
             self.__logger.warning("No training data for scaler fitting.")
             return
