@@ -115,14 +115,14 @@ The project follows Agile methodology with the Scrum framework, which is managed
 | Fault Severity      | XGBoost / Random Forest         |
 | Fault Rectification | Decision Tree / Deep Q-Learning |
 
-## Clone the repository {#clone-the-repository}
+## Clone the repository
 
 ``` bash
 git clone https://github.com/thamadhi/solar-panel-fault-mapping.git
 cd solar-panel-fault-mapping
 ```
 
-# Install dependencies {#install-dependencies}
+## Install dependencies
 
 ```         
 pip install -r requirements.txt
