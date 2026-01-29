@@ -1,25 +1,58 @@
-from typing import Optional, List # type hinting
+from typing import Optional, List, Dict # type hinting
 from abstract_component_flow_handler import AbstractComponentFlowHandler
 from core.analysis_result import AnalysisResult
 from core.logger import Logger
 from typing import Any
 
 class FaultDetectionHandler(AbstractComponentFlowHandler):
+    """
+    Fault Detection Component - To detect a fault based on electrical data or images
+    
+    Responsibilities:
+        1. Process electrical data: Detect Open Circuit, Short Circuit, Shading
+        2. Process thermal images: Detect Hotspots Only
+    """
+
     def __init__(self):
         super().__init__()
-        self.__faultType: Optional[object] = None  #Fault class object Stored here
+        self.__faultType: Optional[object] = None  # Fault class object Stored here
         self.__logger = Logger.get_logger()
 
     # Implement overridden methods
     def pre_process_data(self, image_data: Any, string_data: Any) -> None:
         self.__logger.info("Pre-processing data...")
+
+        try:
+            if string_data:
+                pass
+            
+            if image_data:
+                pass
+        except Exception as e:
+            self.__logger.error(f"Preprocessing error: {e}")
         
     def apply_model(self) -> None:
+        """
+        Used to apply the required model for detection
+        """
         self.__logger.info("Applying Model...")
 
     def present_results(self) -> None:
+        """
+        Used to present the detected fault to the user
+        """
         self.result = AnalysisResult(self.get_fault_type())
         self.__logger.info("Displaying Results...")
+
+    def _preprocess_string_data(self, string_data: Any) -> List[Dict]:
+        """
+
+        """
+
+        processed = []
+
+        if string_data is None:
+            return processed
 
     @property
     def get_fault_type(self):
