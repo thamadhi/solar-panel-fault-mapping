@@ -16,7 +16,7 @@
 -   [Clone the repository](#clone-the-repository)
 -   [Install dependencies](#install-dependencies)
 
-# Group Members {#group-members}
+# Group Members
 
 | Member No. | IIT ID   | RGU ID  | Student Name                  |
 |------------|----------|---------|-------------------------------|
@@ -39,25 +39,25 @@ The core features of the system are summarized as follows:
 -   **AI-Powered Rectification** with optimized repair recommendations
 -   **Interactive Dashboard** for real-time monitoring and decision support
 
-## Components {#components}
+## Components
 
-### Fault Detection {#fault-detection}
+### Fault Detection
 
 This component utilizes electrical data and drone imagery to identify various fault types including open-circuit, short-circuit, partial shading, and hotspot anomalies. It uses an ANN for electrical data and CNN for image analysis.
 
-### Fault Localization {#fault-localization}
+### Fault Localization
 
 This component precisely locates the fault locations by fusing electrical pattern analysis with visual evidence from thermal and electroluminescence imagery. It produces an interactive fault map highlighting affected strings and modules.
 
-### Fault Severity {#fault-severity}
+### Fault Severity
 
 The component quantifies fault impact using regression models, predicting power degradation rates, energy losses, and financial implications. This allows prioritized maintenance scheduling based on how severe the fault is.
 
-### Fault Rectification {#fault-rectification}
+### Fault Rectification
 
 Using reinforcement learning optimization and decision trees, this component provides actionable repair guidance by giving step-by-step instructions, required resources, safety protocols, and estimated downtime.
 
-### Centralized Dashboard {#centralized-dashboard}
+### Centralized Dashboard
 
 A Streamlit-based dashboard provides a user-friendly interface for operators to monitor system health, view fault reports, analyze historical trends, and access maintenance recommendations.
 
@@ -76,11 +76,11 @@ A Streamlit-based dashboard provides a user-friendly interface for operators to 
     -   Windows OS / MacOS (for high-performance computing)
     -   LaTeX / Word / Notion (documentation)
 
-## Project Management Methodology {#project-management-methodology}
+## Project Management Methodology
 
 The project follows Agile methodology with the Scrum framework, which is managed through Jira for sprint planning and task distribution. Regular stand-ups and sprint reviews ensure continuous monitoring and adaptability to changing requirements.
 
-## Folder Structure {#folder-structure}
+## Folder Structure
 
 -   [solar-pv-fault-detection](./)
     -   [dashboard](./data) - Main streamlit dashboard application
