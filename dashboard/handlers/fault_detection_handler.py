@@ -1,3 +1,4 @@
+# Import required libraries
 from typing import Optional, List, Dict # type hinting
 from abstract_component_flow_handler import AbstractComponentFlowHandler
 from core.analysis_result import AnalysisResult
@@ -12,19 +13,24 @@ from sklearn.preprocessing import StandardScaler
 import os
 from tensorflow import keras
 
+# <= 79 cols per line
+# Concurrency?
+
 class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
-    Fault Detection Component - To detect a fault based on electrical data or images
+    To detect faults based on electrical data/images
     
     Responsibilities:
-        1. Process electrical data: Detect Open Circuit, Short Circuit, Shading
+        1. Process electrical data: Detect Open Circuit, 
+        Short Circuit, Shading
         2. Process thermal images: Detect Hotspots Only
     """
 
     def __init__(self):
         super().__init__()
-        self.__faultType: Optional[object] = None  # Fault class object Stored here
+        self.__faultType: Optional[object] = None  # Fault class object stored
         self.__logger = Logger.get_logger()
+
 
     # Implement overridden methods
     def pre_process_data(self, image_data: Any, string_data: Any) -> None:
@@ -39,18 +45,17 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         except Exception as e:
             self.__logger.error(f"Preprocessing error: {e}")
         
+
     def apply_model(self) -> None:
-        """
-        Used to apply the required model for detection
-        """
+        """Used to apply the required model for detection"""
         self.__logger.info("Applying Model...")
 
+
     def present_results(self) -> None:
-        """
-        Used to present the detected fault to the user
-        """
+        """Used to present the detected fault to the user"""
         self.result = AnalysisResult(self.get_fault_type())
         self.__logger.info("Displaying Results...")
+
 
     def _preprocess_string_data(self, string_data: Any) -> List[Dict]:
         """
@@ -61,6 +66,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
         if string_data is None:
             return processed
+
 
     @property
     def get_fault_type(self):
@@ -106,15 +112,21 @@ class ElectricalFaultDetector:
         self.__logger.info("Began Detection")
 
         if not string_data:
-            return {'fault_type': 'Healthy', 'confidence': 0.0, 'evidence': 'No data'}
+            return {'fault_type': 'Healthy', 'confidence': 0.0, 
+                    'evidence': 'No data'}
         
+
     @property
     def get_thresholds(self) -> dict:
+        """Returns the thresholds for fault detection."""
         return self.__thresholds
     
+
     @property
     def get_reference(self) -> dict:
+        """Returns the reference nominal values."""
         return self.__reference
+
 
 class ImageHotspotDetector:
     """
@@ -122,13 +134,27 @@ class ImageHotspotDetector:
     """
 
     def __init__(self):
-        self.__image_size = (224, 224)  # Standard size for CNN models
-        self.__temperature_thresholds = {   # Values greater in the values is the key name
+        self.__IMAGE_SIZE = (224, 224)  # Standard size for CNN models
+
+        # Values greater in the values is the key name
+        self.__TEMPERATURE_THRESHOLDS = {
             'low_hotspot': 10,
             'medium_hotspot': 20,
             'high_hotspot': 30
         }
         self.__logger = Logger.get_logger()
+
+    
+    @property
+    def get_IMAGE_SIZE(self) -> tuple:
+        """Returns the image size for image processing as a tuple"""
+        return self.__IMAGE_SIZE
+    
+
+    @property
+    def get_TEMPERATURE_THRESHOLDS(self) -> dict:
+        """Returns the temperature thresholds as a dictionary"""
+        return self.__TEMPERATURE_THRESHOLDS
 
 
 class ElectricalANN:
@@ -147,15 +173,25 @@ class ElectricalANN:
 
         self.__model = self._load_ann_model(model_path)
         self.__feature_names = ['']
-        self.__class_names = ['Healthy', 'Open Circuit', 'Short Circuit', 'Shading']
+        self.__class_names = ['Healthy', 'Open Circuit', 
+                              'Short Circuit', 'Shading']
         self.__logger = Logger.get_logger()
         self.__scaler = StandardScaler()
+
 
     def _load_ann_model(self, model_path: str) -> keras.Model:
         """
         Loads the saved best_neural_network.h5 model
-        """
 
+        Args:
+            model_path (str): The path of the neural network model
+
+        Returns:
+            keras.Model: The actual model in keras format
+
+        Raises:
+            FileNotFoundError: If the file/path was not to be found.
+        """
         try:
             if os.path.exists(model_path):
                 model = keras.models.load_model(model_path)
@@ -167,6 +203,7 @@ class ElectricalANN:
             self.__logger.error(f"Error loading ANN model: {e}")
             return None
         
+
     def fit_scaler(self, training_data: List[Dict]) -> None:
 
         if not training_data:
@@ -176,8 +213,15 @@ class ElectricalANN:
         features = self._extract_features(training_data)
         self.__scaler.fit(training_data)
 
+
     def _extract_features(self, data: List[Dict]) -> np.ndarray:
         """
         Extracts features from electrical data for ANN
+
+        Args:
+            data (List[Dict]): The data containing the features
+
+        Returns:
+            np.ndarray: 
         """
         pass
