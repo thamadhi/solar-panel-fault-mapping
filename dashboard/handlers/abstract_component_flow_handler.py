@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from core.logger import Logger
 from core.analysis_result import AnalysisResult
-from typing import Any
+from typing import Any, final
 
 class AbstractComponentFlowHandler(ABC):
     """
@@ -15,9 +15,10 @@ class AbstractComponentFlowHandler(ABC):
         self.logger = Logger.get_logger()
         self.result = None
 
+    @final
     def start_flow(self, image_data = None, string_data = None) -> AnalysisResult:
         """
-        Execute the analysis workflow.
+        Execute the analysis workflow using the template method pattern.
         
         image_data : Any
             Input image data.
