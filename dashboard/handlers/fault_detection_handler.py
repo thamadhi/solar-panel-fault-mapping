@@ -160,8 +160,11 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     @override
     def present_results(self) -> None:
         """Used to present the detected fault to the user"""
-        self.result = AnalysisResult(self.get_fault_type())
-        self.__logger.info("Displaying Results...")
+        if self.__fault_type:
+            self.__result = AnalysisResult(self.__fault_type)
+            self.__logger.info(f"Displaying Results: {self.__fault_type}")
+        else:
+            self.__logger.warning("No fault detected to present.")
 
 
     def _preprocess_string_data(self, string_data: Any) -> List[Dict]:
@@ -206,6 +209,7 @@ class ElectricalStrategy(FaultDetectionStrategy):
         }
         self.__logger = Logger.get_logger()
     
+
     @override
     def detect(self, string_data: List[dict]) -> dict:
         """
