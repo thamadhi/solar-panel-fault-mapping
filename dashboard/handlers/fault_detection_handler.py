@@ -1,6 +1,6 @@
 # Standard libraries
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, override
 from abc import ABC, abstractmethod
 
 # Computer vision and TensorFlow
@@ -82,17 +82,24 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         """
         super().__init__()
         self.__electrical_ann = ElectricalANN(electrical_model_path)
-        self.__image_detector = ImageHotspotDetector(image_model_path)
-        # self.__faultType = FaultFactory.create_fault()
+        self.__image_detector = ImageHotspotStrategy(image_model_path)
+        self.__fault_type: Optional[Fault] = None
         self.__logger = Logger.get_logger()
         self.__processed_electrical_data: List[Dict] = []
         self.__processed_image_path: Optional[str] = None
+        self.__detection_context = DetectionContext(ElectricalStrategy())
+        self.__result: Optional[AnalysisResult] = None
 
 
     # Implement overridden methods
+    @override
     def pre_process_data(self, image_data: Any, string_data: Any) -> None:
         """
-        
+        Pre-process input data for fault detection
+
+        Args:
+            image_data: Thermal image data
+            string_data: Electrical string measurement data
         """
         self.__logger.info("Pre-processing data...")
 
@@ -100,6 +107,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             # Reset stored data
             self.__processed_electrical_data = []
             self.__processed_image_path = None
+            self.__fault_type = None
 
             # Process electrical data
             if string_data:
@@ -115,11 +123,41 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             self.__logger.error(f"Preprocessing error: {e}")
         
 
+    @override
     def apply_model(self) -> None:
         """Used to apply the required model for detection"""
         self.__logger.info("Applying Model...")
 
+        detection_results: List[Dict[str, Any]] = []
 
+        # Apply electrical model if electrical data exists
+        if self.__processed_electrical_data:
+            self.__detection_context.set_strategy(ElectricalStrategy())
+            result = self.__detection_context.perform_detection(self.__processed_electrical_data)
+            detection_results.append(result)
+        
+        # Apply image model if image data exists
+        if self.__processed_image_path:
+            self.__detection_context.set_strategy(ImageHotspotStrategy())
+            result = self.__detection_context.perform_detection(self.__processed_image_path)
+            detection_results.append(result)
+
+        # Determine most significant fault
+        if detection_results:
+            # Get fault with highest confidence
+            main_fault = max(detection_results, key=lambda x: x.get('confidence', 0))
+            self.__fault_type = FaultFactory.create_fault(
+                main_fault['fault_type'],
+                main_fault['confidence']
+            )
+            self.__logger.info(f"""Detected fault: 
+                               {main_fault['fault_type']} with confidence: 
+                                {main_fault[['confidence']]:.2f}""")
+        else:
+            self.__logger.warning("No data available for fault detection.")
+
+
+    @override
     def present_results(self) -> None:
         """Used to present the detected fault to the user"""
         self.result = AnalysisResult(self.get_fault_type())
@@ -147,7 +185,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         return self.__faultType
 
 
-class ElectricalFaultDetector:
+class ElectricalStrategy(FaultDetectionStrategy):
     """
     Detects electrical faults from string measurements
     """
@@ -168,6 +206,7 @@ class ElectricalFaultDetector:
         }
         self.__logger = Logger.get_logger()
     
+    @override
     def detect(self, string_data: List[dict]) -> dict:
         """
         Detects electrical faults from string measurements
@@ -202,7 +241,7 @@ class ElectricalFaultDetector:
         return self.__reference
 
 
-class ImageHotspotDetector:
+class ImageHotspotStrategy(FaultDetectionStrategy):
     """
     Detects hotspots from thermal images only
     """
@@ -286,7 +325,8 @@ class ImageHotspotDetector:
             return None
 
 
-    def detect(self, image_path: str) -> Dict:
+    @override
+    def detect(self, image_path: str) -> dict:
         """
         Detects hotspot from thermal image
 
