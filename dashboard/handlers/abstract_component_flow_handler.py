@@ -39,15 +39,18 @@ class AbstractComponentFlowHandler(ABC):
         """
         Prepare data before analysis.
         """
+        pass
 
     @abstractmethod
     def apply_model(self) -> None:
         """
         Apply model logic
         """
+        pass
 
     @abstractmethod
     def present_results(self) -> None:
         """
         Present analysis results
         """
+        pass
