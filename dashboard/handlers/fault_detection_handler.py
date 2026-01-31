@@ -1,6 +1,6 @@
 # Standard libraries
 import os
-from typing import Any, Dict, List, Optional, override
+from typing import Any, Dict, List, Tuple, Optional, override
 from abc import ABC, abstractmethod
 
 # Computer vision and TensorFlow
@@ -28,7 +28,7 @@ class FaultDetectionStrategy(ABC):
 
 class FaultFactory:
     @staticmethod
-    def create_fault(fault_name: str, confidence: float):
+    def create_fault(fault_name: str, confidence: float) -> Fault:
         mapping = {
             'Open Circuit': OpenCircuit,
             'Short-Circuit': ShortCircuit,
@@ -43,7 +43,8 @@ class DetectionContext:
     """
     Detection context defines the reference to the strategy
     """
-    def __init__(self, strategy: FaultDetectionStrategy):
+    def __init__(self, strategy: FaultDetectionStrategy) -> None:
+        """Initializes the strategy for fault detection"""
         self.__strategy = strategy
 
 
@@ -61,7 +62,7 @@ class DetectionContext:
 class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
     To detect faults based on electrical data/images.
-    
+
     This called processes electrical data for detection of Open Circuit,
     Short Circuit, Shading faults.
     It also processes thermal images for the detection of Hotspots Only
@@ -82,7 +83,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         self.__image_detector = ImageHotspotStrategy(image_model_path)
         self.__fault_type: Optional[Fault] = None
         self.__logger = Logger.get_logger()
-        self.__processed_electrical_data: List[Dict] = []
+        self.__processed_electrical_data: List[Dict[str, float]] = []
         self.__processed_image_path: Optional[str] = None
         self.__detection_context = DetectionContext(ElectricalStrategy())
         self.__result: Optional[AnalysisResult] = None
@@ -109,16 +110,32 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             # Process electrical data
             if string_data:
                 self.__processed_electrical_data = self._preprocess_string_data(string_data)
-                self.__logger.info(f"Processed {len(self.__processed_electrical_data)} electricsl readings")
+                self.__logger.info(f"Processed {len(self.__processed_electrical_data)} electrical readings")
             
             # Process image data
             if image_data:
-                self.__processed_image_path = self.__processed_image_path(image_data)
+                self.__processed_image_path = self._preprocess_image_data(image_data)
                 if self.__processed_image_path:
                     self.__logger.info(f"Processed image: {self.__processed_image_path}")
         except Exception as e:
             self.__logger.error(f"Preprocessing error: {e}")
-        
+
+    
+    def _preprocess_image_data(self, image_data: Any) -> Optional[str]:
+        """
+        Pre-process image data
+
+        Args:
+            image_data (Any): Image data (path or array)
+
+        Returns:
+            Optional[str]: Path to processed image
+        """
+        if isinstance(image_data, str) and os.path.exists(image_data):
+            return image_data
+            #####
+        return None
+
 
     @override
     def apply_model(self) -> None:
@@ -149,7 +166,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             )
             self.__logger.info(f"""Detected fault: 
                                {main_fault['fault_type']} with confidence: 
-                                {main_fault[['confidence']]:.2f}""")
+                                {main_fault['confidence']:.2f}""")
         else:
             self.__logger.warning("No data available for fault detection.")
 
@@ -164,11 +181,16 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             self.__logger.warning("No fault detected to present.")
 
 
-    def _preprocess_string_data(self, string_data: Any) -> List[Dict]:
+    def _preprocess_string_data(self, string_data: Any) -> List[Dict[str, float]]:
         """
-        Used to preprocess the electrical daat entered by the user
-        """
+        Used to preprocess the electrical data entered by the user
 
+        Args:
+            string_data (Any): The string data
+
+        Returns:
+            List[Dict[str, float]]: Processed electrical data
+        """
         processed = []
 
         if string_data is None:
@@ -177,12 +199,31 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         if isinstance(string_data, list) and len(string_data) > 0:
             for item in string_data:
                 if isinstance(item, dict):
-                    processed.append({})
+                    processed_item = {
+                        'current_A': float(item.get('current_A', 0.0)),
+                        'voltage_V': float(item.get('voltage_V', 0.0)),
+                        'Irradiance_Wm2': float(item.get('Irradiance_Wm2', 0.0)),
+                        'temperature_C': float(item.get('temperature_C', 25.0))
+                    }
+                    processed.append(processed_item)
+
+        # Handle single measurement
+        elif isinstance(string_data, dict):
+            processed_item = {
+                    'current_A': float(item.get('current_A', 0.0)),
+                    'voltage_V': float(item.get('voltage_V', 0.0)),
+                    'Irradiance_Wm2': float(item.get('Irradiance_Wm2', 0.0)),
+                    'temperature_C': float(item.get('temperature_C', 25.0))
+            }         
+            processed.append(processed_item)
+
+        return processed           
 
 
     @property
-    def get_fault_type(self):
-        return self.__faultType
+    def get_fault_type(self) -> Optional[Fault]:
+        """Returns the fault type"""
+        return self.__fault_type
 
 
 class ElectricalStrategy(FaultDetectionStrategy):
@@ -190,13 +231,13 @@ class ElectricalStrategy(FaultDetectionStrategy):
     Detects electrical faults from string measurements
     """
 
-    def __init__(self):
-
+    def __init__(self) -> None:
         # Threshold values for faulty strings
         self.__thresholds = {
             'open_circuit_current': 0.1,    # < 0.1A implies open circuit
             'short_circuit_current': 12.0,  # > 12.0A implies short circuit
             'minimum_voltage': 5.0,        # Minimum expected voltage
+            'shadowing_current_ratio': 0.5  # current < 50% of expected
         }
         # reference values for a healthy stirng
         self.__reference = {
@@ -208,11 +249,11 @@ class ElectricalStrategy(FaultDetectionStrategy):
     
 
     @override
-    def detect(self, string_data: List[dict]) -> dict:
+    def detect(self, string_data: List[dict]) -> Dict[str, Any]:
         """
         Detects electrical faults from string measurements
         
-        Parameters:
+        Args:
             string_data: List of measurements with keys:
                 - 'current_A' (float): Current in amps
                 - 'voltage_A' (float): Voltage in volts
@@ -222,7 +263,6 @@ class ElectricalStrategy(FaultDetectionStrategy):
         Returns:
             Dictionary with 'fault_type', 'confidence' and 'evidence' 
         """
-
         self.__logger.info("Began Detection")
 
         if not string_data:
@@ -233,16 +273,17 @@ class ElectricalStrategy(FaultDetectionStrategy):
         faults = []
         for i, measurement in enumerate(string_data):
             current = measurement.get("current_A", 0)
-            voltage = measurement.get("voltage_A", 0)
+            voltage = measurement.get("voltage_V", 0)
             irradiance = measurement.get("Irradiance_Wm2", 0)
             temperature = measurement.get("temperature_C", 25)
             power = voltage * current
 
+            # Calculate expected values
             irradiance_factor = irradiance / 1000.0 if irradiance > 0 else 0
             temperature_factor = 1 - 0.004 * (temperature - 25)
             expected_current = self.__reference['nominal_current'] * irradiance_factor * temperature_factor
             expected_voltage = self.__reference['nominal_voltage'] * temperature_factor
-            expcted_power = expected_voltage * expected_current
+            expected_power = expected_voltage * expected_current
 
             # Detect faults
             fault_info = {'string_id': i, 'confidence': 0.0}
@@ -251,7 +292,7 @@ class ElectricalStrategy(FaultDetectionStrategy):
             if current < self.__thresholds['open_circuit_current']:
                 fault_info['fault_type'] = 'Open Circuit'
                 fault_info['confidence'] = min(1.0, 
-                                               (self.__thresholds['open-circuit-current']
+                                               (self.__thresholds['open_circuit_current']
                                                - current)
                                                / self.__thresholds['open_circuit_current'])
                 fault_info['evidence'] = f"Current ({current}A) below open circuit threshold"
@@ -265,13 +306,14 @@ class ElectricalStrategy(FaultDetectionStrategy):
             elif (current / expected_current if expected_current > 0 else 0) \
             < self.__thresholds['shadowing_current_ratio']:
                 fault_info['fault_type'] = 'Shadowing'
-                current_ratio = current / expected_current if expected_current > 0 else 0
+                current_ratio = current / expected_current
                 fault_info['confidence'] = 1.0 - current_ratio
                 fault_info['evidence'] = f"Current ({current}A) significantly below" \
                 f"expected ({expected_current:.1f}A)"
         
             # Normal operation
             else:
+                fault_info['fault_type'] = 'Normal Operation'
                 # Confidence based on how close to expected values
                 current_diff = abs(current - expected_current) / expected_current \
                 if expected_current > 0 else 1.0
@@ -280,21 +322,19 @@ class ElectricalStrategy(FaultDetectionStrategy):
                 if expected_voltage > 0 else 1.0
                 
                 fault_info['confidence'] = max(0.0, 1.0 - (current_diff + voltage_diff) / 2)
-                fault_info['evidence'] = f"Within normal operating range"
+                fault_info['evidence'] = "Within normal operating range"
 
             faults.append(fault_info)
 
-        # Determine overall fault (most severe with highest confidence)
-
 
     @property
-    def get_thresholds(self) -> dict:
+    def get_thresholds(self) -> Dict[str, float]:
         """Returns the thresholds for fault detection."""
         return self.__thresholds
     
 
     @property
-    def get_reference(self) -> dict:
+    def get_reference(self) -> Dict[str, float]:
         """Returns the reference nominal values."""
         return self.__reference
 
@@ -304,7 +344,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
     Detects hotspots from thermal images only
     """
 
-    def __init__(self, model_path: str = "tuned_model.keras"):
+    def __init__(self, model_path: str = "tuned_model.keras") -> None:
         self.__IMAGE_SIZE = (224, 224)  # Standard size for CNN models
         self.__model = self._load_model(model_path)
 
@@ -317,7 +357,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
         self.__logger = Logger.get_logger()
 
 
-    def _load_model(self, model_path: str) -> keras.Model:
+    def _load_model(self, model_path: str) -> Optional[keras.Model]:
         """
         Load the tuned DenseNet model
         """
@@ -327,19 +367,19 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                 return model
             else:
                 return None
-        except FileNotFoundError as e:
+        except Exception as e:
             self.__logger.error(f"Error loading DenseNet model: {e}")
             return None
 
     
     @property
-    def get_IMAGE_SIZE(self) -> tuple:
+    def get_IMAGE_SIZE(self) -> Tuple[int, int]:
         """Returns the image size for image processing as a tuple"""
         return self.__IMAGE_SIZE
 
 
     @property
-    def get_TEMPERATURE_THRESHOLDS(self) -> dict:
+    def get_TEMPERATURE_THRESHOLDS(self) -> Dict[str, int]:
         """Returns the temperature thresholds as a dictionary"""
         return self.__TEMPERATURE_THRESHOLDS
     
@@ -355,7 +395,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
             Optional[np.ndarray]: The normalized image
 
         Raises:
-            FileNotFoundError: If the image was not found
+            Exception: If the image was not found
         """
         try:
             img = cv2.imread(image_path)
@@ -378,13 +418,13 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
 
             return img
         
-        except FileNotFoundError as e:
+        except Exception as e:
             self.__logger.error(f"Image processing error: {e}")
             return None
 
 
     @override
-    def detect(self, image_path: str) -> dict:
+    def detect(self, image_path: str) -> Dict[str, Any]:
         """
         Detects hotspot from thermal image
 
@@ -395,9 +435,14 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
             Dictionary with detected results
 
         Raises:
-            FileNotFoundError: If the image path was not to be found
+            Exception: If the image path was not to be found
         """
         try:
+            # Check if model is loaded
+            if self.__model is None:
+                return {'fault_type': 'Normal Operation', 'confidence': 0.0,
+                        'error': 'Model failed to load'}
+
             # Load and preprocess image
             image = self._load_and_preprocess_image(image_path)
             if image is None:
@@ -405,11 +450,12 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                         'error': 'Image load failed'}
             
             # get predictions
-            predictions = self.__model.predict(image, verbse=0)[0]
+            predictions = self.__model.predict(image, verbose=0)[0]
 
             # Binary classification
             hotspot_confidence = float(predictions[0])
-            clean_confidence = float(predictions[1])
+            clean_confidence = float(predictions[1]) if len(predictions) > 1 \
+                                                     else 1.0 - hotspot_confidence
 
             # Determine fault types
             if hotspot_confidence > 0.5:
@@ -427,10 +473,9 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
             }
 
             self.__logger.info(f"Image prediction: {fault_type} ({confidence:.1f})")
-
             return result
 
-        except FileNotFoundError as e:
+        except Exception as e:
             self.__logger.error(f"Image detection error: {e}")
             return None
 
@@ -447,7 +492,6 @@ class ElectricalANN:
         Args:
             model_path (str): Path of the neural network
         """
-
         self.__model = self._load_ann_model(model_path)
         self.__feature_names = ['current_A', 'voltage_V' 'Irradiance_Wm2',
                                 'temperature_C', 'power_W']
@@ -457,7 +501,7 @@ class ElectricalANN:
         self.__scaler = StandardScaler()
 
 
-    def _load_ann_model(self, model_path: str) -> keras.Model:
+    def _load_ann_model(self, model_path: str) -> Optional[keras.Model]:
         """
         Loads the saved best_neural_network.h5 model
 
@@ -477,7 +521,8 @@ class ElectricalANN:
                 return model
             else:
                 self.__logger.error(f"ANN model not found at: {model_path}")
-        except FileNotFoundError as e:
+                return None
+        except Exception as e:
             self.__logger.error(f"Error loading ANN model: {e}")
             return None
         
@@ -498,9 +543,10 @@ class ElectricalANN:
         
         features = self._extract_features(training_data)
         self.__scaler.fit(training_data)
+        self.__logger.info("Scaler fitted successfully.")
 
 
-    def _extract_features(self, data: List[Dict]) -> np.ndarray:
+    def _extract_features(self, data: List[Dict[str, float]]) -> np.ndarray:
         """
         Extracts features from electrical data for ANN
 
@@ -508,9 +554,29 @@ class ElectricalANN:
             data (List[Dict]): The data containing the features
 
         Returns:
-            np.ndarray: 
+            np.ndarray: Feature matrix
         """
-        pass
+        if not data:
+            return np.array([])
+        
+        features = []
+        for measurement in data:
+            current = measurement.get('current_A', 0.0)
+            voltage = measurement.get('voltage_V', 0.0)
+            irradiance = measurement.get('Irradiance_Wm2', 0.0)
+            temperature = measurement.get('temperature_C', 25.0)
+            power = voltage * current
+
+            # Create feature vector
+            feature_vector = {
+                current,
+                voltage,
+                irradiance,
+                temperature,
+                power
+            }
+
+        return feature_vector
 
     
     def predict(self, data: List[Dict[str, float]]) -> Dict[str, Any]:
@@ -523,13 +589,17 @@ class ElectricalANN:
         Returns:
             Dictionary with prediction results
         """
-        if self.__model == None:
+        if self.__model is None:
             self.__logger.warning("Model has not been loaded.")
-            return None
+            return {
+                'fault_type': 'Normal Operation',
+                'confidence': 0.0,
+                'error': 'Model not loaded'
+            }
         
         features = self._extract_features(data)
 
-        # Scaler features
+        # Scaled features
         features_scaled = self.__scaler.transform(features)
 
         # Make prediction
