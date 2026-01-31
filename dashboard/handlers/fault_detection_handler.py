@@ -71,14 +71,11 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
                  electrical_model_path: str = "best_neural_network.h5",
                  image_model_path: str = "tuned_model.keras") -> None:
         """
-        Initializes a FaultDetectionHandler with
+        Initializes a FaultDetectionHandler with the required models.
         
         Args:
-            electrical_model_path (str):
-            image_model_path (str):
-
-        Returns:
-            None
+            electrical_model_path (str): Path of the electrical model
+            image_model_path (str): Path of the image model
         """
         super().__init__()
         self.__electrical_ann = ElectricalANN(electrical_model_path)
@@ -440,20 +437,20 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
 
 class ElectricalANN:
     """
-    Builds the ANN for electricla fault detection
+    Builds the ANN for electrical fault detection
     """
 
-    def __init__(self, model_path: str = "best_neural_network.h5"):
+    def __init__(self, model_path: str = "best_neural_network.h5") -> None:
         """
-        Docstring for __init__
-        
-        :param self: Description
-        :param model_path: Description
-        :type model_path: str
+        Initializes the ANN
+
+        Args:
+            model_path (str): Path of the neural network
         """
 
         self.__model = self._load_ann_model(model_path)
-        self.__feature_names = ['']
+        self.__feature_names = ['current_A', 'voltage_V' 'Irradiance_Wm2',
+                                'temperature_C', 'power_W']
         self.__class_names = ['Normal Operation', 'Shadowing', 
                               'Open Circuit', 'Short-Circuit']
         self.__logger = Logger.get_logger()
@@ -517,8 +514,15 @@ class ElectricalANN:
 
     
     def predict(self, data: List[Dict[str, float]]) -> Dict[str, Any]:
+        """
+        Makes predictions for the ANN model
 
+        Args:
+            data (List[Dict[str, float]]): List of the electrical measurements
 
+        Returns:
+            Dictionary with prediction results
+        """
         if self.__model == None:
             self.__logger.warning("Model has not been loaded.")
             return None
