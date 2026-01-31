@@ -1,13 +1,12 @@
 # Standard libraries
 import os
-from typing import Any, Dict, List, Tuple, Optional, override
+from typing import Any, Dict, List, Tuple, Optional
+from typing_extensions import override
 from abc import ABC, abstractmethod
 
 # Computer vision and TensorFlow
 import cv2
 import numpy as np
-import pandas as pd
-import tensorflow as tf
 from sklearn.preprocessing import StandardScaler
 from tensorflow import keras
 
@@ -55,7 +54,6 @@ class DetectionContext:
 
     def perform_detection(self, data: Any) -> dict:
         """Method called by the context for fault detection"""
-        Logger.get_logger().info(f"Perfoming detection...")
         return self.__strategy.detect(data)
 
 
@@ -79,13 +77,13 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             image_model_path (str): Path of the image model
         """
         super().__init__()
-        self.__electrical_ann = ElectricalANN(electrical_model_path)
-        self.__image_detector = ImageHotspotStrategy(image_model_path)
+        self.__electrical_strategy = ElectricalStrategy()
+        self.__image_strategy = ImageHotspotStrategy(image_model_path)
         self.__fault_type: Optional[Fault] = None
         self.__logger = Logger.get_logger()
         self.__processed_electrical_data: List[Dict[str, float]] = []
         self.__processed_image_path: Optional[str] = None
-        self.__detection_context = DetectionContext(ElectricalStrategy())
+        self.__detection_context = DetectionContext(self.__electrical_strategy)
         self.__result: Optional[AnalysisResult] = None
 
 
@@ -136,7 +134,6 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             #####
         return None
 
-
     @override
     def apply_model(self) -> None:
         """Used to apply the required model for detection"""
@@ -146,13 +143,13 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
         # Apply electrical model if electrical data exists
         if self.__processed_electrical_data:
-            self.__detection_context.set_strategy(ElectricalStrategy())
+            self.__detection_context.set_strategy(self.__electrical_strategy)
             result = self.__detection_context.perform_detection(self.__processed_electrical_data)
             detection_results.append(result)
         
         # Apply image model if image data exists
         if self.__processed_image_path:
-            self.__detection_context.set_strategy(ImageHotspotStrategy())
+            self.__detection_context.set_strategy(self.__image_strategy)
             result = self.__detection_context.perform_detection(self.__processed_image_path)
             detection_results.append(result)
 
@@ -169,7 +166,6 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
                                 {main_fault['confidence']:.2f}""")
         else:
             self.__logger.warning("No data available for fault detection.")
-
 
     @override
     def present_results(self) -> None:
@@ -210,10 +206,10 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         # Handle single measurement
         elif isinstance(string_data, dict):
             processed_item = {
-                    'current_A': float(item.get('current_A', 0.0)),
-                    'voltage_V': float(item.get('voltage_V', 0.0)),
-                    'Irradiance_Wm2': float(item.get('Irradiance_Wm2', 0.0)),
-                    'temperature_C': float(item.get('temperature_C', 25.0))
+                    'current_A': float(string_data.get('current_A', 0.0)),
+                    'voltage_V': float(string_data.get('voltage_V', 0.0)),
+                    'Irradiance_Wm2': float(string_data.get('Irradiance_Wm2', 0.0)),
+                    'temperature_C': float(string_data.get('temperature_C', 25.0))
             }         
             processed.append(processed_item)
 
@@ -221,7 +217,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
 
     @property
-    def get_fault_type(self) -> Optional[Fault]:
+    def fault_type(self) -> Optional[Fault]:
         """Returns the fault type"""
         return self.__fault_type
 
@@ -239,7 +235,7 @@ class ElectricalStrategy(FaultDetectionStrategy):
             'minimum_voltage': 5.0,        # Minimum expected voltage
             'shadowing_current_ratio': 0.5  # current < 50% of expected
         }
-        # reference values for a healthy stirng
+        # reference values for a healthy string
         self.__reference = {
             'nominal_current': 8.0,
             'nominal_voltage': 40.0,
@@ -263,7 +259,6 @@ class ElectricalStrategy(FaultDetectionStrategy):
         Returns:
             Dictionary with 'fault_type', 'confidence' and 'evidence' 
         """
-        self.__logger.info("Began Detection")
 
         if not string_data:
             return {'fault_type': 'Normal Operation', 'confidence': 0.0, 
@@ -326,15 +321,16 @@ class ElectricalStrategy(FaultDetectionStrategy):
 
             faults.append(fault_info)
 
+        return max(faults, key=lambda x: x['confidence'])
 
     @property
-    def get_thresholds(self) -> Dict[str, float]:
+    def thresholds(self) -> Dict[str, float]:
         """Returns the thresholds for fault detection."""
         return self.__thresholds
     
 
     @property
-    def get_reference(self) -> Dict[str, float]:
+    def reference(self) -> Dict[str, float]:
         """Returns the reference nominal values."""
         return self.__reference
 
@@ -373,13 +369,13 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
 
     
     @property
-    def get_IMAGE_SIZE(self) -> Tuple[int, int]:
+    def IMAGE_SIZE(self) -> Tuple[int, int]:
         """Returns the image size for image processing as a tuple"""
         return self.__IMAGE_SIZE
 
 
     @property
-    def get_TEMPERATURE_THRESHOLDS(self) -> Dict[str, int]:
+    def TEMPERATURE_THRESHOLDS(self) -> Dict[str, int]:
         """Returns the temperature thresholds as a dictionary"""
         return self.__TEMPERATURE_THRESHOLDS
     
@@ -477,157 +473,161 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
 
         except Exception as e:
             self.__logger.error(f"Image detection error: {e}")
-            return None
-
-
-class ElectricalANN:
-    """
-    Builds the ANN for electrical fault detection
-    """
-
-    def __init__(self, model_path: str = "best_neural_network.h5") -> None:
-        """
-        Initializes the ANN
-
-        Args:
-            model_path (str): Path of the neural network
-        """
-        self.__model = self._load_ann_model(model_path)
-        self.__feature_names = ['current_A', 'voltage_V' 'Irradiance_Wm2',
-                                'temperature_C', 'power_W']
-        self.__class_names = ['Normal Operation', 'Shadowing', 
-                              'Open Circuit', 'Short-Circuit']
-        self.__logger = Logger.get_logger()
-        self.__scaler = StandardScaler()
-
-
-    def _load_ann_model(self, model_path: str) -> Optional[keras.Model]:
-        """
-        Loads the saved best_neural_network.h5 model
-
-        Args:
-            model_path (str): The path of the neural network model
-
-        Returns:
-            keras.Model: The actual model in keras format
-
-        Raises:
-            FileNotFoundError: If the file/path was not to be found.
-        """
-        try:
-            if os.path.exists(model_path):
-                model = keras.models.load_model(model_path)
-                self.__logger.info("ANN has been successfully loaded.")
-                return model
-            else:
-                self.__logger.error(f"ANN model not found at: {model_path}")
-                return None
-        except Exception as e:
-            self.__logger.error(f"Error loading ANN model: {e}")
-            return None
-        
-
-    def fit_scaler(self, training_data: List[Dict]) -> None:
-        """
-        Used to fit a standard scaler for the user file input
-        
-        Args:
-            training_data (List[Dict]): The training data being scaled
-
-        Returns:
-            None
-        """
-        if not training_data:
-            self.__logger.warning("No training data for scaler fitting.")
-            return
-        
-        features = self._extract_features(training_data)
-        self.__scaler.fit(training_data)
-        self.__logger.info("Scaler fitted successfully.")
-
-
-    def _extract_features(self, data: List[Dict[str, float]]) -> np.ndarray:
-        """
-        Extracts features from electrical data for ANN
-
-        Args:
-            data (List[Dict]): The data containing the features
-
-        Returns:
-            np.ndarray: Feature matrix
-        """
-        if not data:
-            return np.array([])
-        
-        features = []
-        for measurement in data:
-            current = measurement.get('current_A', 0.0)
-            voltage = measurement.get('voltage_V', 0.0)
-            irradiance = measurement.get('Irradiance_Wm2', 0.0)
-            temperature = measurement.get('temperature_C', 25.0)
-            power = voltage * current
-
-            # Create feature vector
-            feature_vector = {
-                current,
-                voltage,
-                irradiance,
-                temperature,
-                power
+            return {
+                    'fault_type': 'Normal Operation',
+                    'confidence': 0.0,
+                    'error': str(e)
             }
 
-        return feature_vector
+# class ElectricalANN:
+#     """
+#     Builds the ANN for electrical fault detection
+#     """
+
+#     def __init__(self, model_path: str = "best_neural_network.h5") -> None:
+#         """
+#         Initializes the ANN
+
+#         Args:
+#             model_path (str): Path of the neural network
+#         """
+#         self.__model = self._load_ann_model(model_path)
+#         self.__feature_names = ['current_A', 'voltage_V', 'Irradiance_Wm2',
+#                                 'temperature_C', 'power_W']
+#         self.__class_names = ['Normal Operation', 'Shadowing', 
+#                               'Open Circuit', 'Short-Circuit']
+#         self.__logger = Logger.get_logger()
+#         self.__scaler = StandardScaler()
+
+
+#     def _load_ann_model(self, model_path: str) -> Optional[keras.Model]:
+#         """
+#         Loads the saved best_neural_network.h5 model
+
+#         Args:
+#             model_path (str): The path of the neural network model
+
+#         Returns:
+#             keras.Model: The actual model in keras format
+
+#         Raises:
+#             Exception: If the file/path was not to be found.
+#         """
+#         try:
+#             if os.path.exists(model_path):
+#                 model = keras.models.load_model(model_path)
+#                 self.__logger.info("ANN has been successfully loaded.")
+#                 return model
+#             else:
+#                 self.__logger.error(f"ANN model not found at: {model_path}")
+#                 return None
+#         except Exception as e:
+#             self.__logger.error(f"Error loading ANN model: {e}")
+#             return None
+        
+
+#     def fit_scaler(self, training_data: List[Dict]) -> None:
+#         """
+#         Used to fit a standard scaler for the user file input
+        
+#         Args:
+#             training_data (List[Dict]): The training data being scaled
+
+#         Returns:
+#             None
+#         """
+#         if not training_data:
+#             self.__logger.warning("No training data for scaler fitting.")
+#             return
+        
+#         features = self._extract_features(training_data)
+#         self.__scaler.fit(features)
+#         self.__logger.info("Scaler fitted successfully.")
+
+
+#     def _extract_features(self, data: List[Dict[str, float]]) -> np.ndarray:
+#         """
+#         Extracts features from electrical data for ANN
+
+#         Args:
+#             data (List[Dict]): The data containing the features
+
+#         Returns:
+#             np.ndarray: Feature matrix
+#         """
+#         if not data:
+#             return np.array([])
+        
+#         features = []
+#         for measurement in data:
+#             current = measurement.get('current_A', 0.0)
+#             voltage = measurement.get('voltage_V', 0.0)
+#             irradiance = measurement.get('Irradiance_Wm2', 0.0)
+#             temperature = measurement.get('temperature_C', 25.0)
+#             power = voltage * current
+
+#             # Create feature vector
+#             feature_vector = [
+#                 current,
+#                 voltage,
+#                 irradiance,
+#                 temperature,
+#                 power
+#             ]
+#             features.append(feature_vector)
+
+#         return features
 
     
-    def predict(self, data: List[Dict[str, float]]) -> Dict[str, Any]:
-        """
-        Makes predictions for the ANN model
+#     def predict(self, data: List[Dict[str, float]]) -> Dict[str, Any]:
+#         """
+#         Makes predictions for the ANN model
 
-        Args:
-            data (List[Dict[str, float]]): List of the electrical measurements
+#         Args:
+#             data (List[Dict[str, float]]): List of the electrical measurements
 
-        Returns:
-            Dictionary with prediction results
-        """
-        if self.__model is None:
-            self.__logger.warning("Model has not been loaded.")
-            return {
-                'fault_type': 'Normal Operation',
-                'confidence': 0.0,
-                'error': 'Model not loaded'
-            }
+#         Returns:
+#             Dictionary with prediction results
+#         """
+#         if self.__model is None:
+#             self.__logger.warning("Model has not been loaded.")
+#             return {
+#                 'fault_type': 'Normal Operation',
+#                 'confidence': 0.0,
+#                 'error': 'Model not loaded'
+#             }
         
-        features = self._extract_features(data)
+#         features = self._extract_features(data)
 
-        # Scaled features
-        features_scaled = self.__scaler.transform(features)
+#         # Scaled features
+#         features_scaled = self.__scaler.transform(features)
 
-        # Make prediction
-        predictions = self.__model.predict(features_scaled, verbose=0)
+#         # Make prediction
+#         predictions = self.__model.predict(features_scaled, verbose=0)
 
-        # Process predictions
-        results = []
-        for i, pred in enumerate(predictions):
-            class_idx = np.argmax(pred)
-            confidence = float(pred[class_idx])
-            fault_type = self.__class_names[class_idx]
+#         # Process predictions
+#         results = []
+#         for i, pred in enumerate(predictions):
+#             class_idx = np.argmax(pred)
+#             confidence = float(pred[class_idx])
+#             fault_type = self.__class_names[class_idx]
 
-            results.append({
-                'string_id': i,
-                'fault_type': fault_type,
-                'confidence': confidence,
-                'all_predictions': pred.tolist()
-            })
+#             results.append({
+#                 'string_id': i,
+#                 'fault_type': fault_type,
+#                 'confidence': confidence,
+#                 'all_predictions': pred.tolist()
+#             })
 
-        # Return overall prediction (highest confidence)
-        if results:
-            overall = max(results, key=lambda x: x['confidence'])
-            return {
-                'fault_type': overall['fault_type'],
-                'confidence': overall['confidence'],
-                'detailed_predictions': results
-            }
-        return {
-            'fault_type': 'Normal Operation',
-            'confidence': 0.0
-        }
+#         # Return overall prediction (highest confidence)
+#         if results:
+#             overall = max(results, key=lambda x: x['confidence'])
+#             return {
+#                 'fault_type': overall['fault_type'],
+#                 'confidence': overall['confidence'],
+#                 'detailed_predictions': results
+#             }
+#         return {
+#             'fault_type': 'Normal Operation',
+#             'confidence': 0.0
+#         }
