@@ -514,3 +514,46 @@ class ElectricalANN:
             np.ndarray: 
         """
         pass
+
+    
+    def predict(self, data: List[Dict[str, float]]) -> Dict[str, Any]:
+
+
+        if self.__model == None:
+            self.__logger.warning("Model has not been loaded.")
+            return None
+        
+        features = self._extract_features(data)
+
+        # Scaler features
+        features_scaled = self.__scaler.transform(features)
+
+        # Make prediction
+        predictions = self.__model.predict(features_scaled, verbose=0)
+
+        # Process predictions
+        results = []
+        for i, pred in enumerate(predictions):
+            class_idx = np.argmax(pred)
+            confidence = float(pred[class_idx])
+            fault_type = self.__class_names[class_idx]
+
+            results.append({
+                'string_id': i,
+                'fault_type': fault_type,
+                'confidence': confidence,
+                'all_predictions': pred.tolist()
+            })
+
+        # Return overall prediction (highest confidence)
+        if results:
+            overall = max(results, key=lambda x: x['confidence'])
+            return {
+                'fault_type': overall['fault_type'],
+                'confidence': overall['confidence'],
+                'detailed_predictions': results
+            }
+        return {
+            'fault_type': 'Normal Operation',
+            'confidence': 0.0
+        }
