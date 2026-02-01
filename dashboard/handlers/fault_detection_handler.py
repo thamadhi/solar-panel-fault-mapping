@@ -1,6 +1,6 @@
 # Standard libraries
 import os
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Dict, List, Tuple, Optional # Typing hints
 from typing_extensions import override
 from abc import ABC, abstractmethod
 
@@ -20,14 +20,51 @@ from core.logger import Logger
 # Concurrency?
 
 class FaultDetectionStrategy(ABC):
+    """
+    Abstract base class for fault detection strategies in a PV system.
+
+    Demonstrates the Strategy design pattern.
+    """
     @abstractmethod
     def detect(self, data: Any) -> dict:
+        """
+        Analayze the provided data and return fault detection results.
+
+        Args:
+            data (Any): Input data for detection. Can be electrical
+            measurements, thermal images, or any other relevant format
+            depending on the concrete strategy.
+
+        Returns:
+            A dictionary containing fault detection results, typically:
+                - 'fault_type': str, the type of the detected fault
+                - 'confidence': float, confidence level (0.0-1.0)
+                - additional information such as 'evidence' or
+                'error' if applicable.
+        """
         pass
 
 
 class FaultFactory:
+    """
+    Demonstrates the Factory Method design pattern.
+    """
     @staticmethod
     def create_fault(fault_name: str, confidence: float) -> Fault:
+        """
+        Factory method to create a Fault object based on fault type.
+
+        This method maps a human-readable fault name to the corresponding
+        Fault subclass and initializes it with the provided confidence level.
+        
+        Args:
+            fault_name (str): Name of the fault
+            confidence (float): Confidence level of the detected fault (0.0-1.0)
+
+        Returns:
+            Fault: An instance of the appropriate fault subclass
+            initialized with the given confidence.
+        """
         mapping = {
             'Open Circuit': OpenCircuit,
             'Short-Circuit': ShortCircuit,
