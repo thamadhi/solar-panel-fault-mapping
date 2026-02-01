@@ -26,7 +26,7 @@ class FaultDetectionStrategy(ABC):
     Demonstrates the Strategy design pattern.
     """
     @abstractmethod
-    def detect(self, data: Any) -> dict:
+    def detect(self, data: Any) -> Dict[str, Any]:
         """
         Analayze the provided data and return fault detection results.
 
@@ -114,7 +114,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             image_model_path (str): Path of the image model
         """
         super().__init__()
-        self.__electrical_strategy = ElectricalStrategy()
+        self.__electrical_strategy = ElectricalANN(electrical_model_path)
         self.__image_strategy = ImageHotspotStrategy(image_model_path)
         self.__fault_type: Optional[Fault] = None
         self.__logger = Logger.get_logger()
@@ -516,155 +516,174 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                     'error': str(e)
             }
 
-# class ElectricalANN:
-#     """
-#     Builds the ANN for electrical fault detection
-#     """
+class ElectricalANN(FaultDetectionStrategy):
+    """
+    Builds the ANN for electrical fault detection
+    """
 
-#     def __init__(self, model_path: str = "best_neural_network.h5") -> None:
-#         """
-#         Initializes the ANN
+    def __init__(self, model_path: str = "best_neural_network.h5") -> None:
+        """
+        Initializes the ANN
 
-#         Args:
-#             model_path (str): Path of the neural network
-#         """
-#         self.__model = self._load_ann_model(model_path)
-#         self.__feature_names = ['current_A', 'voltage_V', 'Irradiance_Wm2',
-#                                 'temperature_C', 'power_W']
-#         self.__class_names = ['Normal Operation', 'Shadowing', 
-#                               'Open Circuit', 'Short-Circuit']
-#         self.__logger = Logger.get_logger()
-#         self.__scaler = StandardScaler()
+        Args:
+            model_path (str): Path of the neural network
+        """
+        self.__model = self._load_ann_model(model_path)
+        self.__feature_names = ['vdc1', 'vdc2', 'idc1', 'idc2',
+                                'irradiance', 'temperature',
+                                'power_string1', 'power_string2',
+                                'total_power', 
+                                'voltage_ratio', 'current_ratio']
+        self.__class_names = ['Normal Operation', 'Shadowing', 
+                              'Open Circuit', 'Short-Circuit']
+        self.__logger = Logger.get_logger()
+        self.__scaler = StandardScaler()
+        self.__scaler_fitted = False
 
 
-#     def _load_ann_model(self, model_path: str) -> Optional[keras.Model]:
-#         """
-#         Loads the saved best_neural_network.h5 model
+    def _load_ann_model(self, model_path: str) -> Optional[keras.Model]:
+        """
+        Loads the saved best_neural_network.h5 model
 
-#         Args:
-#             model_path (str): The path of the neural network model
+        Args:
+            model_path (str): The path of the neural network model
 
-#         Returns:
-#             keras.Model: The actual model in keras format
+        Returns:
+            keras.Model: The actual model in keras format
 
-#         Raises:
-#             Exception: If the file/path was not to be found.
-#         """
-#         try:
-#             if os.path.exists(model_path):
-#                 model = keras.models.load_model(model_path)
-#                 self.__logger.info("ANN has been successfully loaded.")
-#                 return model
-#             else:
-#                 self.__logger.error(f"ANN model not found at: {model_path}")
-#                 return None
-#         except Exception as e:
-#             self.__logger.error(f"Error loading ANN model: {e}")
-#             return None
+        Raises:
+            Exception: If the file/path was not to be found.
+        """
+        try:
+            if os.path.exists(model_path):
+                model = keras.models.load_model(model_path)
+                self.__logger.info("ANN has been successfully loaded.")
+                return model
+            else:
+                self.__logger.error(f"ANN model not found at: {model_path}")
+                return None
+        except Exception as e:
+            self.__logger.error(f"Error loading ANN model: {e}")
+            return None
         
 
-#     def fit_scaler(self, training_data: List[Dict]) -> None:
-#         """
-#         Used to fit a standard scaler for the user file input
+    def fit_scaler(self, training_data: List[Dict]) -> None:
+        """
+        Used to fit a standard scaler for the user file input
         
-#         Args:
-#             training_data (List[Dict]): The training data being scaled
+        Args:
+            training_data (List[Dict]): The training data being scaled
 
-#         Returns:
-#             None
-#         """
-#         if not training_data:
-#             self.__logger.warning("No training data for scaler fitting.")
-#             return
+        Returns:
+            None
+        """
+        if not training_data:
+            self.__logger.warning("No training data for scaler fitting.")
+            return
         
-#         features = self._extract_features(training_data)
-#         self.__scaler.fit(features)
-#         self.__logger.info("Scaler fitted successfully.")
+        features = self._extract_features(training_data)
+        self.__scaler.fit(features)
+        self.__logger.info("Scaler fitted successfully.")
 
 
-#     def _extract_features(self, data: List[Dict[str, float]]) -> np.ndarray:
-#         """
-#         Extracts features from electrical data for ANN
+    def _extract_features(self, data: List[Dict[str, float]]) -> np.ndarray:
+        """
+        Extracts features from electrical data for ANN
 
-#         Args:
-#             data (List[Dict]): The data containing the features
+        Args:
+            data (List[Dict]): The data containing the features
 
-#         Returns:
-#             np.ndarray: Feature matrix
-#         """
-#         if not data:
-#             return np.array([])
+        Returns:
+            np.ndarray: Feature matrix
+        """
+        if not data:
+            return np.array([])
         
-#         features = []
-#         for measurement in data:
-#             current = measurement.get('current_A', 0.0)
-#             voltage = measurement.get('voltage_V', 0.0)
-#             irradiance = measurement.get('Irradiance_Wm2', 0.0)
-#             temperature = measurement.get('temperature_C', 25.0)
-#             power = voltage * current
+        features = []
+        for measurement in data:
+            
+            vdc1 = measurement.get('vdc1', 0.0)
+            vdc2 = measurement.get('vdc2', 0.0)
+            idc1 = measurement.get('idc1', 0.0)
+            idc2 = measurement.get('idc2', 0.0)
+            irradiance = measurement.get('irradiance', 0.0)
+            temperature = measurement.get('temperature', 25.0)
 
-#             # Create feature vector
-#             feature_vector = [
-#                 current,
-#                 voltage,
-#                 irradiance,
-#                 temperature,
-#                 power
-#             ]
-#             features.append(feature_vector)
+            # Derived features
+            power_string1 = vdc1 * idc1
+            power_string2 = vdc2 * idc2
+            total_power = power_string1 + power_string2
+            voltage_ratio = vdc1 / vdc2 if vdc2 != 0 else 1.0
+            current_ratio = idc1 / idc2 if idc2 != 0 else 1.0
 
-#         return features
+            # Create feature vector
+            feature_vector = [
+                vdc1, vdc2, idc1, idc2, irradiance, temperature,
+                power_string1, power_string2, total_power,
+                voltage_ratio, current_ratio
+            ]
+            features.append(feature_vector)
 
-    
-#     def predict(self, data: List[Dict[str, float]]) -> Dict[str, Any]:
-#         """
-#         Makes predictions for the ANN model
+        return np.array(features)
 
-#         Args:
-#             data (List[Dict[str, float]]): List of the electrical measurements
 
-#         Returns:
-#             Dictionary with prediction results
-#         """
-#         if self.__model is None:
-#             self.__logger.warning("Model has not been loaded.")
-#             return {
-#                 'fault_type': 'Normal Operation',
-#                 'confidence': 0.0,
-#                 'error': 'Model not loaded'
-#             }
+    @override
+    def detect(self, data: List[Dict[str, float]]) -> Dict[str, Any]:
+        """
+        Makes predictions for the ANN model
+
+        Args:
+            data (List[Dict[str, float]]): List of the electrical measurements
+
+        Returns:
+            Dictionary with prediction results
+        """
+        if self.__model is None:
+            self.__logger.warning("Model has not been loaded.")
+            return {
+                'fault_type': 'Normal Operation',
+                'confidence': 0.0,
+                'error': 'Model not loaded'
+            }
         
-#         features = self._extract_features(data)
+        features = self._extract_features(data)
 
-#         # Scaled features
-#         features_scaled = self.__scaler.transform(features)
+        # Scaled features
+        if self.__scaler_fitted:
+            try:
+                features_scaled = self.__scaler.transform(features)
+            except Exception as e:
+                self.__logger.error(f"Error scaling features: {e}")
+                features_scaled = features
+        else:
+            features_scaled = features
 
-#         # Make prediction
-#         predictions = self.__model.predict(features_scaled, verbose=0)
+        # Make prediction
+        predictions = self.__model.predict(features_scaled, verbose=0)
 
-#         # Process predictions
-#         results = []
-#         for i, pred in enumerate(predictions):
-#             class_idx = np.argmax(pred)
-#             confidence = float(pred[class_idx])
-#             fault_type = self.__class_names[class_idx]
+        # Process predictions
+        results = []
+        for i, pred in enumerate(predictions):
+            class_idx = np.argmax(pred)
+            confidence = float(pred[class_idx])
+            fault_type = self.__class_names[class_idx]
 
-#             results.append({
-#                 'string_id': i,
-#                 'fault_type': fault_type,
-#                 'confidence': confidence,
-#                 'all_predictions': pred.tolist()
-#             })
+            results.append({
+                'string_id': i,
+                'fault_type': fault_type,
+                'confidence': confidence,
+                'all_predictions': pred.tolist()
+            })
 
-#         # Return overall prediction (highest confidence)
-#         if results:
-#             overall = max(results, key=lambda x: x['confidence'])
-#             return {
-#                 'fault_type': overall['fault_type'],
-#                 'confidence': overall['confidence'],
-#                 'detailed_predictions': results
-#             }
-#         return {
-#             'fault_type': 'Normal Operation',
-#             'confidence': 0.0
-#         }
+        # Return overall prediction (highest confidence)
+        if results:
+            overall = max(results, key=lambda x: x['confidence'])
+            return {
+                'fault_type': overall['fault_type'],
+                'confidence': overall['confidence'],
+                'detailed_predictions': results
+            }
+        return {
+            'fault_type': 'Normal Operation',
+            'confidence': 0.0
+        }
