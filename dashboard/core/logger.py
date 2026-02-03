@@ -9,23 +9,23 @@ class Logger:
     instance is created and shared across all modules.
     """
 
-    _logger = None  # shared across all instances
+    __logger = None  # shared across all instances
 
     @staticmethod
     def get_logger(name: str = "SolarPVLogger") -> logging.Logger:
         """
         Returns a configured logger instance.
-        
-        name : str, optional
-            Name of the logger instance (default is 'SolarPVLogger').
 
-        return : logging.Logger
+        Args:
+            name (str): Name of the logger instance (default is 'SolarPVLogger').
+
+        Returns:
             Configured logger object
         """
-        if Logger._logger is None:  # first call creates logger
+        if Logger.__logger is None:  # first call creates logger
             logging.basicConfig(
-                level=logging.INFO,
-                format="%(asctime)s | %(levelname)s | %(message)s"
+                level = logging.INFO,
+                format = "%(asctime)s | %(levelname)s | %(message)s"
             )
-            Logger._logger = logging.getLogger(name)
-        return Logger._logger
+            Logger.__logger = logging.getLogger(name)
+        return Logger.__logger
