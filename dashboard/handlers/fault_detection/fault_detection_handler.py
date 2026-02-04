@@ -3,9 +3,6 @@ import os
 from typing import Any, Dict, List, Optional # Typing hints
 from typing_extensions import override
 
-# TensorFlow
-from tensorflow import keras
-
 # Local/project imports
 from abstract_component_flow_handler import AbstractComponentFlowHandler
 from core.analysis_result import AnalysisResult

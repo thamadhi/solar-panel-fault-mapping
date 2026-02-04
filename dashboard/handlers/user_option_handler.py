@@ -1,7 +1,7 @@
-from analysis_result import AnalysisResult
-from fault_detection_handler import FaultDetectionHandler
+from core.analysis_result import AnalysisResult
+from dashboard.handlers.fault_detection.fault_detection_handler import FaultDetectionHandler
 from fault_localisation_handler import FaultLocalisationHandler
-from fault_severity_handler import FaultSeverityHandler
+from handlers.fault_Severity_handler import FaultSeverityHandler
 from fault_rectification_handler import FaultRectificationHandler
 from report_handler import ReportHandler
 
@@ -21,4 +21,3 @@ class UserOptionHandler:
 
     def fullControl(self):
         print("Admin Mode")
-

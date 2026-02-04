@@ -1,26 +1,53 @@
-# import logging  # built-in logging module
-# from logging.handlers import RotatingFileHandler    # Grow indefinitely
+import os
+import yaml
+import logging
+import logging.config
 
 
-# logger = logging.getLogger(__name__)    # Track the module generated the log
-# logger.setLevel(logging.INFO)  # Record info and everything severe
+class LoggerFactory:
+    """
+    A factory class for setting up and retrieving loggers with a centralized
+    configuration.
 
-# if not logger.handlers: # Prevent duplicate handlers
-#     formatter = logging.Formatter(
-#         "%(asctime)s | %(levelname)s | %(message)s"
-#     )
+    - Sets up logging once at application startup using a YAML configuration.
+    - Ensures all loggers have the same handlers, formatters, and levels.
+    - Provides pre-configured loggers for any module by name.
 
-#     # Console handler
-#     console_handler = logging.StreamHandler()
-#     console_handler.setFormatter(formatter)
 
-#     # File handler
-#     file_handler = RotatingFileHandler(
-#         "solar_pv.log",
-#         maxBytes=5*1024*1024,
-#         backupCount=5
-#     )
-#     file_handler.setFormatter(formatter)
+    Usage:
+        # At app startup
+        LoggerFactory.setup()
 
-#     logger.addHandler(console_handler)
-#     logger.addHandler(file_handler)
+        # In modules
+        logger = LoggerFactory.get_logger(__name__)
+    """
+
+    _configured = False # Keeps track whether logging system has been set up
+
+    @classmethod
+    def setup(cls) -> None:
+        """
+        Configures the Python logging system using a YAML file.
+
+        Args:
+            cls: Refers to the class (LoggerFactory).
+        """
+        if not cls._configured:
+            os.makedirs("logs", exist_ok=True) # Rotating handler writes here
+            with open("core/logging_config.yaml", "r") as f:
+                config = yaml.safe_load(f)  # read YAML, convert to dictionary
+                logging.config.dictConfig(config)   # Setup loggers, handlers
+            cls._configured = True  # Prevent duplicate handlers
+
+
+    @staticmethod
+    def get_logger(name: str = "solar-pv") -> logging.Logger:
+        """Returns a pre-configured logger.
+        
+        Args:
+            name (str): The name of the logger.
+
+        Returns:
+            logging.Logger: A configured logger object with the YAML setup.
+        """
+        return logging.getLogger(name)
