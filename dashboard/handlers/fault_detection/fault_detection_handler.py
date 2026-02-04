@@ -158,20 +158,24 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             for item in string_data:
                 if isinstance(item, dict):
                     processed_item = {
-                        'current_A': float(item.get('current_A', 0.0)),
-                        'voltage_V': float(item.get('voltage_V', 0.0)),
-                        'Irradiance_Wm2': float(item.get('Irradiance_Wm2', 0.0)),
-                        'temperature_C': float(item.get('temperature_C', 25.0))
+                    'vdc1': float(item.get('vdc1', item.get('voltage_V', 0.0))),
+                    'vdc2': float(item.get('vdc2', item.get('voltage_V', 0.0))),
+                    'idc1': float(item.get('idc1', item.get('current_A', 0.0))),
+                    'idc2': float(item.get('idc2', item.get('current_A', 0.0))),
+                    'irradiance': float(item.get('irradiance', item.get('Irradiance_Wm2', 0.0))),
+                    'temperature': float(item.get('temperature', item.get('temperature_C', 25.0)))
                     }
                     processed.append(processed_item)
 
         # Handle single measurement
         elif isinstance(string_data, dict):
             processed_item = {
-                    'current_A': float(string_data.get('current_A', 0.0)),
-                    'voltage_V': float(string_data.get('voltage_V', 0.0)),
-                    'Irradiance_Wm2': float(string_data.get('Irradiance_Wm2', 0.0)),
-                    'temperature_C': float(string_data.get('temperature_C', 25.0))
+            'vdc1': float(string_data.get('vdc1', string_data.get('voltage_V', 0.0))),
+            'vdc2': float(string_data.get('vdc2', string_data.get('voltage_V', 0.0))),
+            'idc1': float(string_data.get('idc1', string_data.get('current_A', 0.0))),
+            'idc2': float(string_data.get('idc2', string_data.get('current_A', 0.0))),
+            'irradiance': float(string_data.get('irradiance', string_data.get('Irradiance_Wm2', 0.0))),
+            'temperature': float(string_data.get('temperature', string_data.get('temperature_C', 25.0)))
             }         
             processed.append(processed_item)
 

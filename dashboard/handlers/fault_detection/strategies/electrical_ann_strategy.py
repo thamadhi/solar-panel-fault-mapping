@@ -13,13 +13,14 @@ class ElectricalANN(FaultDetectionStrategy):
     Builds the ANN for electrical fault detection
     """
 
-    def __init__(self, model_path: str = "best_neural_network.h5") -> None:
+    def __init__(self, model_path: str = "/Users/seyedrumaiz/Library/CloudStorage/OneDrive-InformaticsInstituteofTechnology/DSGP/solar-panel-fault-mapping/models/best_neural_network_fault_detection.h5") -> None:
         """
         Initializes the ANN
 
         Args:
             model_path (str): Path of the neural network
         """
+        self.__logger = Logger.get_logger()
         self.__model = self._load_ann_model(model_path)
         self.__feature_names = ['vdc1', 'vdc2', 'idc1', 'idc2',
                                 'irradiance', 'temperature',
@@ -28,7 +29,6 @@ class ElectricalANN(FaultDetectionStrategy):
                                 'voltage_ratio', 'current_ratio']
         self.__class_names = ['Normal Operation', 'Shadowing', 
                               'Open Circuit', 'Short-Circuit']
-        self.__logger = Logger.get_logger()
         self.__scaler = StandardScaler()
         self.__scaler_fitted = False
 
@@ -75,6 +75,7 @@ class ElectricalANN(FaultDetectionStrategy):
         
         features = self._extract_features(training_data)
         self.__scaler.fit(features)
+        self.__scaler_fitted = True
         self.__logger.info("Scaler fitted successfully.")
 
 
