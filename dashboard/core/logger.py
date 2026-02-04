@@ -1,31 +1,26 @@
-import logging  # built-in logging module
+# import logging  # built-in logging module
+# from logging.handlers import RotatingFileHandler    # Grow indefinitely
 
-class Logger:
-    """
-    Logger utility class providing a central logging mechanism
-    across the Solar PV Fault Detection/Rectification system.
 
-    Follows a Singleton-like design to ensure that only one logger
-    instance is created and shared across all modules.
-    """
+# logger = logging.getLogger(__name__)    # Track the module generated the log
+# logger.setLevel(logging.INFO)  # Record info and everything severe
 
-    __logger = None  # shared across all instances
+# if not logger.handlers: # Prevent duplicate handlers
+#     formatter = logging.Formatter(
+#         "%(asctime)s | %(levelname)s | %(message)s"
+#     )
 
-    @staticmethod
-    def get_logger(name: str = "SolarPVLogger") -> logging.Logger:
-        """
-        Returns a configured logger instance.
+#     # Console handler
+#     console_handler = logging.StreamHandler()
+#     console_handler.setFormatter(formatter)
 
-        Args:
-            name (str): Name of the logger instance (default is 'SolarPVLogger').
+#     # File handler
+#     file_handler = RotatingFileHandler(
+#         "solar_pv.log",
+#         maxBytes=5*1024*1024,
+#         backupCount=5
+#     )
+#     file_handler.setFormatter(formatter)
 
-        Returns:
-            Configured logger object
-        """
-        if Logger.__logger is None:  # first call creates logger
-            logging.basicConfig(
-                level = logging.INFO,
-                format = "%(asctime)s | %(levelname)s | %(message)s"
-            )
-            Logger.__logger = logging.getLogger(name)
-        return Logger.__logger
+#     logger.addHandler(console_handler)
+#     logger.addHandler(file_handler)
