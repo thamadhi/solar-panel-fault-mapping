@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import List
 
 from abstract_component_flow_handler import AbstractComponentFlowHandler
-from analysis_result import AnalysisResult
+from core.analysis_result import AnalysisResult
 
 
 class FaultLocalisatiobHandler(AbstractComponentFlowHandler):
