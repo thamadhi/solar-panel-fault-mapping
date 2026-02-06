@@ -1,4 +1,6 @@
 from flask import Flask, request, json
+from core.logger import LoggerFactory
+LoggerFactory.setup()
 
 app = Flask(__name__)
 

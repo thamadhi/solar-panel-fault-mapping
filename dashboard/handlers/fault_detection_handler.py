@@ -1,18 +1,17 @@
 # Standard libraries
 import os
-from typing import Any, Dict, List, Optional # Typing hints
+from typing import Any, Dict, List, Optional  # Typing hints
 from typing_extensions import override
 
 # Local/project imports
-from abstract_component_flow_handler import AbstractComponentFlowHandler
+from .abstract_component_flow_handler import AbstractComponentFlowHandler
 from core.analysis_result import AnalysisResult
-from core.logger import Logger
-from strategies.electrical_ann_strategy import ElectricalANN
-from strategies.image_hotspot_strategy import ImageHotspotStrategy
+from .electrical_ann_strategy import ElectricalANN
+from .image_hotspot_strategy import ImageHotspotStrategy
 from core.fault import Fault
-from context.detection_context import DetectionContext
-from factory.fault_factory import FaultFactory
-
+from .detection_context import DetectionContext
+from .fault_factory import FaultFactory
+from core.logger import LoggerFactory
 
 class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
@@ -24,7 +23,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
 
     def __init__(self,
-                 electrical_model_path: str = "best_neural_network.h5",
+                 electrical_model_path: str = "best_neural_network_fault_detection.h5",
                  image_model_path: str = "tuned_model.keras") -> None:
         """
         Initializes a FaultDetectionHandler with the required models.
@@ -34,10 +33,10 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             image_model_path (str): Path of the image model
         """
         super().__init__()
+        self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
         self.__electrical_strategy = ElectricalANN(electrical_model_path)
         self.__image_strategy = ImageHotspotStrategy(image_model_path)
         self.__fault_type: Optional[Fault] = None
-        self.__logger = Logger.get_logger()
         self.__processed_electrical_data: List[Dict[str, float]] = []
         self.__processed_image_path: Optional[str] = None
         self.__detection_context = DetectionContext(self.__electrical_strategy)

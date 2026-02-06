@@ -5,23 +5,47 @@ from typing_extensions import override
 from tensorflow import keras
 from sklearn.preprocessing import StandardScaler
 from .base_strategy import FaultDetectionStrategy
-from core.logger import Logger
+from core.logger import LoggerFactory
+import streamlit as st
+from pathlib import Path
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers, regularizers
 
+# Get project root (one level up from dashboard)
 
 class ElectricalANN(FaultDetectionStrategy):
     """
     Builds the ANN for electrical fault detection
     """
 
-    def __init__(self, model_path: str = "/Users/seyedrumaiz/Library/CloudStorage/OneDrive-InformaticsInstituteofTechnology/DSGP/solar-panel-fault-mapping/models/best_neural_network_fault_detection.h5") -> None:
+    def __init__(self, model_path: str = "") -> None:
         """
         Initializes the ANN
 
         Args:
             model_path (str): Path of the neural network
         """
-        self.__logger = Logger.get_logger()
-        self.__model = self._load_ann_model(model_path)
+        self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
+        
+        # Use provided path or default
+        if model_path is None or model_path == "":
+            # Try to find model in common locations
+            possible_paths = [
+                "best_neural_network_fault_detection.h5",
+                "models/best_neural_network_fault_detection.h5",
+                "../models/best_neural_network_fault_detection.h5"
+            ]
+            
+            for path in possible_paths:
+                if os.path.exists(path):
+                    model_path = path
+                    print(model_path)
+                    break
+        
+        self.__model = self._build_ann_model(input_dim=11, output_dim=4)
+        self.__model.load_weights("models/best_neural_network_fault_detection.weights.h5")
+
         self.__feature_names = ['vdc1', 'vdc2', 'idc1', 'idc2',
                                 'irradiance', 'temperature',
                                 'power_string1', 'power_string2',
@@ -57,7 +81,42 @@ class ElectricalANN(FaultDetectionStrategy):
         except Exception as e:
             self.__logger.error(f"Error loading ANN model: {e}")
             return None
-        
+    
+
+    @staticmethod
+    def _build_ann_model(input_dim: int, output_dim: int):
+        l2_value = 0.0004293131525436076
+        dropout_rate = 0.4
+
+        model = keras.Sequential()
+
+        # Input layer
+        model.add(layers.Input(shape=(input_dim,)))
+
+        # Hidden layer 1
+        model.add(layers.Dense(
+            128,
+            activation="relu",
+            kernel_regularizer=regularizers.l2(l2_value)
+        ))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Dropout(dropout_rate))
+
+        # Hidden layer 2
+        model.add(layers.Dense(
+            96,
+            activation="relu",
+            kernel_regularizer=regularizers.l2(l2_value)
+        ))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Dropout(dropout_rate))
+
+        # Output layer
+        model.add(layers.Dense(output_dim, activation="softmax"))
+
+        return model
+
+
 
     def fit_scaler(self, training_data: List[Dict]) -> None:
         """
@@ -180,3 +239,7 @@ class ElectricalANN(FaultDetectionStrategy):
             'fault_type': 'Normal Operation',
             'confidence': 0.0
         }
+    
+    @st.cache_resource
+    def get_electrical_ann():
+        return ElectricalANN()
