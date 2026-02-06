@@ -1,4 +1,4 @@
-from strategies.base_strategy import FaultDetectionStrategy
+from .base_strategy import FaultDetectionStrategy
 from typing import Any
 
 

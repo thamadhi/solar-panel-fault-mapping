@@ -4,8 +4,11 @@ import numpy as np
 from typing import Dict, Any, Optional, Tuple
 from typing_extensions import override
 from tensorflow import keras
+
 from .base_strategy import FaultDetectionStrategy
-from core.logger import Logger
+from core.logger import LoggerFactory
+import streamlit as st
+from pathlib import Path
 
 
 class ImageHotspotStrategy(FaultDetectionStrategy):
@@ -13,9 +16,10 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
     Detects hotspots from thermal images only
     """
 
-    def __init__(self, model_path: str = "tuned_model.keras") -> None:
+    def __init__(self, model_path: str = "") -> None:
+        self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
         self.__IMAGE_SIZE = (224, 224)  # Standard size for CNN models
-        self.__model = self._load_model(model_path)
+        self.__model = self._load_model("")
 
         # Values greater in the values is the key name
         self.__TEMPERATURE_THRESHOLDS = {
@@ -23,7 +27,6 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
             'medium_hotspot': 20,
             'high_hotspot': 30
         }
-        self.__logger = Logger.get_logger()
 
 
     def _load_model(self, model_path: str) -> Optional[keras.Model]:
@@ -151,3 +154,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                     'confidence': 0.0,
                     'error': str(e)
             }
+
+    @st.cache_resource
+    def get_image_hotspot_strategy():
+        return ImageHotspotStrategy()
