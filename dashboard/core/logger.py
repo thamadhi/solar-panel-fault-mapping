@@ -2,7 +2,7 @@ import os
 import yaml
 import logging
 import logging.config
-
+from pathlib import Path
 
 class LoggerFactory:
     """
@@ -33,8 +33,10 @@ class LoggerFactory:
             cls: Refers to the class (LoggerFactory).
         """
         if not cls._configured:
-            os.makedirs("logs", exist_ok=True) # Rotating handler writes here
-            with open("core/logging_config.yaml", "r") as f:
+            BASE_DIR = Path(__file__).resolve().parent
+            config_path = BASE_DIR / "logging_config.yaml"
+            os.makedirs(BASE_DIR.parent / "logs", exist_ok=True) # Rotating handler writes here
+            with open(config_path, "r") as f:
                 config = yaml.safe_load(f)  # read YAML, convert to dictionary
                 logging.config.dictConfig(config)   # Setup loggers, handlers
             cls._configured = True  # Prevent duplicate handlers

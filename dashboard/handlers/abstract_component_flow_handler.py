@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from core.logger import Logger
+from core.logger import LoggerFactory
 from core.analysis_result import AnalysisResult
 from typing import Any, final
 
@@ -12,7 +12,7 @@ class AbstractComponentFlowHandler(ABC):
     """
 
     def __init__(self) -> None:
-        self.logger = Logger.get_logger()
+        self.logger = LoggerFactory.get_logger(self.__class__.__name__)
         self.result = None
 
     @final

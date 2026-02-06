@@ -1,6 +1,6 @@
 from typing import Dict, Any, List
 from typing_extensions import override
-from .base_strategy import FaultDetectionStrategy
+from base_strategy import FaultDetectionStrategy
 
 
 class ElectricalStrategy(FaultDetectionStrategy):
