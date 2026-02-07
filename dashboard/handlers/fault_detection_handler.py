@@ -23,8 +23,9 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
 
     def __init__(self,
-                 electrical_model_path: str = "best_neural_network_fault_detection.h5",
-                 image_model_path: str = "tuned_model.keras") -> None:
+                 electrical_model_path: str = "models/best_ANN_2.20.keras",
+                 image_model_path: str = "models/tuned_model.keras",
+                 scaler_path: str = "models/ann_scaler.pkl") -> None:
         """
         Initializes a FaultDetectionHandler with the required models.
         
@@ -34,7 +35,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         """
         super().__init__()
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
-        self.__electrical_strategy = ElectricalANN(electrical_model_path)
+        self.__electrical_strategy = ElectricalANN(electrical_model_path, scaler_path)
         self.__image_strategy = ImageHotspotStrategy(image_model_path)
         self.__fault_type: Optional[Fault] = None
         self.__processed_electrical_data: List[Dict[str, float]] = []
