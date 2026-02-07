@@ -6,7 +6,7 @@ class FaultFactory:
     Demonstrates the Factory Method design pattern.
     """
     @staticmethod
-    def create_fault(fault_name: str, confidence: float) -> Fault:
+    def create_fault(fault_name: str, fault_id: int = 0) -> Fault:
         """
         Factory method to create a Fault object based on fault type.
 
@@ -28,4 +28,11 @@ class FaultFactory:
             'Hotspot': Hotspot,
             'Normal Operation': Fault
         }
-        return mapping.get(fault_name, Fault)(confidence)
+
+        cls = mapping.get(fault_name, Fault)
+
+        # For normal operation a default type (base Fault)
+        if cls is Fault:
+            return cls(fault_id, fault_name)
+        
+        return cls(fault_id)
