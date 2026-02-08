@@ -42,6 +42,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         self.__processed_image_path: Optional[str] = None
         self.__detection_context = DetectionContext(self.__electrical_strategy)
         self.__result: Optional[AnalysisResult] = None
+        self.__last_run_details = {}    # Model outputs
 
 
     # Implement overridden methods
@@ -115,13 +116,12 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         if detection_results:
             # Get fault with highest confidence
             main_fault = max(detection_results, key=lambda x: x.get('confidence', 0))
+
+            self.__last_run_details = main_fault
+
             self.__fault_type = FaultFactory.create_fault(
-                main_fault['fault_type'],
-                main_fault['confidence']
+                main_fault['fault_type']
             )
-            self.__logger.info(f"""Detected fault: 
-                               {main_fault['fault_type']} with confidence: 
-                                {main_fault['confidence']:.2f}""")
         else:
             self.__logger.warning("No data available for fault detection.")
 
@@ -130,10 +130,13 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     def present_results(self) -> None:
         """Used to present the detected fault to the user"""
         if self.__fault_type:
-            self.__result = AnalysisResult(self.__fault_type)
-            self.__logger.info(f"Displaying Results: {self.__fault_type}")
+            self.result = AnalysisResult(
+                result=self.__fault_type.get_fault_type,
+                reading_confidence=self.__last_run_details.get('confidence', 0.0),
+                result_readings=self.__last_run_details.get("detailed_predictions", [])
+            )
         else:
-            self.__logger.warning("No fault detected to present.")
+            self.result = None
 
 
     def _preprocess_string_data(self, string_data: Any) -> List[Dict[str, float]]:

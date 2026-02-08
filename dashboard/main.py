@@ -1,15 +1,21 @@
 import pandas as pd
 import os
-from handlers.electrical_ann_strategy import ElectricalANN
+from handlers.fault_detection_handler import FaultDetectionHandler
 
 # Set model and scaler paths
-MODEL_PATH = "best_ANN_2.20.keras"
-SCALER_PATH = "ann_scaler.pkl"
+MODEL_PATH = "models/best_ANN_2.20.keras"
+SCALER_PATH = "models/ann_scaler.pkl"
+
+handler = FaultDetectionHandler(
+    electrical_model_path=MODEL_PATH,
+    scaler_path=SCALER_PATH
+)
 
 # Initialize the ANN model
-ann_model = ElectricalANN(MODEL_PATH, SCALER_PATH)
+# ann_model = ElectricalANN(MODEL_PATH, SCALER_PATH)
 
 def detect_from_csv(csv_file):
+    global handler
     if not os.path.exists(csv_file):
         print(f"CSV file not found: {csv_file}")
         return
@@ -23,13 +29,14 @@ def detect_from_csv(csv_file):
         return
 
     data = df[required_cols].to_dict('records')
-    result = ann_model.detect(data)
-    print(f"Overall Fault Type: {result['fault_type']}")
-    print(f"Confidence: {result['confidence']:.1%}")
+    result = handler.start_flow(string_data=data)
+    if result:
+        print(f"Overall Fault Type: {result.result}")
+        print(f"Confidence: {result.reading_confidence:.1%}")
 
-    print("\nDetailed Predictions per string:")
-    for d in result.get('detailed_predictions', []):
-        print(f"String {d['string_id']}: {d['fault_type']} ({d['confidence']:.1%})")
+        print("\nDetailed Predictions per string:")
+        for d in result.result_readings:
+            print(f"String {d['string_id']}: {d['fault_type']} ({d['confidence']:.1%})")
 
 
 def detect_manual():
@@ -51,9 +58,14 @@ def detect_manual():
         'temperature': temperature
     }]
 
-    result = ann_model.detect(test_data)
-    print(f"Fault Type: {result['fault_type']}")
-    print(f"Confidence: {result['confidence']:.1%}")
+    final_report = handler.start_flow(string_data=test_data)
+    if final_report:
+        print(f"Main Result: {final_report.result}")
+        print(f"Confidence: {final_report.reading_confidence:.2%}")
+        
+        # Loop through individual string predictions if they exist
+        for reading in final_report.result_readings:
+            print(f"String {reading['string_id']}: {reading['fault_type']} ({reading['confidence']:.1%})")
 
 
 def main():
