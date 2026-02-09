@@ -1,6 +1,6 @@
 # Standard libraries
 import os
-from typing import Any, Dict, List, Optional  # Typing hints
+from typing import Any, Dict, List, Optional
 from typing_extensions import override
 
 # Local/project imports

@@ -11,7 +11,6 @@ handler = FaultDetectionHandler(
     scaler_path=SCALER_PATH
 )
 
-
 def detect_from_csv(csv_file):
     """
     CSV fault detection
