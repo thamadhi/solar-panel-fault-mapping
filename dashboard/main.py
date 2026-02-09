@@ -3,7 +3,7 @@ import os
 from handlers.fault_detection_handler import FaultDetectionHandler
 
 # Set model and scaler paths
-MODEL_PATH = "models/best_ANN_2.20.keras"
+MODEL_PATH = "models/best_neural_network.keras"
 SCALER_PATH = "models/ann_scaler.pkl"
 
 handler = FaultDetectionHandler(
@@ -11,8 +11,6 @@ handler = FaultDetectionHandler(
     scaler_path=SCALER_PATH
 )
 
-# Initialize the ANN model
-# ann_model = ElectricalANN(MODEL_PATH, SCALER_PATH)
 
 def detect_from_csv(csv_file):
     global handler
