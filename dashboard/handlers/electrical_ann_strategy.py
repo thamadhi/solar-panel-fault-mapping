@@ -1,15 +1,13 @@
 import os
 import numpy as np
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from typing_extensions import override
 from tensorflow import keras
 from .base_strategy import FaultDetectionStrategy
 from core.logger import LoggerFactory
-import streamlit as st
 from tensorflow import keras
 import joblib
 
-# Get project root (one level up from dashboard)
 
 class ElectricalANN(FaultDetectionStrategy):
     """
@@ -42,8 +40,8 @@ class ElectricalANN(FaultDetectionStrategy):
                                 'power_string1', 'power_string2',
                                 'total_power', 
                                 'voltage_ratio', 'current_ratio']
-        self.__class_names = ['Normal Operation', 'Shadowing', 
-                              'Open Circuit', 'Short-Circuit']
+        self.__class_names = ['Normal Operation', 'Short-Circuit',
+                              'Open Circuit', 'Shadowing']
 
 
     def fit_scaler(self, training_data: List[Dict]) -> None:
