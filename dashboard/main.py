@@ -13,6 +13,12 @@ handler = FaultDetectionHandler(
 
 
 def detect_from_csv(csv_file):
+    """
+    CSV fault detection
+    
+    Args:
+        csv_file: The file being read
+    """
     global handler
     if not os.path.exists(csv_file):
         print(f"CSV file not found: {csv_file}")
@@ -38,6 +44,9 @@ def detect_from_csv(csv_file):
 
 
 def detect_manual():
+    """
+    Manual fault detection for a single record
+    """
     print("Enter manual values for electrical strings:")
 
     vdc1 = float(input("vdc1 (Voltage String 1): "))
