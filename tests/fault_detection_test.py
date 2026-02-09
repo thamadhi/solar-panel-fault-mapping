@@ -10,10 +10,8 @@ from dashboard.handlers.fault_detection_handler import (
     FaultFactory,
     DetectionContext,
     FaultDetectionHandler,
-    ElectricalStrategy,
     ImageHotspotStrategy,
     ElectricalANN,
-    ElectricalStrategy
 )
 
 def test_edge_cases():
@@ -26,3 +24,15 @@ def test_edge_cases():
     handler.present_results()
 
     assert handler.fault_type is None
+
+
+def test_pre_process_data():
+    pass
+
+
+def test_apply_model():
+    pass
+
+
+def test_present_results():
+    pass
