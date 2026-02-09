@@ -1,0 +1,27 @@
+version: 1
+disable_existing_loggers: False
+formatters:
+  detailed:
+    format: "%(asctime)s | %(name)s | %(filename)s:%(lineno)d | %(levelname)s | %(message)s"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: detailed
+  file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: detailed
+    filename: logs/solar_pv.log
+    maxBytes: 5242880
+    backupCount: 5
+
+loggers:
+  solar_pv:
+    level: INFO
+    handlers: [console, file]
+    propagate: no
+root:
+  level: WARNING
+  handlers: [console]

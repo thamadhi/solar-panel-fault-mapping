@@ -1,31 +1,54 @@
-import logging  # built-in logging module
+import os
+import yaml
+import logging
+import logging.config
+from pathlib import Path
 
-class Logger:
+class LoggerFactory:
     """
-    Logger utility class providing a central logging mechanism
-    across the Solar PV Fault Detection/Rectification system.
+    A factory class for setting up and retrieving loggers with a centralized
+    configuration.
 
-    Follows a Singleton-like design to ensure that only one logger
-    instance is created and shared across all modules.
+    - Sets up logging once at application startup using a YAML configuration.
+    - Ensures all loggers have the same handlers, formatters, and levels.
+    - Provides pre-configured loggers for any module by name.
+
+    Usage:
+        # At app startup
+        LoggerFactory.setup()
+
+        # In modules
+        logger = LoggerFactory.get_logger(__name__)
     """
 
-    __logger = None  # shared across all instances
+    _configured = False # Keeps track whether logging system has been set up
 
-    @staticmethod
-    def get_logger(name: str = "SolarPVLogger") -> logging.Logger:
+    @classmethod
+    def setup(cls) -> None:
         """
-        Returns a configured logger instance.
+        Configures the Python logging system using a YAML file.
 
         Args:
-            name (str): Name of the logger instance (default is 'SolarPVLogger').
+            cls: Refers to the class (LoggerFactory).
+        """
+        if not cls._configured:
+            BASE_DIR = Path(__file__).resolve().parent
+            config_path = BASE_DIR / "logging_config.yaml"
+            os.makedirs(BASE_DIR.parent / "logs", exist_ok=True) # Rotating handler writes here
+            with open(config_path, "r") as f:
+                config = yaml.safe_load(f)  # read YAML, convert to dictionary
+                logging.config.dictConfig(config)   # Setup loggers, handlers
+            cls._configured = True  # Prevent duplicate handlers
+
+
+    @staticmethod
+    def get_logger(name: str = "solar-pv") -> logging.Logger:
+        """Returns a pre-configured logger.
+        
+        Args:
+            name (str): The name of the logger.
 
         Returns:
-            Configured logger object
+            logging.Logger: A configured logger object with the YAML setup.
         """
-        if Logger.__logger is None:  # first call creates logger
-            logging.basicConfig(
-                level = logging.INFO,
-                format = "%(asctime)s | %(levelname)s | %(message)s"
-            )
-            Logger.__logger = logging.getLogger(name)
-        return Logger.__logger
+        return logging.getLogger(name)
