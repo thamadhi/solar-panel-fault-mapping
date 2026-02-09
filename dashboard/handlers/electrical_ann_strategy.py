@@ -1,11 +1,12 @@
 import os
 import numpy as np
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from typing_extensions import override
 from tensorflow import keras
-from sklearn.preprocessing import StandardScaler
 from .base_strategy import FaultDetectionStrategy
-from core.logger import Logger
+from core.logger import LoggerFactory
+from tensorflow import keras
+import joblib
 
 
 class ElectricalANN(FaultDetectionStrategy):
@@ -13,51 +14,35 @@ class ElectricalANN(FaultDetectionStrategy):
     Builds the ANN for electrical fault detection
     """
 
-    def __init__(self, model_path: str = "best_neural_network.h5") -> None:
+    def __init__(self, model_path: str, scaler_path: str) -> None:
         """
         Initializes the ANN
 
         Args:
             model_path (str): Path of the neural network
         """
-        self.__model = self._load_ann_model(model_path)
+        self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
+        
+        # Use provided path or default
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"ANN Model not found at: {model_path}")
+        
+        self.__model = keras.models.load_model(model_path, compile=False)
+
+        if not os.path.exists(scaler_path):
+            raise FileNotFoundError(f"Scaler not found at: {scaler_path}")
+
+        self.__scaler = joblib.load(scaler_path)
+
+
         self.__feature_names = ['vdc1', 'vdc2', 'idc1', 'idc2',
                                 'irradiance', 'temperature',
                                 'power_string1', 'power_string2',
                                 'total_power', 
                                 'voltage_ratio', 'current_ratio']
-        self.__class_names = ['Normal Operation', 'Shadowing', 
-                              'Open Circuit', 'Short-Circuit']
-        self.__logger = Logger.get_logger()
-        self.__scaler = StandardScaler()
-        self.__scaler_fitted = False
+        self.__class_names = ['Normal Operation', 'Short-Circuit',
+                              'Open Circuit', 'Shadowing']
 
-
-    def _load_ann_model(self, model_path: str) -> Optional[keras.Model]:
-        """
-        Loads the saved best_neural_network.h5 model
-
-        Args:
-            model_path (str): The path of the neural network model
-
-        Returns:
-            keras.Model: The actual model in keras format
-
-        Raises:
-            Exception: If the file/path was not to be found.
-        """
-        try:
-            if os.path.exists(model_path):
-                model = keras.models.load_model(model_path)
-                self.__logger.info("ANN has been successfully loaded.")
-                return model
-            else:
-                self.__logger.error(f"ANN model not found at: {model_path}")
-                return None
-        except Exception as e:
-            self.__logger.error(f"Error loading ANN model: {e}")
-            return None
-        
 
     def fit_scaler(self, training_data: List[Dict]) -> None:
         """
@@ -141,13 +126,10 @@ class ElectricalANN(FaultDetectionStrategy):
         features = self._extract_features(data)
 
         # Scaled features
-        if self.__scaler_fitted:
-            try:
-                features_scaled = self.__scaler.transform(features)
-            except Exception as e:
-                self.__logger.error(f"Error scaling features: {e}")
-                features_scaled = features
-        else:
+        try:
+            features_scaled = self.__scaler.transform(features)
+        except Exception as e:
+            self.__logger.error(f"Error scaling features: {e}")
             features_scaled = features
 
         # Make prediction

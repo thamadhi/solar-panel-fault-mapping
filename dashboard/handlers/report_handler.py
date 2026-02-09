@@ -1,4 +1,4 @@
-from analysis_result import AnalysisResult
+from core.analysis_result import AnalysisResult
 
 class ReportHandler:
     def __init__(self, 
@@ -12,7 +12,7 @@ class ReportHandler:
         self.__SeverityResult = SeverityResult
         self.__RectificationResult = RectificationResult
 
-    def exportAllToPDF(self:
+    def exportAllToPDF(self):
         print("Exporting full analysis to PDF")
 
     def reccomendationExportToPDF(self):

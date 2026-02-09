@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from core.logger import Logger
+from core.logger import LoggerFactory
 from core.analysis_result import AnalysisResult
-from typing import Any, final
+from typing import Any, final, Optional
 
 class AbstractComponentFlowHandler(ABC):
     """
@@ -12,8 +12,8 @@ class AbstractComponentFlowHandler(ABC):
     """
 
     def __init__(self) -> None:
-        self.logger = Logger.get_logger()
-        self.result = None
+        self.logger = LoggerFactory.get_logger(self.__class__.__name__)
+        self.result: Optional[AnalysisResult] = None
 
     @final
     def start_flow(self, image_data = None, string_data = None) -> AnalysisResult:
@@ -42,7 +42,7 @@ class AbstractComponentFlowHandler(ABC):
         pass
 
     @abstractmethod
-    def apply_model(self) -> None:
+    def apply_model(self) -> Any:
         """
         Apply model logic
         """

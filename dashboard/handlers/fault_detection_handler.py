@@ -1,21 +1,17 @@
 # Standard libraries
 import os
-from typing import Any, Dict, List, Optional # Typing hints
+from typing import Any, Dict, List, Optional  # Typing hints
 from typing_extensions import override
 
-# TensorFlow
-from tensorflow import keras
-
 # Local/project imports
-from abstract_component_flow_handler import AbstractComponentFlowHandler
+from .abstract_component_flow_handler import AbstractComponentFlowHandler
 from core.analysis_result import AnalysisResult
-from core.logger import Logger
-from strategies.electrical_ann_strategy import ElectricalANN
-from strategies.image_hotspot_strategy import ImageHotspotStrategy
+from .electrical_ann_strategy import ElectricalANN
+from .image_hotspot_strategy import ImageHotspotStrategy
 from core.fault import Fault
-from context.detection_context import DetectionContext
-from factory.fault_factory import FaultFactory
-
+from .detection_context import DetectionContext
+from .fault_factory import FaultFactory
+from core.logger import LoggerFactory
 
 class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
@@ -27,8 +23,9 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
 
     def __init__(self,
-                 electrical_model_path: str = "best_neural_network.h5",
-                 image_model_path: str = "tuned_model.keras") -> None:
+                 electrical_model_path: str = "models/best_ANN_2.20.keras",
+                 image_model_path: str = "models/tuned_model.keras",
+                 scaler_path: str = "models/ann_scaler.pkl") -> None:
         """
         Initializes a FaultDetectionHandler with the required models.
         
@@ -37,14 +34,15 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             image_model_path (str): Path of the image model
         """
         super().__init__()
-        self.__electrical_strategy = ElectricalANN(electrical_model_path)
+        self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
+        self.__electrical_strategy = ElectricalANN(electrical_model_path, scaler_path)
         self.__image_strategy = ImageHotspotStrategy(image_model_path)
         self.__fault_type: Optional[Fault] = None
-        self.__logger = Logger.get_logger()
         self.__processed_electrical_data: List[Dict[str, float]] = []
         self.__processed_image_path: Optional[str] = None
         self.__detection_context = DetectionContext(self.__electrical_strategy)
         self.__result: Optional[AnalysisResult] = None
+        self.__last_run_details = {}    # Model outputs
 
 
     # Implement overridden methods
@@ -118,13 +116,12 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         if detection_results:
             # Get fault with highest confidence
             main_fault = max(detection_results, key=lambda x: x.get('confidence', 0))
+
+            self.__last_run_details = main_fault
+
             self.__fault_type = FaultFactory.create_fault(
-                main_fault['fault_type'],
-                main_fault['confidence']
+                main_fault['fault_type']
             )
-            self.__logger.info(f"""Detected fault: 
-                               {main_fault['fault_type']} with confidence: 
-                                {main_fault['confidence']:.2f}""")
         else:
             self.__logger.warning("No data available for fault detection.")
 
@@ -133,10 +130,13 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     def present_results(self) -> None:
         """Used to present the detected fault to the user"""
         if self.__fault_type:
-            self.__result = AnalysisResult(self.__fault_type)
-            self.__logger.info(f"Displaying Results: {self.__fault_type}")
+            self.result = AnalysisResult(
+                result=self.__fault_type.get_fault_type,
+                reading_confidence=self.__last_run_details.get('confidence', 0.0),
+                result_readings=self.__last_run_details.get("detailed_predictions", [])
+            )
         else:
-            self.__logger.warning("No fault detected to present.")
+            self.result = None
 
 
     def _preprocess_string_data(self, string_data: Any) -> List[Dict[str, float]]:
@@ -157,21 +157,26 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         if isinstance(string_data, list) and len(string_data) > 0:
             for item in string_data:
                 if isinstance(item, dict):
+                    print(item.items())
                     processed_item = {
-                        'current_A': float(item.get('current_A', 0.0)),
-                        'voltage_V': float(item.get('voltage_V', 0.0)),
-                        'Irradiance_Wm2': float(item.get('Irradiance_Wm2', 0.0)),
-                        'temperature_C': float(item.get('temperature_C', 25.0))
+                    'vdc1': float(item.get('vdc1', item.get('voltage_V', 0.0))),
+                    'vdc2': float(item.get('vdc2', item.get('voltage_V', 0.0))),
+                    'idc1': float(item.get('idc1', item.get('current_A', 0.0))),
+                    'idc2': float(item.get('idc2', item.get('current_A', 0.0))),
+                    'irradiance': float(item.get('irradiance', item.get('Irradiance_Wm2', 0.0))),
+                    'temperature': float(item.get('temperature', item.get('temperature_C', 25.0)))
                     }
                     processed.append(processed_item)
 
         # Handle single measurement
         elif isinstance(string_data, dict):
             processed_item = {
-                    'current_A': float(string_data.get('current_A', 0.0)),
-                    'voltage_V': float(string_data.get('voltage_V', 0.0)),
-                    'Irradiance_Wm2': float(string_data.get('Irradiance_Wm2', 0.0)),
-                    'temperature_C': float(string_data.get('temperature_C', 25.0))
+            'vdc1': float(string_data.get('vdc1', string_data.get('voltage_V', 0.0))),
+            'vdc2': float(string_data.get('vdc2', string_data.get('voltage_V', 0.0))),
+            'idc1': float(string_data.get('idc1', string_data.get('current_A', 0.0))),
+            'idc2': float(string_data.get('idc2', string_data.get('current_A', 0.0))),
+            'irradiance': float(string_data.get('irradiance', string_data.get('Irradiance_Wm2', 0.0))),
+            'temperature': float(string_data.get('temperature', string_data.get('temperature_C', 25.0)))
             }         
             processed.append(processed_item)
 
