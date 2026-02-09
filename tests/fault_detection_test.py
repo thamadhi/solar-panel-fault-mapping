@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch, MagicMock
 from PIL import Image
 
 # Import the classes to test
-from dashboard.handlers.fault_detection.fault_detection_handler import (
+from dashboard.handlers.fault_detection_handler import (
     FaultFactory,
     DetectionContext,
     FaultDetectionHandler,
