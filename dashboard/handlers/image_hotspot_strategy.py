@@ -4,11 +4,9 @@ import numpy as np
 from typing import Dict, Any, Optional, Tuple
 from typing_extensions import override
 from tensorflow import keras
-
 from .base_strategy import FaultDetectionStrategy
 from core.logger import LoggerFactory
 import streamlit as st
-from pathlib import Path
 
 
 class ImageHotspotStrategy(FaultDetectionStrategy):
@@ -20,13 +18,6 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
         self.__IMAGE_SIZE = (224, 224)  # Standard size for CNN models
         self.__model = self._load_model("")
-
-        # Values greater in the values is the key name
-        self.__TEMPERATURE_THRESHOLDS = {
-            'low_hotspot': 10,
-            'medium_hotspot': 20,
-            'high_hotspot': 30
-        }
 
 
     def _load_model(self, model_path: str) -> Optional[keras.Model]:
@@ -48,12 +39,6 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
     def IMAGE_SIZE(self) -> Tuple[int, int]:
         """Returns the image size for image processing as a tuple"""
         return self.__IMAGE_SIZE
-
-
-    @property
-    def TEMPERATURE_THRESHOLDS(self) -> Dict[str, int]:
-        """Returns the temperature thresholds as a dictionary"""
-        return self.__TEMPERATURE_THRESHOLDS
     
 
     def _load_and_preprocess_image(self, image_path: str) -> Optional[np.ndarray]:
@@ -84,7 +69,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
             # Normalize to [0,1]
             img = img.astype(np.float32) / 255.0
 
-            # Add batch dimension - expand the shape of teh array
+            # Add batch dimension - expand the shape of the array
             # by inserting a new axis (dimension) at a position
             img = np.expand_dims(img, axis=0)
 
@@ -129,7 +114,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
             clean_confidence = float(predictions[1]) if len(predictions) > 1 \
                                                      else 1.0 - hotspot_confidence
 
-            # Determine fault types
+            # Determine fault types based on confidence
             if hotspot_confidence > 0.5:
                 fault_type = 'Hotspot'
                 confidence = hotspot_confidence
