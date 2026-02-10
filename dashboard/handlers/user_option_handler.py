@@ -1,5 +1,5 @@
 from core.analysis_result import AnalysisResult
-from dashboard.handlers.fault_detection.fault_detection_handler import FaultDetectionHandler
+from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
 from fault_localisation_handler import FaultLocalisationHandler
 from handlers.fault_Severity_handler import FaultSeverityHandler
 from fault_rectification_handler import FaultRectificationHandler
