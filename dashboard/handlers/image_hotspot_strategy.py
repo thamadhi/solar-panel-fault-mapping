@@ -17,7 +17,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
     def __init__(self, model_path: str = "") -> None:
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
         self.__IMAGE_SIZE = (224, 224)  # Standard size for CNN models
-        self.__model = self._load_model("")
+        self.__model = self._load_model("models/tuned_model.keras")
 
 
     def _load_model(self, model_path: str) -> Optional[keras.Model]:

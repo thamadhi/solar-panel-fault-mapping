@@ -79,6 +79,7 @@ def main():
     print("Options:")
     print("1. Detect faults from CSV")
     print("2. Enter manual values")
+    print("3. Enter an image")
     choice = input("Choose option (1/2): ")
 
     if choice == "1":
@@ -86,6 +87,21 @@ def main():
         detect_from_csv(csv_file)
     elif choice == "2":
         detect_manual()
+    elif choice == "3":
+        path = input("Enter image path: ")
+        if not os.path.exists(path):
+            print(f"Image not found at: {path}")
+
+        else:
+            result = handler.start_flow(image_data=path, string_data=None)
+            if result:
+                print(f"Overall fault type: {result.result}")
+                print(f"Confidence: {result.reading_confidence:.1f}")
+
+                if result.result_readings:
+                    print("Detailed predictions:")
+                    for idx, d in enumerate(result.result_readings, start=1):
+                        print(f"Region {idx}: {d['fault_type']} ({d['confidence']:.1%})")
     else:
         print("Invalid choice.")
 
