@@ -4,7 +4,6 @@ import tempfile
 import os
 from unittest.mock import Mock, patch, MagicMock
 from PIL import Image
-
 # Import the classes to test
 from dashboard.handlers.fault_detection_handler import (
     FaultFactory,
@@ -36,3 +35,13 @@ def test_apply_model():
 
 def test_present_results():
     pass
+
+
+def test_hotspot(handler):
+    path = "dashboard/handlers/single.jpg"
+
+    result = handler.start_flow(image_data=path)
+
+    assert result is not None
+    assert result.result in ["Hotspot", "Normal Operation"]
+    assert 0.0 <= result.reading_confidence <= 1.0
