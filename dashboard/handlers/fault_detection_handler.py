@@ -42,6 +42,11 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         self.__processed_image_path: Optional[str] = None
         self.__detection_context = DetectionContext(self.__electrical_strategy)
         self.__result: Optional[AnalysisResult] = None
+        self.__feature_names = ['vdc1', 'vdc2', 'idc1', 'idc2',
+                                'irradiance', 'temperature',
+                                'power_string1', 'power_string2',
+                                'total_power', 
+                                'voltage_ratio', 'current_ratio']
         self.__last_run_details = {}    # Model outputs
 
 
@@ -187,3 +192,8 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     def fault_type(self) -> Optional[Fault]:
         """Returns the fault type"""
         return self.__fault_type
+
+
+    @property
+    def feature_names(self) -> List[str]:
+        return self.__feature_names
