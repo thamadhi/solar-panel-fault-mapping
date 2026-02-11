@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from handlers.fault_detection_handler import FaultDetectionHandler
+import tempfile
 
 # Setup paths
 MODEL_PATH = "models/best_neural_network.keras"
@@ -82,3 +83,33 @@ with tab1:
                     st.subheader("Individual String Analysis")
                     res_df = pd.DataFrame(result.result_readings)
                     st.table(res_df[['string_id', 'fault_type', 'confidence']])
+
+
+# Image mode
+with tab3:
+    st.subheader("Thermal Analysis")
+    img_col, det_col = st.columns([1, 1])
+
+    with img_col:
+        image_file = st.file_uploader("Upload Thermal Image", type=["jpg", "png, jpeg"])
+
+        # Show the image aswell
+        if image_file:
+            st.image(image_file, caption="Source Thermal Feed", use_container_width=True)
+
+    with det_col:
+        if image_file:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+                tmp.write(image_file.read())
+                image_path = tmp.name
+
+            if st.button("Scan for Hotspots"):
+                with st.spinner("Analyzing Pixels..."):
+                    result = handler.start_flow(image_data=image_path)
+
+                if result:
+                    st.text(result.result)
+                    st.progress(result.reading_confidence)
+
+                    for i, r in enumerate(result.result_readings, 1):
+                        st.info(f"**Region {i}:** {r['fault_type']} ({r['confidence']:.1f%})")
