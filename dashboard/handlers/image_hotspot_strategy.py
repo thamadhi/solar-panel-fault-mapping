@@ -6,7 +6,6 @@ from typing_extensions import override
 from tensorflow import keras
 from .base_strategy import FaultDetectionStrategy
 from core.logger import LoggerFactory
-import streamlit as st
 
 
 class ImageHotspotStrategy(FaultDetectionStrategy):
@@ -140,6 +139,5 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                     'error': str(e)
             }
 
-    @st.cache_resource
     def get_image_hotspot_strategy():
         return ImageHotspotStrategy()
