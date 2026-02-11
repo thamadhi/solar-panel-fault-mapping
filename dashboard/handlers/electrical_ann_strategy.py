@@ -33,13 +33,6 @@ class ElectricalANN(FaultDetectionStrategy):
             raise FileNotFoundError(f"Scaler not found at: {scaler_path}")
 
         self.__scaler = joblib.load(scaler_path)
-
-
-        self.__feature_names = ['vdc1', 'vdc2', 'idc1', 'idc2',
-                                'irradiance', 'temperature',
-                                'power_string1', 'power_string2',
-                                'total_power', 
-                                'voltage_ratio', 'current_ratio']
         self.__class_names = ['Normal Operation', 'Short-Circuit',
                               'Open Circuit', 'Shadowing']
 
