@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from handlers.fault_detection_handler import FaultDetectionHandler
 import tempfile
+import plotly.express as px
 
 # Setup paths
 MODEL_PATH = "models/best_neural_network.keras"
@@ -86,14 +87,13 @@ with tab1:
 
 
 # Image mode
+
 with tab3:
     st.subheader("Thermal Analysis")
     img_col, det_col = st.columns([1, 1])
 
     with img_col:
-        image_file = st.file_uploader("Upload Thermal Image", type=["jpg", "png, jpeg"])
-
-        # Show the image aswell
+        image_file = st.file_uploader("Upload Thermal Image", type=["jpg", "png", "jpeg"])
         if image_file:
             st.image(image_file, caption="Source Thermal Feed", use_container_width=True)
 
@@ -103,13 +103,36 @@ with tab3:
                 tmp.write(image_file.read())
                 image_path = tmp.name
 
-            if st.button("Scan for Hotspots"):
+            if st.button("Scan for Hotspots", key="scan_thermal"):
                 with st.spinner("Analyzing Pixels..."):
                     result = handler.start_flow(image_data=image_path)
 
                 if result:
-                    st.text(result.result)
-                    st.progress(result.reading_confidence)
+                    st.success(f"Primary Detection: **{result.result}**")
+                    
+                    # Pie chart
+                    if result.result_readings and len(result.result_readings) > 0:
+                        chart_df = pd.DataFrame(result.result_readings)
+                        
+                        # Use plotly to create a Donut chart
+                        fig = px.pie(
+                            chart_df,
+                            values="confidence",
+                            names="fault_type",
+                            hole=0.5,
+                            color_discrete_sequence=px.colors.sequential.YlOrRd_r,
+                            title="Detection Confidence Distribution"
+                        )
+                        
+                        # Clean up the chart layout
+                        fig.update_layout(showlegend=True, margin=dict(t=30, b=0, l=0, r=0))
+                        st.plotly_chart(fig, use_container_width=True)
 
-                    for i, r in enumerate(result.result_readings, 1):
-                        st.info(f"**Region {i}:** {r['fault_type']} ({r['confidence']:.1f%})")
+                        # Detailed text breakdown
+                        with st.expander("See Detailed Region Confidence"):
+                            for i, r in enumerate(result.result_readings, 1):
+                                st.write(f"🎯 **Region {i}:** {r['fault_type']} — `{r['confidence']:.1%}`")
+                    else:
+                        # Fallback for single overall confidence
+                        st.metric("Detection Confidence", f"{result.reading_confidence:.1%}")
+                        st.info("No specific sub-regions identified.")
