@@ -31,6 +31,8 @@ def load_handler():
         scaler_path=SCALER_PATH
     )
 
+handler = load_handler()
+
 # Sidebar
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3222/3222672.png", width=100)
@@ -59,11 +61,24 @@ with tab1:
         with st.expander('Preview Uploaded Data'):
             st.dataframe(df, use_container_width=True)
         
-        feature_names = load_handler().feature_names
+        feature_names = handler.feature_names
 
         missing = [c for c in feature_names if c not in df.columns]
 
         if missing:
             st.error(f"🚨 Missing required columns: {', '.join(missing)}")
         else:
-            pass
+            if st.button("Analyze CSV Data", key="btn_csv"):
+                data = df[feature_names].to_dict("records")
+                result = handler.start_flow(string_data=data)
+
+                if result:
+                    # Display summary cards
+                    c1, c2 = st.columns(2)
+                    c1.metric("System status", result.result)
+                    c2.metric("Confidence score", f"{result.reading_confidence:.1%}")
+
+                    # Individual strings
+                    st.subheader("Individual String Analysis")
+                    res_df = pd.DataFrame(result.result_readings)
+                    st.table(res_df[['string_id', 'fault_type', 'confidence']])
