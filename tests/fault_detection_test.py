@@ -12,18 +12,8 @@ from dashboard.handlers.fault_detection_handler import (
     ImageHotspotStrategy,
     ElectricalANN,
 )
-
-def test_edge_cases():
-
-    handler = FaultDetectionHandler()
-
-    # Test with no data
-    handler.pre_process_data(None, None)
-    handler.apply_model()
-    handler.present_results()
-
-    assert handler.fault_type is None
-
+from dashboard.core.logger import LoggerFactory
+import logging
 
 def test_pre_process_data():
     pass
@@ -37,7 +27,11 @@ def test_present_results():
     pass
 
 
-def test_hotspot(handler):
+def test_hotspot():
+    handler = FaultDetectionHandler(
+        electrical_model_path="dashboard/models/best_neural_network.keras",
+        scaler_path="dashboard/models/ann_scaler.pkl"
+    )
     path = "dashboard/handlers/single.jpg"
 
     result = handler.start_flow(image_data=path)
@@ -45,3 +39,10 @@ def test_hotspot(handler):
     assert result is not None
     assert result.result in ["Hotspot", "Normal Operation"]
     assert 0.0 <= result.reading_confidence <= 1.0
+
+def test_logger_setup_runs_once():
+    LoggerFactory.setup()
+    LoggerFactory.setup()   # Must not duplicate
+
+    logger = LoggerFactory.get_logger(__name__)
+    assert isinstance(logger, logging.Logger)

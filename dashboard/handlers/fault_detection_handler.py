@@ -5,13 +5,13 @@ from typing_extensions import override
 
 # Local/project imports
 from .abstract_component_flow_handler import AbstractComponentFlowHandler
-from core.analysis_result import AnalysisResult
+from ..core.analysis_result import AnalysisResult
 from .electrical_ann_strategy import ElectricalANN
 from .image_hotspot_strategy import ImageHotspotStrategy
-from core.fault import Fault
+from ..core.fault import Fault
 from .detection_context import DetectionContext
 from .fault_factory import FaultFactory
-from core.logger import LoggerFactory
+from ..core.logger import LoggerFactory
 
 class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
@@ -23,7 +23,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
 
     def __init__(self,
-                 electrical_model_path: str = "models/best_ANN_2.20.keras",
+                 electrical_model_path: str = "models/best_neural_network.keras",
                  image_model_path: str = "models/tuned_model.keras",
                  scaler_path: str = "models/ann_scaler.pkl") -> None:
         """
