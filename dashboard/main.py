@@ -3,6 +3,7 @@ import pandas as pd
 from handlers.fault_detection_handler import FaultDetectionHandler
 import tempfile
 import plotly.express as px
+from modules.ui_components import render_pie_chart
 
 # Setup paths
 MODEL_PATH = "models/best_neural_network.keras"
@@ -130,43 +131,20 @@ def load_image_mode(tab3):
 
         with det_col:
             if image_file:
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-                    tmp.write(image_file.read())
-                    image_path = tmp.name
 
                 if st.button("Scan for Hotspots", key="scan_thermal"):
                     with st.spinner("Analyzing Pixels..."):
-                        result = handler.start_flow(image_data=image_path)
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+                            tmp.write(image_file.read())
+                            image_path = tmp.name
+                        st.session_state.thermal_result = handler.start_flow(image_data=image_path)
 
-                    if result:
+                    if "thermal_result" in st.session_state:
+                        result = st.session_state.thermal_result
                         st.success(f"Primary Detection: **{result.result}**")
-                        
+                        st.metric("Detection Confidence", f"{result.reading_confidence:.1%}")
                         # Pie chart
-                        if result.result_readings and len(result.result_readings) > 0:
-                            chart_df = pd.DataFrame(result.result_readings)
-                            
-                            # Use plotly to create a Donut chart
-                            fig = px.pie(
-                                chart_df,
-                                values="confidence",
-                                names="fault_type",
-                                hole=0.5,
-                                color_discrete_sequence=px.colors.sequential.YlOrRd_r,
-                                title="Detection Confidence Distribution"
-                            )
-                            
-                            # Clean up the chart layout
-                            fig.update_layout(showlegend=True, margin=dict(t=30, b=0, l=0, r=0))
-                            st.plotly_chart(fig, use_container_width=True)
-
-                            # Detailed text breakdown
-                            with st.expander("See Detailed Region Confidence"):
-                                for i, r in enumerate(result.result_readings, 1):
-                                    st.write(f"🎯 **Region {i}:** {r['fault_type']} — `{r['confidence']:.1%}`")
-                        else:
-                            # Fallback for single overall confidence
-                            st.metric("Detection Confidence", f"{result.reading_confidence:.1%}")
-                            st.info("No specific sub-regions identified.")
+                        render_pie_chart(result)
 
 # Load functions
 load_sidebar()

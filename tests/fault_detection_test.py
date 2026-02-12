@@ -161,8 +161,8 @@ def test_apply_model_selects_highest_confidence(mock_context_class, mock_fault_f
 
     # Create handler after patching
     handler = FaultDetectionHandler(
-    electrical_model_path="dashboard/models/best_neural_network.keras",
-    scaler_path="dashboard/models/ann_scaler.pkl"
+        electrical_model_path="dashboard/models/best_neural_network.keras",
+        scaler_path="dashboard/models/ann_scaler.pkl"
     )
 
     # Fake processed data
@@ -185,8 +185,8 @@ def test_present_results_sets_analysis_result():
     Handler's internal fields are pre-populated to simulate a complete run.
     """
     handler = handler = FaultDetectionHandler(
-    electrical_model_path="dashboard/models/best_neural_network.keras",
-    scaler_path="dashboard/models/ann_scaler.pkl"
+        electrical_model_path="dashboard/models/best_neural_network.keras",
+        scaler_path="dashboard/models/ann_scaler.pkl"
     )
 
     mock_fault = MagicMock()
