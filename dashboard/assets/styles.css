@@ -11,7 +11,7 @@
 }
 
 /* Buttons */
-.stButton>button {
+.stButton > button {
     width: 100%;
     border-radius: 5px;
     height: 3em
