@@ -5,13 +5,14 @@ from typing_extensions import override
 
 # Local/project imports
 from .abstract_component_flow_handler import AbstractComponentFlowHandler
-from ..core.analysis_result import AnalysisResult
+from core.analysis_result import AnalysisResult
 from .electrical_ann_strategy import ElectricalANN
 from .image_hotspot_strategy import ImageHotspotStrategy
-from ..core.fault import Fault
+from core.fault import Fault
 from .detection_context import DetectionContext
 from .fault_factory import FaultFactory
-from ..core.logger import LoggerFactory
+from core.logger import LoggerFactory
+# from .fault_observer import FaultObserver
 
 class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
@@ -127,6 +128,9 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             self.__fault_type = FaultFactory.create_fault(
                 main_fault['fault_type']
             )
+
+            # Notify all registered observers
+            # self._notify_observers()
         else:
             self.__logger.warning("No data available for fault detection.")
 
@@ -197,3 +201,12 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     @property
     def feature_names(self) -> List[str]:
         return self.__feature_names
+
+
+    # def add_observer(self, observer: FaultObserver):
+    #     self.__observers.append(observer)
+
+
+    # def _notify_observers(self):
+    #     for obs in self.__observers:
+    #         obs.update(self.__fault_type)
