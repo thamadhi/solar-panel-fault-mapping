@@ -1,26 +1,29 @@
 import streamlit as st
 import pandas as pd
 from handlers.fault_detection_handler import FaultDetectionHandler
+
+# Save the uploaded image into a temporary file since streamlit uses memory
 import tempfile
-import plotly.express as px
 from modules.ui_components import render_pie_chart
 
 # Setup paths
 MODEL_PATH = "models/best_neural_network.keras"
 SCALER_PATH = "models/ann_scaler.pkl"
 
-
+# Streamlit page config
 st.set_page_config(
     page_title="Solar PV Fault Detection",
     page_icon="☀️",
     layout="wide"   # Better data display
 )
 
+
+# Custom CSS styling
 st.markdown("""
 <style>
-        .main {background-color: #f8f9fa; } 
-        .stMetric {background-color: #ffffff; padding: 15px; border-radius: 10px}
-        .stButton>button {wide: 100%; border-radius: 5px; height: 3em}   
+        .main {background-color: #ffffff;}
+        .stMetric {background-color: #000000; padding: 15px; border-radius: 10px}
+        .stButton>button {width: 100%; border-radius: 5px; height: 3em}
 </style>
 
 
@@ -41,10 +44,10 @@ def load_sidebar():
     Loads the main menu's sidebar
     """
     with st.sidebar:
-        st.image("https://cdn-icons-png.flaticon.com/512/3222/3222672.png", width=100)
+        st.image("handlers/cloudy.png", width=100)
         st.title("Control Panel")
         st.info("This system uses AI to detect faults in solar PV arrays via electrical or" \
-        "thermal imaging.")
+        " thermal imaging.")
         st.divider()
         st.caption("Version: 1.0.0")
 
@@ -93,7 +96,11 @@ def load_csv_mode(tab1):
                 st.error(f"🚨 Missing required columns: {', '.join(missing)}")
             else:
                 if st.button("Analyze CSV Data", key="btn_csv"):
+
+                    # Each row is now a record
                     data = df[feature_names].to_dict("records")
+
+                    # Send to the detection pipeline
                     result = handler.start_flow(string_data=data)
 
                     if result:
@@ -117,26 +124,29 @@ def load_image_mode(tab3):
 
     Args:
         tab3: The image tab in the UI.
-    
-    :param tab3: Description
     """
     with tab3:
         st.subheader("Thermal Analysis")
+
+        # Split into 2 columns, left for image, right for detection outputs
         img_col, det_col = st.columns([1, 1])
 
         with img_col:
             image_file = st.file_uploader("Upload Thermal Image", type=["jpg", "png", "jpeg"])
             if image_file:
-                st.image(image_file, caption="Source Thermal Feed", use_container_width=True)
+
+                # Show the uploaded image
+                st.image(image_file, caption="Preview Of Uploaded Image\n(Tamadhi react with a 👍 if you can see this)", use_container_width=True)
 
         with det_col:
             if image_file:
-
                 if st.button("Scan for Hotspots", key="scan_thermal"):
                     with st.spinner("Analyzing Pixels..."):
                         with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
                             tmp.write(image_file.read())
                             image_path = tmp.name
+
+                        # Store in session state so it persists after reruns
                         st.session_state.thermal_result = handler.start_flow(image_data=image_path)
 
                     if "thermal_result" in st.session_state:
