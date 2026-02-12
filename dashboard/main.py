@@ -17,19 +17,6 @@ st.set_page_config(
     layout="wide"   # Better data display
 )
 
-
-# Custom CSS styling
-st.markdown("""
-<style>
-        .main {background-color: #ffffff;}
-        .stMetric {background-color: #000000; padding: 15px; border-radius: 10px}
-        .stButton>button {width: 100%; border-radius: 5px; height: 3em}
-</style>
-
-
-""", unsafe_allow_html=True)
-
-
 @st.cache_resource  # Return the same cached instance to improve performance
 def load_handler():
     return FaultDetectionHandler(
@@ -136,7 +123,7 @@ def load_image_mode(tab3):
             if image_file:
 
                 # Show the uploaded image
-                st.image(image_file, caption="Preview Of Uploaded Image\n(Tamadhi react with a 👍 if you can see this)", use_container_width=True)
+                st.image(image_file, caption="Preview Of Uploaded Image", use_container_width=True)
 
         with det_col:
             if image_file:
@@ -153,9 +140,17 @@ def load_image_mode(tab3):
                         result = st.session_state.thermal_result
                         st.success(f"Primary Detection: **{result.result}**")
                         st.metric("Detection Confidence", f"{result.reading_confidence:.1%}")
-                        # Pie chart
+                        
+                        # Render result pie chart
                         render_pie_chart(result)
 
+
+def load_css(css_file):
+    with open(css_file) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+
+load_css("assets/styles.css")
 # Load functions
 load_sidebar()
 tab1, tab2, tab3 = load_ui()
