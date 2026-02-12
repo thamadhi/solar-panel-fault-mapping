@@ -4,7 +4,7 @@ from typing import Dict, Any, List
 from typing_extensions import override
 from tensorflow import keras
 from .base_strategy import FaultDetectionStrategy
-from ..core.logger import LoggerFactory
+from core.logger import LoggerFactory
 from tensorflow import keras
 import joblib
 
