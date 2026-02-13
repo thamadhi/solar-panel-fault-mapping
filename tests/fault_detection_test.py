@@ -49,19 +49,22 @@ def test_present_results():
     pass
 
 
+@patch("dashboard.handlers.fault_detection_handler.ElectricalANN")
 @patch("dashboard.handlers.fault_detection_handler.ImageHotspotStrategy")
-def test_hotspot_mock_model(mock_hotspot_cls):
+def test_hotspot_mock_model(mock_hotspot_cls, mock_ann_cls):
     """
     Test hotspot without loading a real model or real image file.
     """
 
+    # Prevent ElectricalANN from loading fake.keras
+    mock_ann_cls.return_value = MagicMock()
+
     # Mock strategy instance
     mock_hotspot = MagicMock()
-    mock_hotspot.predict.return_value = {
+    mock_hotspot.detect.return_value = {
         "fault_type": "Hotspot",
         "confidence": 0.87
     }
-
     mock_hotspot_cls.return_value = mock_hotspot
 
     # Create handler
@@ -70,14 +73,14 @@ def test_hotspot_mock_model(mock_hotspot_cls):
         scaler_path="fake.pkl"
     )
 
-    # Patch image processing so no file needed
+    # Patch image processing so no real file needed
     with patch.object(handler, "_preprocess_image_data", return_value="fake_image.jpg"):
-
         result = handler.start_flow(image_data="anything.jpg")
 
-        assert result is not None
-        assert result.result == "Hotspot"
-        assert result.reading_confidence == 0.87
+    assert result is not None
+    assert result.result == "Hotspot"
+    assert 0.0 <= result.reading_confidence <= 1.0
+    assert abs(result.reading_confidence - 0.87) < 1e-9
 
 
 def test_logger_setup_runs_once():
