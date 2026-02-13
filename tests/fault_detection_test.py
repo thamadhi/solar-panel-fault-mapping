@@ -4,6 +4,34 @@ from unittest.mock import Mock, patch, MagicMock
 from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
 from dashboard.core.logger import LoggerFactory
 import logging
+import pytest
+
+
+@pytest.fixture
+def mocked_handler():
+    """
+    Create a FaultDetectionHandler without loading real model files.
+    Patches ElectricalANN + ImageHotspotStrategy so __init__ doesn't do heavy work.
+    """
+    with patch("dashboard.handlers.fault_detection_handler.ElectricalANN") as mock_ann_cls, \
+    patch("dashboard.handlers.fault_detection_handler.ImageHotspotStrategy") as mock_hotspot_cls:
+        
+        mock_ann = MagicMock()
+        mock_ann.predict.return_value = {"fault_type": "Normal Operation",
+                                         "confidence": 0.9}
+        mock_ann_cls.return_value = mock_ann
+
+        mock_hotspot = MagicMock()
+        mock_hotspot.predict.return_value = {"fault_type": "Hotspot",
+                                             "confidence": 0.8}
+        mock_hotspot_cls.return_value = mock_hotspot
+
+        handler = FaultDetectionHandler(
+            electrical_model_path="fake.keras",
+            scaler_path="fake.pkl"
+        )
+
+        return handler
 
 
 def test_pre_process_data():
@@ -21,18 +49,35 @@ def test_present_results():
     pass
 
 
-def test_hotspot():
-    path = "dashboard/handlers/single.jpg"
+@patch("dashboard.handlers.fault_detection_handler.ImageHotspotStrategy")
+def test_hotspot_mock_model(mock_hotspot_cls):
+    """
+    Test hotspot without loading a real model or real image file.
+    """
+
+    # Mock strategy instance
+    mock_hotspot = MagicMock()
+    mock_hotspot.predict.return_value = {
+        "fault_type": "Hotspot",
+        "confidence": 0.87
+    }
+
+    mock_hotspot_cls.return_value = mock_hotspot
+
+    # Create handler
     handler = FaultDetectionHandler(
-        electrical_model_path="dashboard/models/best_neural_network.keras",
-        scaler_path="dashboard/models/ann_scaler.pkl"
+        electrical_model_path="fake.keras",
+        scaler_path="fake.pkl"
     )
 
-    result = handler.start_flow(image_data=path)
+    # Patch image processing so no file needed
+    with patch.object(handler, "_preprocess_image_data", return_value="fake_image.jpg"):
 
-    assert result is not None
-    assert result.result in ["Hotspot", "Normal Operation"]
-    assert 0.0 <= result.reading_confidence <= 1.0
+        result = handler.start_flow(image_data="anything.jpg")
+
+        assert result is not None
+        assert result.result == "Hotspot"
+        assert result.reading_confidence == 0.87
 
 
 def test_logger_setup_runs_once():
@@ -107,15 +152,40 @@ def test_feature_names():
 
 # Mock electrical ANN
 @patch("dashboard.handlers.fault_detection_handler.ElectricalANN")
-def test_apply_model_mock_ann(mock_ann):
+@patch("dashboard.handlers.fault_detection_handler.DetectionContext")
+@patch("dashboard.handlers.fault_detection_handler.FaultFactory")
+def test_apply_model_mock_ann(mock_factory, mock_ctx_cls, mock_ann_cls):
     """
     Test `apply_model` with a mocked ElectricalANN dependency.
 
     This test should ensure that the handler can run model logic without
     loading a real Keras model file.
     """
-    mock_strategy = Mock()
-    pass
+    mock_ann = Mock()
+    mock_ann_cls.return_value = mock_ann
+
+    mock_ctx = MagicMock()
+
+    # Simulate detection returning a prediction
+    mock_ctx.perform_detection.return_value = {
+        "fault_type": "Short-Circuit",
+        "confidence": 0.88
+    }
+    mock_ctx_cls.return_value = mock_ctx
+
+    mock_fault = MagicMock()
+    mock_factory.create_fault.return_value = mock_fault
+
+    handler = FaultDetectionHandler(
+        electrical_model_path="fake.keras",
+        scaler_path="fake.pkl"
+    )
+    handler._FaultDetectionHandler__processed_electrical_data = [{"fake": "row"}]
+
+    handler.apply_model()
+
+    mock_factory.create_fault.assert_called_with("Short-Circuit")
+    assert handler._FaultDetectionHandler__last_run_details["confidence"] == 0.88
 
 
 def test_preprocess_image_data_valid_path():
@@ -202,3 +272,21 @@ def test_present_results_sets_analysis_result():
 
     assert handler.result is not None
     assert handler.result.reading_confidence == 0.8
+
+
+def test_start_flow_calls_pipeline_in_order(mocked_handler):
+    """
+    start_flow should call:
+    pre_process_data -> apply_model -> present_results
+    """
+    handler = mocked_handler
+
+    with patch.object(handler, "pre_process_data") as pre, \
+    patch.object(handler, "apply_model") as apply, \
+    patch.object(handler, "present_results") as present:
+        
+        handler.start_flow(string_data={"x": 1})
+
+        pre.assert_called_once()
+        apply.assert_called_once()
+        present.assert_called_once()
