@@ -105,7 +105,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                 return {'fault_type': 'Normal Operation', 'confidence': 0.0,
                         'error': 'Image load failed'}
             
-            # get predictions
+            # Get predictions
             predictions = self.__model.predict(image, verbose=0)[0]
 
             # Binary classification
