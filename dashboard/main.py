@@ -4,6 +4,7 @@ from modules.ui_components import (render_sidebar, render_tabs,
                                     render_csv_mode, render_image_mode,
                                     render_css, render_page_config, render_history)
 
+# Load page configurations and CSS
 render_page_config()
 render_css("assets/styles.css")
 
@@ -25,7 +26,7 @@ def load_handler():
 handler = load_handler()
 render_sidebar()
 
-
+# Load input tabs
 tab1, tab2, tab3 = render_tabs()
 render_csv_mode(tab1, handler=handler)
 render_image_mode(tab3, handler=handler)
