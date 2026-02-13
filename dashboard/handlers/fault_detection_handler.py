@@ -166,7 +166,6 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         if isinstance(string_data, list) and len(string_data) > 0:
             for item in string_data:
                 if isinstance(item, dict):
-                    print(item.items())
                     processed_item = {
                     'vdc1': float(item.get('vdc1', item.get('voltage_V', 0.0))),
                     'vdc2': float(item.get('vdc2', item.get('voltage_V', 0.0))),
