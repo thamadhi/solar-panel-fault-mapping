@@ -207,3 +207,30 @@ marimo/_lsp/
 __marimo__/
 *.joblib
 src/fault-detection/model-comparisons/mlruns/**/artifacts/*.pkl
+# MLflow
+mlruns/
+**/mlruns/
+
+# CatBoost
+catboost_info/
+**/catboost_info/
+
+# Experiment artifacts
+model-comparisons/
+src/fault-detection/model-comparisons/
+
+# Temporary files
+*.tmp
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+.venv/
+# Model files
+*.keras
+*.h5
+*.pkl
+*.joblib
