@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional, Tuple
 from typing_extensions import override
 from tensorflow import keras
 from .base_strategy import FaultDetectionStrategy
-from ..core.logger import LoggerFactory
+from core.logger import LoggerFactory
 
 
 class ImageHotspotStrategy(FaultDetectionStrategy):
