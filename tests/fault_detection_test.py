@@ -1,5 +1,7 @@
 import tempfile
 import os
+
+# Isolate logic from heavy dependencies
 from unittest.mock import Mock, patch, MagicMock
 from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
 from dashboard.core.logger import LoggerFactory
@@ -13,14 +15,19 @@ def mocked_handler():
     Create a FaultDetectionHandler without loading real model files.
     Patches ElectricalANN + ImageHotspotStrategy so __init__ doesn't do heavy work.
     """
+
+    # Replace real class with a Magic Mock
     with patch("dashboard.handlers.fault_detection_handler.ElectricalANN") as mock_ann_cls, \
     patch("dashboard.handlers.fault_detection_handler.ImageHotspotStrategy") as mock_hotspot_cls:
         
         mock_ann = MagicMock()
+
+        # Return a fake prediction whenever ANN.predict() is called
         mock_ann.predict.return_value = {"fault_type": "Normal Operation",
                                          "confidence": 0.9}
         mock_ann_cls.return_value = mock_ann
 
+        # Repeat the same for hotspots
         mock_hotspot = MagicMock()
         mock_hotspot.predict.return_value = {"fault_type": "Hotspot",
                                              "confidence": 0.8}
@@ -188,6 +195,8 @@ def test_apply_model_mock_ann(mock_factory, mock_ctx_cls, mock_ann_cls):
     handler.apply_model()
 
     mock_factory.create_fault.assert_called_with("Short-Circuit")
+
+    # Verify whether internal state updated correctly.
     assert handler._FaultDetectionHandler__last_run_details["confidence"] == 0.88
 
 
@@ -201,6 +210,8 @@ def test_preprocess_image_data_valid_path():
         electrical_model_path="dashboard/models/best_neural_network.keras",
         scaler_path="dashboard/models/ann_scaler.pkl"
     )
+
+    # Create a temporary file
     with tempfile.NamedTemporaryFile(delete=False) as tmp:
         path = tmp.name
 
@@ -224,6 +235,8 @@ def test_apply_model_selects_highest_confidence(mock_context_class, mock_fault_f
 
     # Create mock context instance
     mock_context = MagicMock()
+
+    # Simulate multiple detections
     mock_context.perform_detection.side_effect = [
         {"fault_type": "Open Circuit", "confidence": 0.6},
         {"fault_type": "Hotspot", "confidence": 0.9}
@@ -265,6 +278,7 @@ def test_present_results_sets_analysis_result():
     mock_fault = MagicMock()
     mock_fault.get_fault_type = "Open Circuit"
 
+    # Inject internal state
     handler._FaultDetectionHandler__fault_type = mock_fault
     handler._FaultDetectionHandler__last_run_details = {
         "confidence": 0.8,
@@ -273,6 +287,7 @@ def test_present_results_sets_analysis_result():
 
     handler.present_results()
 
+    # Check if output works correctly
     assert handler.result is not None
     assert handler.result.reading_confidence == 0.8
 
