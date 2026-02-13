@@ -19,7 +19,14 @@ def render_sidebar():
 
 
 def render_pie_chart(result):
-
+    """
+    Renders a pie chart visualizing the class distirbution confidence
+    during hotpsot detection.
+    
+    Args:
+        result: The result containing the fault details such as confidence
+        and fault type.
+    """
     conf = float(result.reading_confidence or 0.0)
     conf = max(0.0, min(conf, 1.0))  # clamp between 0 and 1
 
@@ -101,6 +108,13 @@ def render_csv_mode(tab1, handler):
                         c1.metric("System status", result.result)
                         c2.metric("Confidence score", f"{result.reading_confidence:.1%}")
 
+                        st.session_state.history.append({
+                            "mode": "csv",
+                            "fault_type": result.result,
+                            "confidence": float(result.reading_confidence),
+                            "rows": len(df)
+                        })
+
                         # Individual strings
                         st.subheader("Individual String Analysis")
                         res_df = pd.DataFrame(result.result_readings)
@@ -144,6 +158,11 @@ def render_image_mode(tab3, handler):
 
                     if "thermal_result" in st.session_state:
                         result = st.session_state.thermal_result
+                        st.session_state.history.append({
+                            "mode": "thermal",
+                            "fault_type": result.result,
+                            "confidence": float(result.reading_confidence),
+                        })
                         st.success(f"Primary Detection: **{result.result}**")
                         st.metric("Detection Confidence", f"{result.reading_confidence:.1%}")
                         
@@ -171,3 +190,23 @@ def render_page_config():
         page_icon="☀️",
         layout="wide"   # Better data display
     )
+
+
+def render_history():
+    """
+    Renders the session history for past predictions.
+    Allows the user to clear the history.
+    """
+    if "history" not in st.session_state:
+        st.session_state.history = []
+    st.sidebar.subheader("Prediction History")
+
+    if st.session_state.history:
+        hist_df = pd.DataFrame(st.session_state.history)
+        st.sidebar.dataframe(hist_df, width="stretch")
+    else:
+        st.sidebar.caption("No predictions yet.")
+
+    if st.sidebar.button("🗑️ Clear history"):
+        st.session_state.history = []
+        st.rerun()
