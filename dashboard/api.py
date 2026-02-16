@@ -10,13 +10,11 @@ LoggerFactory.setup()
 # Create the flask app
 app = Flask(__name__)
 
-MODEL_PATH = "models/best_neural_network.keras"
-SCALER_PATH = "models/ann_scaler.pkl"
+MODEL_PATH = "models/tuned_random_forest.pkl"
 
 # Load once
 handler = FaultDetectionHandler(
     electrical_model_path=MODEL_PATH,
-    scaler_path=SCALER_PATH
 )
 
 # Define API endpoint
@@ -29,7 +27,7 @@ def predict():
 
 
 @app.route("/predict-image", methods=["POST"])
-def predict():
+def predict_image():
     if 'image' not in request.files:
         return jsonify({"error": "No image in this request."}), 400
     

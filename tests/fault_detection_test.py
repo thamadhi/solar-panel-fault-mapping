@@ -17,25 +17,24 @@ def mocked_handler():
     """
 
     # Replace real class with a Magic Mock
-    with patch("dashboard.handlers.fault_detection_handler.ElectricalANN") as mock_ann_cls, \
+    with patch("dashboard.handlers.fault_detection_handler.ElectricalRF") as mock_rf_cls, \
     patch("dashboard.handlers.fault_detection_handler.ImageHotspotStrategy") as mock_hotspot_cls:
         
-        mock_ann = MagicMock()
+        mock_rf = MagicMock()
 
         # Return a fake prediction whenever ANN.predict() is called
-        mock_ann.predict.return_value = {"fault_type": "Normal Operation",
+        mock_rf.predict.return_value = {"fault_type": "Normal Operation",
                                          "confidence": 0.9}
-        mock_ann_cls.return_value = mock_ann
+        mock_rf_cls.return_value = mock_rf
 
         # Repeat the same for hotspots
         mock_hotspot = MagicMock()
-        mock_hotspot.predict.return_value = {"fault_type": "Hotspot",
+        mock_hotspot.detect.return_value = {"fault_type": "Hotspot",
                                              "confidence": 0.8}
         mock_hotspot_cls.return_value = mock_hotspot
 
         handler = FaultDetectionHandler(
-            electrical_model_path="fake.keras",
-            scaler_path="fake.pkl"
+            electrical_model_path="fake.pkl"
         )
 
         return handler
@@ -56,15 +55,15 @@ def test_present_results():
     pass
 
 
-@patch("dashboard.handlers.fault_detection_handler.ElectricalANN")
+@patch("dashboard.handlers.fault_detection_handler.ElectricalRF")
 @patch("dashboard.handlers.fault_detection_handler.ImageHotspotStrategy")
-def test_hotspot_mock_model(mock_hotspot_cls, mock_ann_cls):
+def test_hotspot_mock_model(mock_hotspot_cls, mock_rf_cls):
     """
     Test hotspot without loading a real model or real image file.
     """
 
     # Prevent ElectricalANN from loading fake.keras
-    mock_ann_cls.return_value = MagicMock()
+    mock_rf_cls.return_value = MagicMock()
 
     # Mock strategy instance
     mock_hotspot = MagicMock()
@@ -76,8 +75,7 @@ def test_hotspot_mock_model(mock_hotspot_cls, mock_ann_cls):
 
     # Create handler
     handler = FaultDetectionHandler(
-        electrical_model_path="fake.keras",
-        scaler_path="fake.pkl"
+        electrical_model_path="fake.pkl"
     )
 
     # Patch image processing so no real file needed
@@ -109,8 +107,7 @@ def test_preprocess_image_data_invalid_path():
     Test `_preprocess_image_data` returns None when the file path is invalid.
     """
     handler = FaultDetectionHandler(
-        electrical_model_path="dashboard/models/best_neural_network.keras",
-        scaler_path="dashboard/models/ann_scaler.pkl"
+        electrical_model_path="dashboard/models/tuned_random_forest.pkl",
     )
     result = handler._preprocess_image_data("non_existing.jpg")
 
@@ -122,8 +119,7 @@ def test_apply_model_with_no_data():
     Test `apply_model` does not set a fault type when no data was processed.
     """
     handler = FaultDetectionHandler(
-        electrical_model_path="dashboard/models/best_neural_network.keras",
-        scaler_path="dashboard/models/ann_scaler.pkl"
+        electrical_model_path="dashboard/models/tuned_random_forest.pkl",
     )
     handler.pre_process_data(None, None)
     handler.apply_model()
@@ -136,8 +132,7 @@ def test_feature_names():
     Test `feature_names` returns the expected list of electrical features.
     """
     handler = FaultDetectionHandler(
-        electrical_model_path="dashboard/models/best_neural_network.keras",
-        scaler_path="dashboard/models/ann_scaler.pkl"
+        electrical_model_path="dashboard/models/tuned_random_forest.pkl"
     )
     features = handler.feature_names
 
@@ -157,22 +152,22 @@ def test_feature_names():
     ]
 
     assert isinstance(features, list)
-    assert all(f in expected_feature_names for f in features)
+    assert features == expected_feature_names
 
 
 # Mock electrical ANN
-@patch("dashboard.handlers.fault_detection_handler.ElectricalANN")
+@patch("dashboard.handlers.fault_detection_handler.ElectricalRF")
 @patch("dashboard.handlers.fault_detection_handler.DetectionContext")
 @patch("dashboard.handlers.fault_detection_handler.FaultFactory")
-def test_apply_model_mock_ann(mock_factory, mock_ctx_cls, mock_ann_cls):
+def test_apply_model_mock_ann(mock_factory, mock_ctx_cls, mock_rf_cls):
     """
-    Test `apply_model` with a mocked ElectricalANN dependency.
+    Test `apply_model` with a mocked ElectricalRF dependency.
 
     This test should ensure that the handler can run model logic without
     loading a real Keras model file.
     """
-    mock_ann = Mock()
-    mock_ann_cls.return_value = mock_ann
+    mock_rf = Mock()
+    mock_rf_cls.return_value = mock_rf
 
     mock_ctx = MagicMock()
 
@@ -187,8 +182,7 @@ def test_apply_model_mock_ann(mock_factory, mock_ctx_cls, mock_ann_cls):
     mock_factory.create_fault.return_value = mock_fault
 
     handler = FaultDetectionHandler(
-        electrical_model_path="fake.keras",
-        scaler_path="fake.pkl"
+        electrical_model_path="fake.pkl"
     )
     handler._FaultDetectionHandler__processed_electrical_data = [{"fake": "row"}]
 
@@ -207,8 +201,7 @@ def test_preprocess_image_data_valid_path():
     Uses a temporary file to avoid relying on repository image assets.
     """
     handler = FaultDetectionHandler(
-        electrical_model_path="dashboard/models/best_neural_network.keras",
-        scaler_path="dashboard/models/ann_scaler.pkl"
+        electrical_model_path="dashboard/models/tuned_random_forest.pkl"
     )
 
     # Create a temporary file
@@ -222,7 +215,7 @@ def test_preprocess_image_data_valid_path():
     os.remove(path)
 
 
-@patch("dashboard.handlers.fault_detection_handler.FaultFactory")
+@patch("dashboard.handlers.fault_detection_handler.FaultFactory")   # Temporary replace actual implementation
 @patch("dashboard.handlers.fault_detection_handler.DetectionContext")
 def test_apply_model_selects_highest_confidence(mock_context_class, mock_fault_factory):
     """
@@ -247,8 +240,7 @@ def test_apply_model_selects_highest_confidence(mock_context_class, mock_fault_f
 
     # Create handler after patching
     handler = FaultDetectionHandler(
-        electrical_model_path="dashboard/models/best_neural_network.keras",
-        scaler_path="dashboard/models/ann_scaler.pkl"
+        electrical_model_path="dashboard/models/tuned_random_forest.pkl"
     )
 
     # Fake processed data
@@ -270,9 +262,8 @@ def test_present_results_sets_analysis_result():
 
     Handler's internal fields are pre-populated to simulate a complete run.
     """
-    handler = handler = FaultDetectionHandler(
-        electrical_model_path="dashboard/models/best_neural_network.keras",
-        scaler_path="dashboard/models/ann_scaler.pkl"
+    handler = FaultDetectionHandler(
+        electrical_model_path="dashboard/models/tuned_random_forest.pkl"
     )
 
     mock_fault = MagicMock()
