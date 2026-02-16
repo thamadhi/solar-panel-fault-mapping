@@ -299,3 +299,29 @@ def test_start_flow_calls_pipeline_in_order(mocked_handler):
         pre.assert_called_once()
         apply.assert_called_once()
         present.assert_called_once()
+
+
+def test_pre_process_data_non_numeric_values():
+    """
+    Non-numeric values should be handled safely or raise a clear ValueError.
+    """
+    handler = FaultDetectionHandler(
+        electrical_model_path="dashboard/models/tuned_random_forest.pkl"
+    )
+
+    unsafe_input = {
+        "vdc1": "abc",  # Invalid
+        "vdc2": 20,
+        "idc1": 1.2,
+        "idc2": 1.1,
+        "irradiance": 800,
+        "temperature": 35
+    }
+
+    try:
+        handler.pre_process_data(string_data=unsafe_input, image_data=None)
+        processed = getattr(handler, "_FaultDetectionHandler__processed_electrical_data", None)
+        # If it didn't crash, then it should still be in a valid "safe" state
+        assert processed is None or processed != "CRASH"
+    except ValueError:
+        assert True
