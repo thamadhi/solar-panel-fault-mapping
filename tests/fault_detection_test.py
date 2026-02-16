@@ -1,11 +1,13 @@
 import tempfile
 import os
 import io
+import numpy as np
 
 # Isolate logic from heavy dependencies
 from unittest.mock import Mock, patch, MagicMock
 from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
 from dashboard.core.logger import LoggerFactory
+from dashboard.handlers.image_hotspot_strategy import ImageHotspotStrategy
 import logging
 import pytest
 import json
@@ -15,12 +17,17 @@ import json
 def mocked_handler():
     """
     Create a FaultDetectionHandler without loading real model files.
-    Patches ElectricalANN + ImageHotspotStrategy so __init__ doesn't do heavy work.
+    Patches ElectricalANN + ImageHotspotStrategy so __init__ doesn't 
+    do heavy work.
     """
 
     # Replace real class with a Magic Mock
-    with patch("dashboard.handlers.fault_detection_handler.ElectricalRF") as mock_rf_cls, \
-    patch("dashboard.handlers.fault_detection_handler.ImageHotspotStrategy") as mock_hotspot_cls:
+    with patch(
+        "dashboard.handlers.fault_detection_handler.ElectricalRF"
+        ) as mock_rf_cls, \
+    patch(
+        "dashboard.handlers.fault_detection_handler.ImageHotspotStrategy"
+    ) as mock_hotspot_cls:
         
         mock_rf = MagicMock()
 
@@ -43,7 +50,8 @@ def mocked_handler():
 
 
 def test_pre_process_data():
-    """Test that `pre_process_data` handles inputs and updates handler state."""
+    """Test that `pre_process_data` handles inputs and updates
+    handler state."""
     pass
 
 
@@ -81,7 +89,9 @@ def test_hotspot_mock_model(mock_hotspot_cls, mock_rf_cls):
     )
 
     # Patch image processing so no real file needed
-    with patch.object(handler, "_preprocess_image_data", return_value="fake_image.jpg"):
+    with patch.object(
+        handler, "_preprocess_image_data", return_value="fake_image.jpg"
+    ):
         result = handler.start_flow(image_data="anything.jpg")
 
     assert result is not None
@@ -190,14 +200,18 @@ def test_apply_model_mock_ann(mock_factory, mock_ctx_cls, mock_rf_cls):
     handler = FaultDetectionHandler(
         electrical_model_path="fake.pkl"
     )
-    handler._FaultDetectionHandler__processed_electrical_data = [{"fake": "row"}]
+    handler._FaultDetectionHandler__processed_electrical_data = [
+        {"fake": "row"}
+    ]
 
     handler.apply_model()
 
     mock_factory.create_fault.assert_called_with("Short-Circuit")
 
     # Verify whether internal state updated correctly.
-    assert handler._FaultDetectionHandler__last_run_details["confidence"] == 0.88
+    assert handler._FaultDetectionHandler__last_run_details[
+        "confidence"
+    ] == 0.88
 
 
 def test_preprocess_image_data_valid_path():
@@ -229,8 +243,10 @@ def test_apply_model_selects_highest_confidence(mock_context_class, mock_fault_f
     Test `apply_model` picks the fault with the highest confidence.
 
     Mocks:
-        - `DetectionContext.perform_detection` to return different confidence values.
-        - `FaultFactory.create_fault` to verify the selected fault type is used.
+        - `DetectionContext.perform_detection` to return different
+        confidence values.
+        - `FaultFactory.create_fault` to verify the selected
+        fault type is used.
     """
 
     # Create mock context instance
@@ -265,7 +281,8 @@ def test_apply_model_selects_highest_confidence(mock_context_class, mock_fault_f
 
 def test_present_results_sets_analysis_result():
     """
-    Test `present_results` creates and stores the analysis result on the handler.
+    Test `present_results` creates and stores the analysis result
+    on the handler.
 
     Handler's internal fields are pre-populated to simulate a complete run.
     """
@@ -330,7 +347,9 @@ def test_pre_process_data_non_numeric_values():
 
     try:
         handler.pre_process_data(string_data=unsafe_input, image_data=None)
-        processed = getattr(handler, "_FaultDetectionHandler__processed_electrical_data", None)
+        processed = getattr(
+            handler, "_FaultDetectionHandler__processed_electrical_data", None
+        )
         # If it didn't crash, then it should still be in a valid "safe" state
         assert processed is None or processed != "CRASH"
     except ValueError:
@@ -360,6 +379,23 @@ def test_present_results_fault_type_none_no_uncrash(mock_hotspot_cls, mock_rf_cl
     assert handler.result is None or handler.result.result is None
 
 
+def _make_strategy(pred_vector):
+    """
+    Create strategy without running __init__,
+    inject mock model + logger.
+    """
+
+    s = ImageHotspotStrategy.__new__(ImageHotspotStrategy)
+    setattr(s, "_ImageHotspotStrategy__IMAGE_SIZE", (224, 224))
+    setattr(s, "_ImageHotspotStrategy__logger", MagicMock())
+
+    model = MagicMock()
+    model.predict.return_value = np.array([pred_vector], dtype=np.float32)
+    setattr(s, "_ImageHotspotStrategy__model", model)
+
+    return s
+
+
 @pytest.fixture
 def client():
     """
@@ -373,10 +409,13 @@ def client():
 
 @patch("dashboard.api.handler")
 def test_api_predict_success(mocked_handler, client):
+    """
+    Test POST /predict returns JSON with expected keys.
+    """
 
     # Mock API start flow call
     mocked_handler.start_flow.return_value = MagicMock(result="Open Circuit",
-                                                       reading_confidence=0.91)
+                                                    reading_confidence=0.91)
     
     # Simulate sensor readings sent to API
     payload = {"vdc1": 1,
@@ -409,14 +448,17 @@ def test_api_predict_missing_json(client):
     assert resp.status_code == 400
 
 
-@patch("dashboard.api.handler") # Replace this with a MagicMock, and is the first argument
+# This is replaced with a MagicMock, and is the first argument
+@patch("dashboard.api.handler")
 def test_api_predict_missing_image_file(mocked_handler, client):
     """
     POST /predict-image without file should return 400.
     """
 
     # Would get MagicMock.post without mocked handler as an argument
-    resp = client.post("/predict-image", data={}, content_type="multipart/form-data")
+    resp = client.post(
+        "/predict-image", data={}, content_type="multipart/form-data"
+    )
     assert resp.status_code == 400
 
 
@@ -445,3 +487,29 @@ def test_api_predict_image_success(mocked_handler, client):
     assert out["status"] == "success"
     assert out["fault_type"] == "Hotspot"
     assert out["confidence"] == 0.87
+
+
+@patch("dashboard.api.os.remove")
+@patch("dashboard.api.os.path.exists", return_value=True)
+@patch("dashboard.api.handler")
+def test_api_predict_image_handler_exception(mocked_handler, mock_exists, mock_remove, client):
+
+    mocked_handler.start_flow.side_effect = RuntimeError("boom")
+
+    dummy_img = (io.BytesIO(b"fake image bytes"), "x.jpg")
+    data = {"image": dummy_img}
+
+    resp = client.post(
+        "/predict-image",
+        data=data,
+        content_type="multipart/form-data"
+    )
+
+    assert resp.status_code == 500
+    out = resp.get_json()
+    assert out is not None
+    assert out["status"] == "error"
+    assert "boom" in out["message"]
+
+    # Clean should exist if the file exists
+    assert mock_remove.called
