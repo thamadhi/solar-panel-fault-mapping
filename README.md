@@ -33,29 +33,29 @@ This project develops an AI-driven system for automated detection, localisation,
 
 The core features of the system are summarized as follows:
 
--   **Multimodal Fault Detection** using electrical time-series data and thermal/EL imagery
+-   **Multimodal Fault Detection** using electrical time-series data and thermal (hotspot) imagery
 -   **Precise Fault Localization** to identify the exact module or string with issues
 -   **Severity Assessment** quantifying power loss and economic impact
 -   **AI-Powered Rectification** with optimized repair recommendations
--   **Interactive Dashboard** for real-time monitoring and decision support
+-   **Interactive Dashboard** enabling fault classification, confidence analysis, and decision support through an intuitive interface.
 
 ## Components
 
 ### Fault Detection
 
-This component utilizes electrical data and drone imagery to identify various fault types including open-circuit, short-circuit, partial shading, and hotspot anomalies. It uses an ANN for electrical data and CNN for image analysis.
+This component utilizes electrical data and thermal imagery to identify various fault types including open-circuit, short-circuit, shadowing, and hotspot anomalies. It uses a Random Forest for electrical data and a CNN for image analysis.
 
 ### Fault Localization
 
-This component precisely locates the fault locations by fusing electrical pattern analysis with visual evidence from thermal and electroluminescence imagery. It produces an interactive fault map highlighting affected strings and modules.
+This component precisely locates the fault locations by fusing electrical pattern analysis with visual evidence from thermal imagery. It produces an interactive fault map highlighting affected strings and modules.
 
 ### Fault Severity
 
-The component quantifies fault impact using regression models, predicting power degradation rates, energy losses, and financial implications. This allows prioritized maintenance scheduling based on how severe the fault is.
+The component quantifies fault impact, predicting power degradation rates, energy losses, and financial implications. This allows prioritized maintenance scheduling based on how severe the fault is.
 
 ### Fault Rectification
 
-Using reinforcement learning optimization and decision trees, this component provides actionable repair guidance by giving step-by-step instructions, required resources, safety protocols, and estimated downtime.
+Using decision trees, this component provides actionable repair guidance by giving step-by-step instructions, required resources, safety protocols, and estimated downtime.
 
 ### Centralized Dashboard
 
@@ -64,17 +64,19 @@ A Streamlit-based dashboard provides a user-friendly interface for operators to 
 ## 🛠 Tech Stack
 
 -   **Backend**: Python
--   **Frontend**: Streamlit
+-   **Frontend**: Streamlit, CSS
 -   **Computer Vision**: OpenCV
 -   **Project Management**: Jira
 -   **Frameworks & Libraries**:
     -   Scikit-learn (ML algorithms, preprocessing)
-    -   TensorFlow / PyTorch (deep learning models)
+    -   TensorFlow (deep learning models)
     -   Google Colab (cloud-based notebooks)
     -   PyCharm, VS Code (IDE for development & debugging)
-    -   FastAPI (backend API integration)
+    -   Flask API (backend API integration)
     -   Windows OS / MacOS (for high-performance computing)
-    -   LaTeX / Word / Notion (documentation)
+    -   LaTeX / MS Word / Notion (documentation)
+    -   MLflow (model comparisons and performance tracking)
+    -   SHAP (for model explainability)
 
 ## Project Management Methodology
 
@@ -100,7 +102,7 @@ The project follows Agile methodology with the Scrum framework, which is managed
     -   [tests](./tests) - Component tests
     -   [.Rhistory](./.Rhistory) - Rhistory
     -   [README.md](./README.md) - Project documentation
-    -   [.gitignore](./.gitignore) - Git ignore
+    -   [.gitignore](./.gitignore) - Files to ignore
     -   [.CONTRIBUTING.md](./CONTRIBUTING.md) - Contributions
     -   [LICENSE](./LICENSE) - Project License
     -   [README.md](./README.md) - Project documentation
@@ -110,10 +112,10 @@ The project follows Agile methodology with the Scrum framework, which is managed
 
 | Component           | Model / Algorithm               |
 |---------------------|---------------------------------|
-| Fault Detection     | ANN / DenseNet201               |
+| Fault Detection     | Random Forest / DenseNet201     |
 | Fault Localization  | CNN + LSTM                      |
-| Fault Severity      | XGBoost / Random Forest         |
-| Fault Rectification | Decision Tree / Deep Q-Learning |
+| Fault Severity      | Random Forest                   |
+| Fault Rectification | Decision Tree                   |
 
 ## Clone the repository
 
