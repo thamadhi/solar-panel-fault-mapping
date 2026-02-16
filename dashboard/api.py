@@ -73,7 +73,6 @@ def predict_image():
             "status": "success",
             "fault_type": result.result,
             "confidence": result.reading_confidence,
-            "regions": result.result_readings
         }), 200
     
     except Exception as e:
