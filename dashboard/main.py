@@ -13,14 +13,12 @@ if "history" not in st.session_state:
     st.session_state.history = []
 
 # Setup paths
-MODEL_PATH = "models/best_neural_network.keras"
-SCALER_PATH = "models/ann_scaler.pkl"
+MODEL_PATH = "models/tuned_random_forest.pkl"
 
 @st.cache_resource  # Return the same cached instance to improve performance
 def load_handler():
     return FaultDetectionHandler(
-        electrical_model_path=MODEL_PATH,
-        scaler_path=SCALER_PATH
+        electrical_model_path=MODEL_PATH
     )
 
 handler = load_handler()
