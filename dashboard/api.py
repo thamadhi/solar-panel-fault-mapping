@@ -10,11 +10,13 @@ LoggerFactory.setup()
 # Create the flask app
 app = Flask(__name__)
 
-MODEL_PATH = "dashboard/models/tuned_random_forest.pkl"
+RANDOM_FOREST_MODEL_PATH = "dashboard/models/tuned_random_forest.pkl"
+DENSENET_MODEL_PATH = "dashboard/models/tuned_model.keras"
 
 # Load once
 handler = FaultDetectionHandler(
-    electrical_model_path=MODEL_PATH,
+    electrical_model_path=RANDOM_FOREST_MODEL_PATH,
+    image_model_path=DENSENET_MODEL_PATH
 )
 
 # Define API endpoint
@@ -55,6 +57,7 @@ def predict_image():
     if file.filename == '':
         return jsonify({"error": "No selected file."}), 400
     
+    temp_path = None
     try:
         # Save to a temporary file, suffix to identify as an image
         with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
@@ -63,10 +66,6 @@ def predict_image():
 
         # Run detection
         result = handler.start_flow(image_data=temp_path)
-
-        # Cleanup image after processing
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
 
         # Return JSON result
         return jsonify({
@@ -77,6 +76,11 @@ def predict_image():
     
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+    
+    finally:
+        # Always cleanup if file was created
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
 
 # Run the server
 if __name__ == "__main__":
