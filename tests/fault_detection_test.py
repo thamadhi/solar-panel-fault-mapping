@@ -1,5 +1,6 @@
 import tempfile
 import os
+import io
 
 # Isolate logic from heavy dependencies
 from unittest.mock import Mock, patch, MagicMock
@@ -96,6 +97,7 @@ def test_logger_setup_runs_once():
     The intent is that repeated calls should not duplicate handlers or cause
     unexpected side effects.
     """
+
     LoggerFactory.setup()
     LoggerFactory.setup()   # Must not duplicate
 
@@ -119,6 +121,7 @@ def test_apply_model_with_no_data():
     """
     Test `apply_model` does not set a fault type when no data was processed.
     """
+
     handler = FaultDetectionHandler(
         electrical_model_path="dashboard/models/tuned_random_forest.pkl",
     )
@@ -132,6 +135,7 @@ def test_feature_names():
     """
     Test `feature_names` returns the expected list of electrical features.
     """
+
     handler = FaultDetectionHandler(
         electrical_model_path="dashboard/models/tuned_random_forest.pkl"
     )
@@ -167,6 +171,7 @@ def test_apply_model_mock_ann(mock_factory, mock_ctx_cls, mock_rf_cls):
     This test should ensure that the handler can run model logic without
     loading a real Keras model file.
     """
+
     mock_rf = Mock()
     mock_rf_cls.return_value = mock_rf
 
@@ -201,6 +206,7 @@ def test_preprocess_image_data_valid_path():
 
     Uses a temporary file to avoid relying on repository image assets.
     """
+
     handler = FaultDetectionHandler(
         electrical_model_path="dashboard/models/tuned_random_forest.pkl"
     )
@@ -263,6 +269,7 @@ def test_present_results_sets_analysis_result():
 
     Handler's internal fields are pre-populated to simulate a complete run.
     """
+
     handler = FaultDetectionHandler(
         electrical_model_path="dashboard/models/tuned_random_forest.pkl"
     )
@@ -289,6 +296,7 @@ def test_start_flow_calls_pipeline_in_order(mocked_handler):
     start_flow should call:
     pre_process_data -> apply_model -> present_results
     """
+
     handler = mocked_handler
 
     with patch.object(handler, "pre_process_data") as pre, \
@@ -306,6 +314,7 @@ def test_pre_process_data_non_numeric_values():
     """
     Non-numeric values should be handled safely or raise a clear ValueError.
     """
+
     handler = FaultDetectionHandler(
         electrical_model_path="dashboard/models/tuned_random_forest.pkl"
     )
@@ -326,6 +335,29 @@ def test_pre_process_data_non_numeric_values():
         assert processed is None or processed != "CRASH"
     except ValueError:
         assert True
+
+@patch("dashboard.handlers.fault_detection_handler.ElectricalRF")
+@patch("dashboard.handlers.fault_detection_handler.ImageHotspotStrategy")
+def test_present_results_fault_type_none_no_uncrash(mock_hotspot_cls, mock_rf_cls):
+    """
+    present_results should not crash if fault_type is None.
+    """
+
+    mock_rf_cls.return_value = MagicMock()
+    mock_hotspot_cls.return_value =  MagicMock()
+
+    handler = FaultDetectionHandler(
+        electrical_model_path="fake.pkl"
+    )
+
+    # Simulate no fault
+    handler._FaultDetectionHandler__fault_type = None
+    handler._FaultDetectionHandler__last_run_details = {}
+
+    # Should not crash
+    handler.present_results()
+
+    assert handler.result is None or handler.result.result is None
 
 
 @pytest.fixture
@@ -366,3 +398,50 @@ def test_api_predict_success(mocked_handler, client):
     # Confirm API structure is correct
     assert "fault_type" in data
     assert "confidence" in data
+
+
+def test_api_predict_missing_json(client):
+    """
+    POST /predict without JSON should return 400.
+    """
+
+    resp = client.post("/predict")
+    assert resp.status_code == 400
+
+
+@patch("dashboard.api.handler") # Replace this with a MagicMock, and is the first argument
+def test_api_predict_missing_image_file(mocked_handler, client):
+    """
+    POST /predict-image without file should return 400.
+    """
+
+    # Would get MagicMock.post without mocked handler as an argument
+    resp = client.post("/predict-image", data={}, content_type="multipart/form-data")
+    assert resp.status_code == 400
+
+
+@patch("dashboard.api.handler")
+def test_api_predict_image_success(mocked_handler, client):
+    """
+    POST /predict-image with dummy file should return success.
+    """
+
+    mocked_handler.start_flow.return_value = MagicMock(
+        result="Hotspot", reading_confidence=0.87
+    )
+
+    dummy_img = (io.BytesIO(b"fake image bytes"), "x.jpg")
+
+    # Key as "image" since it is used to check in request.files in api.py
+    data = {"image": dummy_img}
+
+    resp = client.post(
+        "/predict-image", data=data, content_type="multipart/form-data"
+    )
+
+    assert resp.status_code == 200
+    out = resp.get_json()
+    assert out is not None
+    assert out["status"] == "success"
+    assert out["fault_type"] == "Hotspot"
+    assert out["confidence"] == 0.87
