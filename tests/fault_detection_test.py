@@ -379,6 +379,49 @@ def test_present_results_fault_type_none_no_uncrash(mock_hotspot_cls, mock_rf_cl
     assert handler.result is None or handler.result.result is None
 
 
+def test_pre_process_data_zero_denominator_safe(mocked_handler):
+    handler = mocked_handler
+
+    payload = {
+        "vdc1": 10, "vdc2": 0,
+        "idc1": 2, "idc2": 0,
+        "irradiance": 800, "temperature": 30
+    }
+
+    try:
+        handler.pre_process_data(string_data=payload, image_data=None)
+        processed = handler._FaultDetectionHandler__processed_electrical_data
+        assert processed is None or processed != "CRASH"
+    except ZeroDivisionError:
+        pytest.fail("Should not raise ZeroDivisionError")
+
+
+def test_pre_process_data_missing_keys(mocked_handler):
+    handler = mocked_handler
+    payload= {"vdc1": 10}   # Missing lots of features
+
+    handler.pre_process_data(string_data=payload, image_data=None)
+
+    processed = handler._FaultDetectionHandler__processed_electrical_data
+
+    assert processed is not None
+    assert isinstance(processed, list)
+    assert len(processed) == 1
+
+    row = processed[0]
+    assert isinstance(row, dict)
+
+    # Provided value should remain
+    assert row["vdc1"] == 10 or row["vdc1"] == 10.0
+
+    # Defaulted values
+    assert row.get("vdc2", 0.0) == 0.0
+    assert row.get("idc1", 0.0) == 0.0
+    assert row.get("idc2", 0.0) == 0.0
+    assert row.get("irradiance", 0.0) == 0.0
+    assert row.get("temperature", 25.0) == 25.0
+
+
 def _make_strategy(pred_vector):
     """
     Create strategy without running __init__,
