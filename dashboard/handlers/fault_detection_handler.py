@@ -6,7 +6,7 @@ from typing_extensions import override
 # Local/project imports
 from .abstract_component_flow_handler import AbstractComponentFlowHandler
 from core.analysis_result import AnalysisResult
-from .electrical_ann_strategy import ElectricalANN
+from .electrical_rf_strategy import ElectricalRF
 from .image_hotspot_strategy import ImageHotspotStrategy
 from core.fault import Fault
 from .detection_context import DetectionContext
@@ -24,9 +24,8 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
 
     def __init__(self,
-                 electrical_model_path: str = "models/best_neural_network.keras",
-                 image_model_path: str = "models/tuned_model.keras",
-                 scaler_path: str = "models/ann_scaler.pkl") -> None:
+                 electrical_model_path: str = "models/tuned_random_forest.pkl",
+                 image_model_path: str = "models/tuned_model.keras") -> None:
         """
         Initializes a FaultDetectionHandler with the required models.
         
@@ -36,7 +35,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         """
         super().__init__()
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
-        self.__electrical_strategy = ElectricalANN(electrical_model_path, scaler_path)
+        self.__electrical_strategy = ElectricalRF(electrical_model_path)
         self.__image_strategy = ImageHotspotStrategy(image_model_path)
         self.__fault_type: Optional[Fault] = None
         self.__processed_electrical_data: List[Dict[str, float]] = []
