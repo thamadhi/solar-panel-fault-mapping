@@ -5,8 +5,7 @@ from typing import Dict, Any, Optional, Tuple
 from typing_extensions import override
 from tensorflow import keras
 from .base_strategy import FaultDetectionStrategy
-from core.logger import LoggerFactory
-import streamlit as st
+from ..core.logger import LoggerFactory
 
 
 class ImageHotspotStrategy(FaultDetectionStrategy):
@@ -17,7 +16,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
     def __init__(self, model_path: str = "") -> None:
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
         self.__IMAGE_SIZE = (224, 224)  # Standard size for CNN models
-        self.__model = self._load_model("")
+        self.__model = self._load_model("models/tuned_model.keras")
 
 
     def _load_model(self, model_path: str) -> Optional[keras.Model]:
@@ -106,7 +105,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                 return {'fault_type': 'Normal Operation', 'confidence': 0.0,
                         'error': 'Image load failed'}
             
-            # get predictions
+            # Get predictions
             predictions = self.__model.predict(image, verbose=0)[0]
 
             # Binary classification
@@ -140,6 +139,5 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                     'error': str(e)
             }
 
-    @st.cache_resource
     def get_image_hotspot_strategy():
         return ImageHotspotStrategy()
