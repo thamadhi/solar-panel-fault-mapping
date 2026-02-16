@@ -3,6 +3,15 @@ import plotly.express as px
 import pandas as pd
 # Save the uploaded image into a temporary file since streamlit uses memory
 import tempfile
+import tensorflow as tf
+from tensorflow import keras
+import numpy as np
+import cv2
+
+
+@st.cache_resource
+def load_hotspot_model():
+    return keras.models.load_model("models/tuned_model.keras")
 
 
 def render_sidebar():
