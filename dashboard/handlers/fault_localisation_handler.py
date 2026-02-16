@@ -1,8 +1,6 @@
 from typing import List
-
 from abstract_component_flow_handler import AbstractComponentFlowHandler
 from core.analysis_result import AnalysisResult
-
 
 class FaultLocalisatiobHandler(AbstractComponentFlowHandler):
     def __init__(self):
@@ -19,4 +17,3 @@ class FaultLocalisatiobHandler(AbstractComponentFlowHandler):
     def _presentResults(self):
         self.result = AnalysisResult(object)
         print("Displaying results")
-

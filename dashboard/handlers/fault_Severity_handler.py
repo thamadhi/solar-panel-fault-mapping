@@ -1,5 +1,3 @@
-from typing import Optional
-
 from abstract_component_flow_handler import AbstractComponentFlowHandler
 from core.analysis_result import AnalysisResult
 
@@ -7,7 +5,6 @@ from core.analysis_result import AnalysisResult
 class FaultSeverityHandler(AbstractComponentFlowHandler):
     def __init__(self):
         super().__init__()
- 
         self.faultSeverity: str = "" 
 
     def _preProcessData(self):
@@ -19,4 +16,3 @@ class FaultSeverityHandler(AbstractComponentFlowHandler):
     def _presentResults(self):
         self.result = AnalysisResult(object)
         print("Displaying results")
-

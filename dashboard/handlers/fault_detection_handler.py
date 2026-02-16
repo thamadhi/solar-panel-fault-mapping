@@ -1,17 +1,18 @@
 # Standard libraries
 import os
-from typing import Any, Dict, List, Optional  # Typing hints
+from typing import Any, Dict, List, Optional
 from typing_extensions import override
 
 # Local/project imports
 from .abstract_component_flow_handler import AbstractComponentFlowHandler
-from core.analysis_result import AnalysisResult
-from .electrical_ann_strategy import ElectricalANN
+from ..core.analysis_result import AnalysisResult
+from .electrical_rf_strategy import ElectricalRF
 from .image_hotspot_strategy import ImageHotspotStrategy
-from core.fault import Fault
+from ..core.fault import Fault
 from .detection_context import DetectionContext
 from .fault_factory import FaultFactory
-from core.logger import LoggerFactory
+from ..core.logger import LoggerFactory
+# from .fault_observer import FaultObserver
 
 class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
@@ -23,9 +24,8 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
 
     def __init__(self,
-                 electrical_model_path: str = "models/best_ANN_2.20.keras",
-                 image_model_path: str = "models/tuned_model.keras",
-                 scaler_path: str = "models/ann_scaler.pkl") -> None:
+                 electrical_model_path: str = "models/tuned_random_forest.pkl",
+                 image_model_path: str = "models/tuned_model.keras") -> None:
         """
         Initializes a FaultDetectionHandler with the required models.
         
@@ -35,13 +35,18 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         """
         super().__init__()
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
-        self.__electrical_strategy = ElectricalANN(electrical_model_path, scaler_path)
+        self.__electrical_strategy = ElectricalRF(electrical_model_path)
         self.__image_strategy = ImageHotspotStrategy(image_model_path)
         self.__fault_type: Optional[Fault] = None
         self.__processed_electrical_data: List[Dict[str, float]] = []
         self.__processed_image_path: Optional[str] = None
         self.__detection_context = DetectionContext(self.__electrical_strategy)
         self.__result: Optional[AnalysisResult] = None
+        self.__feature_names = ['vdc1', 'vdc2', 'idc1', 'idc2',
+                                'irradiance', 'temperature',
+                                'power_string1', 'power_string2',
+                                'total_power', 
+                                'voltage_ratio', 'current_ratio']
         self.__last_run_details = {}    # Model outputs
 
 
@@ -122,6 +127,9 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             self.__fault_type = FaultFactory.create_fault(
                 main_fault['fault_type']
             )
+
+            # Notify all registered observers
+            # self._notify_observers()
         else:
             self.__logger.warning("No data available for fault detection.")
 
@@ -157,7 +165,6 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         if isinstance(string_data, list) and len(string_data) > 0:
             for item in string_data:
                 if isinstance(item, dict):
-                    print(item.items())
                     processed_item = {
                     'vdc1': float(item.get('vdc1', item.get('voltage_V', 0.0))),
                     'vdc2': float(item.get('vdc2', item.get('voltage_V', 0.0))),
@@ -187,3 +194,17 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     def fault_type(self) -> Optional[Fault]:
         """Returns the fault type"""
         return self.__fault_type
+
+
+    @property
+    def feature_names(self) -> List[str]:
+        return self.__feature_names
+
+
+    # def add_observer(self, observer: FaultObserver):
+    #     self.__observers.append(observer)
+
+
+    # def _notify_observers(self):
+    #     for obs in self.__observers:
+    #         obs.update(self.__fault_type)
