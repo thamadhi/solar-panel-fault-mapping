@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from core.logger import LoggerFactory
-from core.analysis_result import AnalysisResult
+from ..core.logger import LoggerFactory
+from ..core.analysis_result import AnalysisResult
 from typing import Any, final, Optional
 
 class AbstractComponentFlowHandler(ABC):
