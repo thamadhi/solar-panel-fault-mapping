@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
-from core.logger import LoggerFactory
-from handlers.fault_detection_handler import FaultDetectionHandler
+from dashboard.core.logger import LoggerFactory
+from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
 import os
 import tempfile
 
@@ -10,7 +10,7 @@ LoggerFactory.setup()
 # Create the flask app
 app = Flask(__name__)
 
-MODEL_PATH = "models/tuned_random_forest.pkl"
+MODEL_PATH = "dashboard/models/tuned_random_forest.pkl"
 
 # Load once
 handler = FaultDetectionHandler(
@@ -20,10 +20,29 @@ handler = FaultDetectionHandler(
 # Define API endpoint
 @app.route("/predict", methods=["POST"])
 def predict():
-    data = request.get_json()
 
-    # Expecitng features list
-    features = data['features']
+    data = request.get_json(silent=True)
+
+    if not data:
+        return jsonify({
+            "error": "No JSON body provided"
+        }), 400
+    
+    try:
+        # Run electrical detection
+        result = handler.start_flow(string_data=data)
+
+        return jsonify({
+            "status": "success",
+            "fault_type": result.result,
+            "confidence": result.reading_confidence
+        }), 200
+    
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
 
 
 @app.route("/predict-image", methods=["POST"])

@@ -7,6 +7,7 @@ from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
 from dashboard.core.logger import LoggerFactory
 import logging
 import pytest
+import json
 
 
 @pytest.fixture
@@ -325,3 +326,43 @@ def test_pre_process_data_non_numeric_values():
         assert processed is None or processed != "CRASH"
     except ValueError:
         assert True
+
+
+@pytest.fixture
+def client():
+    """
+    Flask test client
+    """
+
+    from dashboard.api import app
+    app.testing = True
+    return app.test_client()
+
+
+@patch("dashboard.api.handler")
+def test_api_predict_success(mocked_handler, client):
+
+    # Mock API start flow call
+    mocked_handler.start_flow.return_value = MagicMock(result="Open Circuit",
+                                                       reading_confidence=0.91)
+    
+    # Simulate sensor readings sent to API
+    payload = {"vdc1": 1,
+               "vdc2": 2,
+               "idc1": 1,
+               "idc2": 1,
+               "irradiance": 800,
+               "temperature": 30}
+    
+    # Simulate HTTP request
+    resp = client.post(
+        "/predict", data=json.dumps(payload), content_type="application/json"
+    )
+
+    assert resp.status_code  == 200
+    data = resp.get_json()  # Check if valid JSON
+    assert data is not None
+
+    # Confirm API structure is correct
+    assert "fault_type" in data
+    assert "confidence" in data
