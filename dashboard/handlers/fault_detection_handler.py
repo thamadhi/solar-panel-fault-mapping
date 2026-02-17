@@ -5,13 +5,13 @@ from typing_extensions import override
 
 # Local/project imports
 from .abstract_component_flow_handler import AbstractComponentFlowHandler
-from ..core.analysis_result import AnalysisResult
+from core.analysis_result import AnalysisResult
 from .electrical_rf_strategy import ElectricalRF
 from .image_hotspot_strategy import ImageHotspotStrategy
-from ..core.fault import Fault
+from core.fault import Fault
 from .detection_context import DetectionContext
 from .fault_factory import FaultFactory
-from ..core.logger import LoggerFactory
+from core.logger import LoggerFactory
 # from .fault_observer import FaultObserver
 
 class FaultDetectionHandler(AbstractComponentFlowHandler):
@@ -20,7 +20,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
     This called processes electrical data for detection of Open Circuit,
     Short Circuit, Shading faults.
-    It also processes thermal images for the detection of Hotspots Only
+    It also processes thermal images for the detection of Hotspots only
     """
 
     def __init__(self,
@@ -52,7 +52,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
     # Implement overridden methods
     @override
-    def pre_process_data(self, image_data: Any, string_data: Any) -> None:
+    def pre_process_data(self, image_data: Any = None, string_data: Any = None) -> None:
         """
         Pre-process input data for fault detection
 
@@ -109,7 +109,20 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         if self.__processed_electrical_data:
             self.__detection_context.set_strategy(self.__electrical_strategy)
             result = self.__detection_context.perform_detection(self.__processed_electrical_data)
-            detection_results.append(result)
+
+            # Unwrap if context returns (dict,) or {"result": dict}
+            if isinstance(result, tuple) and len(result) and isinstance(result[0], dict):
+                result = result[0]
+            if isinstance(result, dict) and "result" in result and isinstance(result["result"], dict):
+                result = result["result"]
+
+            self.__logger.info(f"[DEBUG] electrical result keys: {list(result.keys()) if isinstance(result, dict) else type(result)}")
+
+            if isinstance(result, dict):
+                detection_results.append(result)
+            else:
+                self.__logger.error(f"Unexpected electrical result type: {type(result)} -> {result}")
+
         
         # Apply image model if image data exists
         if self.__processed_image_path:

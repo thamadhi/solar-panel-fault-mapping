@@ -3,6 +3,12 @@ import plotly.express as px
 import pandas as pd
 # Save the uploaded image into a temporary file since streamlit uses memory
 import tempfile
+from tensorflow import keras
+
+
+@st.cache_resource
+def load_hotspot_model():
+    return keras.models.load_model("models/tuned_model.keras")
 
 
 def render_sidebar():
@@ -85,11 +91,11 @@ def render_csv_mode(tab1, handler):
         if csv_file:
             df = pd.read_csv(csv_file)
             with st.expander('Preview Uploaded Data'):
-                st.dataframe(df, use_container_width=True)
+                st.dataframe(df, width=True)
             
-            feature_names = handler.feature_names
+            raw_cols = ["vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature"]
 
-            missing = [c for c in feature_names if c not in df.columns]
+            missing = [c for c in raw_cols if c not in df.columns]
 
             if missing:
                 st.error(f"🚨 Missing required columns: {', '.join(missing)}")
@@ -97,7 +103,7 @@ def render_csv_mode(tab1, handler):
                 if st.button("Analyze CSV Data", key="btn_csv"):
 
                     # Each row is now a record
-                    data = df[feature_names].to_dict("records")
+                    data = df[raw_cols].to_dict("records")
 
                     # Send to the detection pipeline
                     result = handler.start_flow(string_data=data)
@@ -143,7 +149,7 @@ def render_image_mode(tab3, handler):
             if image_file:
 
                 # Show the uploaded image
-                st.image(image_file, caption="Preview Of Uploaded Image", use_container_width=True)
+                st.image(image_file, caption="Preview Of Uploaded Image", width=True)
 
         with det_col:
             if image_file:
