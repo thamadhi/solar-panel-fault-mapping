@@ -1,4 +1,4 @@
-from ..core.fault import Fault, Hotspot, OpenCircuit, Shadowing, ShortCircuit
+from core.fault import Fault, Hotspot, OpenCircuit, Shadowing, ShortCircuit
 
 
 class FaultFactory:
