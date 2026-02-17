@@ -1,5 +1,5 @@
 from .base_strategy import FaultDetectionStrategy
-from typing import Any
+from typing import Any, Dict
 
 
 class DetectionContext:
@@ -16,6 +16,6 @@ class DetectionContext:
         self.__strategy = strategy
 
 
-    def perform_detection(self, data: Any) -> dict:
+    def perform_detection(self, data: Any) -> Dict[str, Any]:
         """Method called by the context for fault detection"""
         return self.__strategy.detect(data)
