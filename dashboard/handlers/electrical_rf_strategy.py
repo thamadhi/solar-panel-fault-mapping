@@ -3,7 +3,7 @@ import numpy as np
 from typing import Dict, Any, List
 from typing_extensions import override
 from .base_strategy import FaultDetectionStrategy
-from ..core.logger import LoggerFactory
+from core.logger import LoggerFactory
 import joblib
 import pandas as pd
 
@@ -105,9 +105,9 @@ class ElectricalRF(FaultDetectionStrategy):
 
         try:
             X = self._to_feature_df(data)
-
-            y_pred = self.__model.predict(X)    # Labels
-            y_proba = self.__model.predict_proba(X)  # Probabilities
+            X_np = X.to_numpy()
+            y_pred = self.__model.predict(X_np)    # Labels
+            y_proba = self.__model.predict_proba(X_np)  # Probabilities
         except Exception as e:
             self.__logger.error(f"Random Forest prediction error: {e}")
             return {"fault_type": "Normal Operation", "confidence": 0.0, "error": str(e)}
