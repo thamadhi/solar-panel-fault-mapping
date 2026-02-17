@@ -115,9 +115,39 @@ def test_apply_model(mocked_handler):
         assert handler.fault_type is not None
 
 
-def test_present_results():
+def test_present_results(mocked_handler):
     """Test that `present_results` produces a valid analysis result object."""
-    pass
+
+    handler = mocked_handler
+
+    mock_fault = MagicMock()
+    mock_fault.get_fault_type = "Short-Circuit"
+
+    handler._FaultDetectionHandler__fault_type = mock_fault
+    handler._FaultDetectionHandler__last_run_details = {
+        "confidence": 0.77
+    }
+
+    handler.present_results()
+
+    assert handler.result is not None
+    assert handler.result.result == "Short-Circuit"
+    assert handler.result.reading_confidence == 0.77
+    assert isinstance(handler.result.result_readings, list)
+
+
+def test_present_results_no_fault(mocked_handler):
+    """Test that `present_results` returns none if no faults are present."""
+
+    handler = mocked_handler
+
+    handler._FaultDetectionHandler__fault_type = None
+    handler._FaultDetectionHandler__last_run_details = {
+        "confidence": 0.93
+    }
+
+    handler.present_results()
+    assert handler.result is None
 
 
 @patch("dashboard.handlers.fault_detection_handler.ElectricalRF")

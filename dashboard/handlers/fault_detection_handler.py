@@ -20,7 +20,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
     This called processes electrical data for detection of Open Circuit,
     Short Circuit, Shading faults.
-    It also processes thermal images for the detection of Hotspots Only
+    It also processes thermal images for the detection of Hotspots only
     """
 
     def __init__(self,
@@ -140,8 +140,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         if self.__fault_type:
             self.result = AnalysisResult(
                 result=self.__fault_type.get_fault_type,
-                reading_confidence=self.__last_run_details.get('confidence', 0.0),
-                result_readings=self.__last_run_details.get("detailed_predictions", [])
+                reading_confidence=self.__last_run_details.get('confidence', 0.0)
             )
         else:
             self.result = None
