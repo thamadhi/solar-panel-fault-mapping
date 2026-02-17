@@ -1,8 +1,11 @@
 from flask import Flask, request, jsonify
-from dashboard.core.logger import LoggerFactory
-from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
+from core.logger import LoggerFactory
+from handlers.fault_detection_handler import FaultDetectionHandler
+# from dashboard.core.logger import LoggerFactory
+# from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
 import os
 import tempfile
+from pathlib import Path
 
 # Configure logging once
 LoggerFactory.setup()
@@ -10,8 +13,9 @@ LoggerFactory.setup()
 # Create the flask app
 app = Flask(__name__)
 
-RANDOM_FOREST_MODEL_PATH = "dashboard/models/tuned_random_forest.pkl"
-DENSENET_MODEL_PATH = "dashboard/models/tuned_model.keras"
+BASE_DIR = Path(__file__).resolve().parent
+RANDOM_FOREST_MODEL_PATH = str(BASE_DIR / "models" / "tuned_random_forest.pkl")
+DENSENET_MODEL_PATH = str(BASE_DIR / "models" / "tuned_model.keras")
 
 # Load once
 handler = FaultDetectionHandler(

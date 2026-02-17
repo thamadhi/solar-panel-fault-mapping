@@ -3,22 +3,22 @@ import numpy as np
 from typing import Dict, Any, List
 from typing_extensions import override
 from .base_strategy import FaultDetectionStrategy
-from ..core.logger import LoggerFactory
+from core.logger import LoggerFactory
 import joblib
 import pandas as pd
 
 
 class ElectricalRF(FaultDetectionStrategy):
     """
-    Builds the ANN for electrical fault detection
+    Builds the Random Forest for electrical fault detection
     """
 
     def __init__(self, model_path: str) -> None:
         """
-        Initializes the ANN
+        Initializes the Random Forest.
 
         Args:
-            model_path (str): Path of the neural network
+            model_path (str): Path of the random forest model.
         """
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
         
@@ -41,13 +41,13 @@ class ElectricalRF(FaultDetectionStrategy):
 
     def _to_feature_df(self, data: List[Dict[str, float]]) -> pd.DataFrame:
         """
-        Extracts features from electrical data for ANN
+        Extracts features from electrical data for the random forest.
 
         Args:
-            data (List[Dict]): The data containing the features
+            data (List[Dict]): The data containing the features.
 
         Returns:
-            np.ndarray: Feature matrix
+            pd.DataFrame: Dataframe containing all the features.
         """
 
         # Get raw features
@@ -79,17 +79,16 @@ class ElectricalRF(FaultDetectionStrategy):
         return X
 
 
-
     @override
     def detect(self, data: List[Dict[str, float]]) -> Dict[str, Any]:
         """
-        Makes predictions for the ANN model
+        Makes predictions for the Random Forest model.
 
         Args:
             data (List[Dict[str, float]]): List of the electrical measurements
 
         Returns:
-            Dictionary with prediction results
+            Dictionary with prediction results.
         """
         if self.__model is None:
             return {
@@ -104,12 +103,11 @@ class ElectricalRF(FaultDetectionStrategy):
                 'confidence': 0.0
             }
 
-
         try:
             X = self._to_feature_df(data)
-
-            y_pred = self.__model.predict(X)    # Labels
-            y_proba = self.__model.predict_proba(X)  # Probabilities
+            X_np = X.to_numpy()
+            y_pred = self.__model.predict(X_np)    # Labels
+            y_proba = self.__model.predict_proba(X_np)  # Probabilities
         except Exception as e:
             self.__logger.error(f"Random Forest prediction error: {e}")
             return {"fault_type": "Normal Operation", "confidence": 0.0, "error": str(e)}
