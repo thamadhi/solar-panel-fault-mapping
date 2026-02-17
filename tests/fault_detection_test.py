@@ -49,15 +49,70 @@ def mocked_handler():
         return handler
 
 
-def test_pre_process_data():
+def test_pre_process_data(mocked_handler):
     """Test that `pre_process_data` handles inputs and updates
     handler state."""
-    pass
+
+    handler = mocked_handler
+
+    payload = {
+        "vdc1": 10,
+        "vdc2": 20,
+        "idc1": 2,
+        "idc2": 4,
+        "irradiance": 800,
+        "temperature": 30,
+    }
+
+    handler.pre_process_data(string_data=payload, image_data=None)
+
+    processed = getattr(handler, "_FaultDetectionHandler__processed_electrical_data", None)
+    assert processed is not None
+    assert isinstance(processed, list)
+    assert len(processed) == 1
+    assert isinstance(processed[0], dict)
+
+    row = processed[0]
+
+    # Base features exist
+    for k in ["vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature"]:
+        assert k in row
 
 
-def test_apply_model():
+def test_apply_model(mocked_handler):
     """Test that `apply_model` runs detection and selects a fault type."""
-    pass
+    
+    handler = mocked_handler
+
+    # Pretend we already have processed electrical data
+    handler._FaultDetectionHandler__processed_electrical_data = [{"vdc1": 1.0}]
+    handler._FaultDetectionHandler__processed_image_path = None
+
+    # Mock the existing detection_context instance inside the handler
+    handler._FaultDetectionHandler__detection_context = MagicMock()
+    handler._FaultDetectionHandler__detection_context.perform_detection.return_value = {
+        "fault_type": "Open Circuit",
+        "confidence": 0.91
+    }
+
+    # Patch the static/class method
+    with patch(
+        "dashboard.handlers.fault_detection_handler.FaultFactory.create_fault"
+    ) as create_fault:
+
+        fake_fault = MagicMock()
+        fake_fault.get_fault_type = "Open Circuit"
+        create_fault.return_value = fake_fault
+
+        handler.apply_model()
+
+        # Should create a fault based on max confidence result
+        create_fault.assert_called_once_with("Open Circuit")
+
+        last = handler._FaultDetectionHandler__last_run_details
+        assert last["fault_type"] == "Open Circuit"
+        assert last["confidence"] == 0.91
+        assert handler.fault_type is not None
 
 
 def test_present_results():
@@ -556,3 +611,36 @@ def test_api_predict_image_handler_exception(mocked_handler, mock_exists, mock_r
 
     # Clean should exist if the file exists
     assert mock_remove.called
+
+
+@patch("dashboard.api.handler")
+def test_api_predict_image_emoty_filename(mocked_handler, client):
+    """
+    Check if empty filenames are rejected
+    """
+    dummy_img = (io.BytesIO(b"fake image bytes"), "")
+    resp = client.post(
+        "/predict-image",
+        data={"image": dummy_img},
+        content_type="multipart/form-data"
+    )
+
+    assert resp.status_code == 400
+
+
+@patch("dashboard.api.os.remove")
+@patch("dashboard.api.os.path.exists", return_value=True)
+@patch("dashboard.api.handler")
+def test_api_predict_image_handler_exception_cleans_up(mocked_handler, mock_exists, mock_remove, client):
+
+    mocked_handler.start_flow.side_effect = RuntimeError("boom")
+
+    dummy_img = (io.BytesIO(b"fake image bytes"), "x.jpg")
+    resp = client.post(
+        "/predict-image",
+        data={"image": dummy_img},
+        content_type="multipart/form-data"
+    )
+
+    assert resp.status_code == 500
+    assert mock_remove.call_count == 1
