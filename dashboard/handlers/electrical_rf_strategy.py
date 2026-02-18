@@ -30,8 +30,10 @@ class ElectricalRF(FaultDetectionStrategy):
 
         self.__class_names = self.__model.classes_
 
+        # Raw features entered by the user
         self.__raw_cols = ["vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature"]
 
+        # Required features for the model
         self.__feature_order = [
             "vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature",
             "power_string1", "power_string2", "total_power",
