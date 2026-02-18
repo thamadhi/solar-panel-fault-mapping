@@ -4,11 +4,56 @@ import pandas as pd
 # Save the uploaded image into a temporary file since streamlit uses memory
 import tempfile
 from tensorflow import keras
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
 
 @st.cache_resource
 def load_hotspot_model():
     return keras.models.load_model("models/tuned_model.keras")
+
+
+def selectable_table(df: pd.DataFrame) -> None:
+    """
+    Creates an interactive selectable grid and allows the user to select
+    one row for analysis.
+
+    Args:
+        df (pd.DataFrame): The dataframe being displayed.
+    """
+
+    # Prepare the table to be interactive
+    gb = GridOptionsBuilder.from_dataframe(df)
+
+    # Enable default column settings
+    gb.configure_default_column(
+        filter=True,
+        sortable=True,  # Sort columns
+        resizable=True  # Drag column width
+    )
+
+    # Page size adjusted to screen size
+    gb.configure_pagination(paginationAutoPageSize=True)
+
+    # Allow row selection
+    gb.configure_selection(
+        selection_mode="single",
+        use_checkbox=True
+    )
+
+    # Convert to config dictionary
+    grid_options = gb.build()
+
+    # Create the AgGrid table
+    grid = AgGrid(
+        df.reset_index(drop=False),
+        gridOptions=grid_options,
+
+        # Re-run script when selection changes
+        update_mode=GridUpdateMode.SELECTION_CHANGED,
+        data_return_mode="AS_INPUT",    # Exactly as shown in grid
+        fit_columns_on_grid_load=True,
+        theme="streamlit"
+    )
 
 
 def render_sidebar():
