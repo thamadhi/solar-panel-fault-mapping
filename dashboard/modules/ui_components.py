@@ -5,14 +5,58 @@ import pandas as pd
 import tempfile
 from tensorflow import keras
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
+import joblib
+import numpy as np
+import shap
 
+
+FRIENDLY = {
+    "vdc1": "String 1 voltage (V)",
+    "vdc2": "String 2 voltage (V)",
+    "idc1": "String 1 current (A)",
+    "idc2": "String 2 current (A)",
+    "irradiance": "Irradiance",
+    "temperature": "Temperature",
+    "power_string1": "String 1 power (V×A)",
+    "power_string2": "String 2 power (V×A)",
+    "total_power": "Total power",
+    "voltage_ratio": "Voltage ratio (vdc1/vdc2)",
+    "current_ratio": "Current ratio (idc1/idc2)",
+}
 
 @st.cache_resource
 def load_hotspot_model():
     return keras.models.load_model("models/tuned_model.keras")
 
 
-def selectable_table(df: pd.DataFrame) -> None:
+@st.cache_resource
+def load_electrical_model():
+    return joblib.load("models/tuned_random_forest.pkl")
+
+
+def build_electrical_feature_df(df_raw: pd.DataFrame) -> pd.DataFrame:
+    """
+    Build the engineered features for the model
+    """
+
+    X = df_raw.copy()
+
+    # Engineer features
+    X["power_string1"] = X["vdc1"] * X["idc1"]
+    X["power_string2"] = X["vdc2"] * X["idc2"]
+    X["total_power"] = X["power_string1"] + X["power_string2"]
+    X["voltage_ratio"] = X["vdc1"] / (X["idc2"] + 1e-9)
+    X["power_string1"] = X["vdc1"] / (X["idc1"] + 1e-9)
+
+    feature_order = [
+        "vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature",
+        "power_string1", "power_string2", "total_power",
+        "voltage_ratio", "current_ratio"
+    ]
+    return X[feature_order]
+
+
+def selectable_table(df: pd.DataFrame, key: str = "grid") -> None:
     """
     Creates an interactive selectable grid and allows the user to select
     one row for analysis.
@@ -52,8 +96,61 @@ def selectable_table(df: pd.DataFrame) -> None:
         update_mode=GridUpdateMode.SELECTION_CHANGED,
         data_return_mode="AS_INPUT",    # Exactly as shown in grid
         fit_columns_on_grid_load=True,
-        theme="streamlit"
+        theme="streamlit",
+        key=key
     )
+
+    selected = grid.get("selected_rows", None)
+
+    if isinstance(selected, list):
+        if len(selected) > 0 and isinstance(selected[0], dict) and "index" \
+        in selected[0]:
+            return int(selected[0]["index"])
+        return st.session_state.get("selected_row_idx", 0)
+    
+    # Fallback
+    return st.session_state.get("selected_row_idx", 0)
+
+
+def compute_shap(model, X: pd.DataFrame, row_idx: int):
+
+    x_row = X.iloc[[row_idx]]
+    x_np = x_row.to_numpy()
+
+    proba = model.predict(x_np)[0]
+    class_idx = int(np.argmax(proba))
+    pred_label = str(model.classes_[class_idx])
+    confidence = float(proba[class_idx])
+
+    proba = model.predict_proba(X.iloc[[row_idx]]).to_numpy()[0]
+    pairs = list(zip(model.classes_, proba))
+    pairs.sort(key=lambda x: x[1], reverse=True)
+
+    st.write(f"Top predictions: **{pairs[0][0]} ({pairs[0][1]:.1%})**, "
+             f"2nd: **{pairs[1][0]} ({pairs[1][1]})**")
+    
+    if pairs[0][1] < 0.60:
+        st.warning("Low confidence - treat this result as uncertain.")
+
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(x_row)
+
+    # Multi class returns list[n_classes] each (n_samples, n_features)
+    if isinstance(shap_values, list):
+        sv = np.array(shap_values[class_idx])[0]    # (n_features,)
+        base = explainer.expected_value[class_idx]
+    else:
+        sv = np.array(shap_values)
+
+        # (n_samples, n_features, n_classes)
+        if sv.ndim == 3:
+            sv = sv[0, :, class_idx]
+            base = explainer.expected_value[class_idx]
+        else:   # Binary fallback
+            sv = sv[0]
+            base = explainer.expected_value
+
+    return pred_label, confidence, sv, base
 
 
 def render_sidebar():
