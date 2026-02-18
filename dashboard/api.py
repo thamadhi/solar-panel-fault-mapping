@@ -13,11 +13,12 @@ LoggerFactory.setup()
 # Create the flask app
 app = Flask(__name__)
 
+# Setup paths for models
 BASE_DIR = Path(__file__).resolve().parent
 RANDOM_FOREST_MODEL_PATH = str(BASE_DIR / "models" / "tuned_random_forest.pkl")
 DENSENET_MODEL_PATH = str(BASE_DIR / "models" / "tuned_model.keras")
 
-# Load once
+# Load fault detection handler once
 handler = FaultDetectionHandler(
     electrical_model_path=RANDOM_FOREST_MODEL_PATH,
     image_model_path=DENSENET_MODEL_PATH
@@ -26,9 +27,13 @@ handler = FaultDetectionHandler(
 # Define API endpoint
 @app.route("/predict", methods=["POST"])
 def predict():
+    """
+    Handles the electrical data inputs from the user.
+    """
 
     data = request.get_json(silent=True)
 
+    # If no data was provided
     if not data:
         return jsonify({
             "error": "No JSON body provided"
@@ -53,11 +58,16 @@ def predict():
 
 @app.route("/predict-image", methods=["POST"])
 def predict_image():
+    """
+    Handles image loading and prediction logic within the application.
+    """
+
     if 'image' not in request.files:
         return jsonify({"error": "No image in this request."}), 400
     
     file = request.files['image']
 
+    # Check if a file was uploaded or not
     if file.filename == '':
         return jsonify({"error": "No selected file."}), 400
     

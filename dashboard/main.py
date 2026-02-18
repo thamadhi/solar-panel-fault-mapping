@@ -13,9 +13,8 @@ render_css("assets/styles.css")
 if "history" not in st.session_state:
     st.session_state.history = []
 
-BASE_DIR = Path(__file__).resolve().parent
-
 # Setup paths
+BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = str(BASE_DIR / "models" / "tuned_random_forest.pkl")
 
 @st.cache_resource  # Return the same cached instance to improve performance
@@ -24,6 +23,7 @@ def load_handler():
         electrical_model_path=MODEL_PATH
     )
 
+# Load handlers and all other UI components
 handler = load_handler()
 render_sidebar()
 
