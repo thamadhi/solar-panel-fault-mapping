@@ -47,7 +47,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
                                 'power_string1', 'power_string2',
                                 'total_power', 
                                 'voltage_ratio', 'current_ratio']
-        self.__last_run_details = {}    # Model outputs
+        self.__last_run_details = {}    # Stores model outputs for each run
 
 
     # Implement overridden methods
@@ -172,6 +172,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         """
         processed = []
 
+        # Check if electrical data was uploaded
         if string_data is None:
             return processed
         
@@ -200,7 +201,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             }         
             processed.append(processed_item)
 
-        return processed           
+        return processed
 
 
     @property

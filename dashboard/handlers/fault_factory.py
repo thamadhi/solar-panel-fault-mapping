@@ -21,6 +21,7 @@ class FaultFactory:
             Fault: An instance of the appropriate fault subclass
             initialized with the given confidence.
         """
+
         mapping = {
             'Open Circuit': OpenCircuit,
             'Short-Circuit': ShortCircuit,
