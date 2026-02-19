@@ -8,8 +8,10 @@ from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 import joblib
 import numpy as np
 import shap
+import matplotlib.pyplot as plt
 
 
+# Map the columns as UI-friendly
 FRIENDLY = {
     "vdc1": "String 1 voltage (V)",
     "vdc2": "String 2 voltage (V)",
@@ -45,8 +47,8 @@ def build_electrical_feature_df(df_raw: pd.DataFrame) -> pd.DataFrame:
     X["power_string1"] = X["vdc1"] * X["idc1"]
     X["power_string2"] = X["vdc2"] * X["idc2"]
     X["total_power"] = X["power_string1"] + X["power_string2"]
-    X["voltage_ratio"] = X["vdc1"] / (X["idc2"] + 1e-9)
-    X["power_string1"] = X["vdc1"] / (X["idc1"] + 1e-9)
+    X["voltage_ratio"] = X["vdc1"] / (X["vdc2"] + 1e-9)
+    X["current_ratio"] = X["idc1"] / (X["idc2"] + 1e-9)
 
     feature_order = [
         "vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature",
@@ -56,7 +58,120 @@ def build_electrical_feature_df(df_raw: pd.DataFrame) -> pd.DataFrame:
     return X[feature_order]
 
 
-def selectable_table(df: pd.DataFrame, key: str = "grid") -> None:
+def render_bullet_points(
+        contrib_df: pd.DataFrame, pred_label: str, k: int = 4
+) -> list[str]:
+    
+    bullets = []
+    top = contrib_df.head(k)
+
+    for _, row in top.iterrows():
+        feat = str[row["feature"]]
+        value = row["value"]
+        impact = float[row["impact"]]
+
+        name = FRIENDLY.get(feat, feat)
+
+        # Direction based on SHAP sign
+        if impact >= 0:
+            verb = "pushes forward"
+        else:
+            verb = "pushes away from"
+
+        # Helper language
+        if feat in (
+            "total_power", "power_string1", "power_string2", "idc1", "idc2"
+        ):
+            level = "higher/lower than expected"
+        elif feat in ("voltage_ratio", "current_ratio"):
+            level = "unbalanced / ratio is off"
+        elif feat in ("irradiance", "temperature"):
+            level = "environmental condition"
+        else:
+            level = "important signal"
+
+        bullets.append(
+            f"**{name}** = `{value:.3f}` → {level} → {verb} **{pred_label}** (impact `{impact:+.3f}`)"
+        )
+    return bullets
+
+
+def topk_contributors(feature_names, shap_vals_1d, x_row_1d, k=5):
+    order = np.argsort(np.abs(shap_vals_1d))[::-1][:k]
+    rows = []
+
+    for i in order:
+        rows.append({
+            "feature": feature_names[i],
+            "value": float(x_row_1d[i]),
+            "impact": float(shap_vals_1d[i]),
+            "direction": "pushes forward" if shap_vals_1d[i] >= 0 else \
+                "pushes away"
+        })
+    return pd.DataFrame(rows)
+
+
+def render_shap_explainability_section(raw_df: pd.DataFrame) -> None:
+    """
+    Renders the SHAP plots for the user.
+
+    Args:
+        raw_df (pd.DataFrame): The raw CSV file entered by the user.
+
+    Returns:
+        None
+    """
+
+    st.subheader("Explainability (Electrical Model)")
+
+    model = load_electrical_model()
+
+    # Build features
+    X = build_electrical_feature_df(raw_df)
+    feature_names = list(X.columns)
+
+    # Choose which row/string to explain
+    row_idx = st.selectbox(
+        "Select string (row index) to explain",
+        options=list(range(len(raw_df))),
+        index=0
+    )
+
+    pred_label, conf, sv, base = compute_shap(model, X, row_idx=row_idx)
+
+    st.markdown(f"**Explaining row:** `{row_idx}`")
+    st.success(f"Predicted: {pred_label} | Confidence: **{conf:1%}**")
+
+    # Top contributors table
+    contrib_df = topk_contributors(feature_names, sv, X.iloc[row_idx].to_numpy(), k=8)
+    st.dataframe(contrib_df)
+
+    # Plotly bar chart
+    bar_df = contrib_df.copy()
+    bar_df["abs_impact"] = bar_df["impact"].abs()
+    fig = px.bar(
+        bar_df.sort_values("abs_impact", ascending=True),
+        x="impact",
+        y="feature",
+        orientation="h",
+        title="Top feature impacts (SHAP)"
+    )
+    st.plotly_chart(fig, width="stretch")
+
+    # Waterfall plot
+    with st.expander("Show waterfall plot"):
+        exp = shap.Explanation(
+            values=sv,
+            base_values=base,
+            data=X.iloc[row_idx].to_numpy(),
+            feature_names=feature_names
+        )
+        plt.figure()
+        shap.plots.waterfall(exp, max_display=10, show=False)
+        st.pyplot(plt.gcf(), clear_figure=True)
+
+
+def selectable_table(df: pd.DataFrame, key: str = "grid") -> int:
     """
     Creates an interactive selectable grid and allows the user to select
     one row for analysis.
@@ -100,6 +215,7 @@ def selectable_table(df: pd.DataFrame, key: str = "grid") -> None:
         key=key
     )
 
+    # Return selected row index
     selected = grid.get("selected_rows", None)
 
     if isinstance(selected, list):
@@ -108,31 +224,46 @@ def selectable_table(df: pd.DataFrame, key: str = "grid") -> None:
             return int(selected[0]["index"])
         return st.session_state.get("selected_row_idx", 0)
     
-    # Fallback
+    # If nothing is selected
     return st.session_state.get("selected_row_idx", 0)
 
 
 def compute_shap(model, X: pd.DataFrame, row_idx: int):
+    """
+    Computes the SHAP values for the selected row.
 
+    Args:
+        model:
+        X (pd.DataFrame):
+        row_idx (int):
+
+    Returns:
+        None
+    """
+
+    # Get the row
     x_row = X.iloc[[row_idx]]
     x_np = x_row.to_numpy()
 
-    proba = model.predict(x_np)[0]
+    proba = model.predict_proba(x_np)[0]
     class_idx = int(np.argmax(proba))
     pred_label = str(model.classes_[class_idx])
     confidence = float(proba[class_idx])
 
     proba = model.predict_proba(X.iloc[[row_idx]]).to_numpy()[0]
     pairs = list(zip(model.classes_, proba))
+
+    # Sort by probability (highest first)
     pairs.sort(key=lambda x: x[1], reverse=True)
 
+    # Display the top 2 predictions
     st.write(f"Top predictions: **{pairs[0][0]} ({pairs[0][1]:.1%})**, "
-             f"2nd: **{pairs[1][0]} ({pairs[1][1]})**")
+            f"2nd: **{pairs[1][0]} ({pairs[1][1]:.1%})**")
     
     if pairs[0][1] < 0.60:
         st.warning("Low confidence - treat this result as uncertain.")
 
-    explainer = shap.TreeExplainer(model)
+    explainer = shap.TreeExplainer(model)   # For tree based models
     shap_values = explainer.shap_values(x_row)
 
     # Multi class returns list[n_classes] each (n_samples, n_features)
