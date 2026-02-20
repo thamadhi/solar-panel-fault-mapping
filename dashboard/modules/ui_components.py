@@ -9,7 +9,7 @@ import joblib
 import numpy as np
 import shap
 import matplotlib.pyplot as plt
-from db import init_db, insert_prediction, fetch_latest
+from db import insert_prediction, fetch_latest
 import json
 
 
@@ -69,9 +69,9 @@ def render_bullet_points(
     top = contrib_df.head(k)
 
     for _, row in top.iterrows():
-        feat = str[row["feature"]]
+        feat = str(row["feature"])
         value = row["value"]
-        impact = float[row["impact"]]
+        impact = float(row["impact"])
 
         name = FRIENDLY.get(feat, feat)
 
@@ -174,6 +174,62 @@ def render_shap_explainability_section(raw_df: pd.DataFrame) -> None:
         st.pyplot(plt.gcf(), clear_figure=True)
 
 
+def render_shap_for_row(raw_df: pd.DataFrame, row_idx: int):
+
+    st.subheader("Explainability")
+
+    model = load_electrical_model()
+    X = build_electrical_feature_df(raw_df)
+    feature_names = list(X.columns)
+
+    # Clamp row index safely
+    if len(raw_df) == 0:
+        st.warning("No rows to explain.")
+        return
+    row_idx = max(0, min(int(row_idx), len(raw_df) - 1))
+
+    pred_label, conf, sv, base = compute_shap(model, X, row_idx=row_idx)
+
+    st.markdown(f"**Explaining row:** `{row_idx}`")
+    st.success(f"Predicted: **{pred_label}**  |  Confidence: **{conf:.1%}**")
+
+    contrib_df = topk_contributors(feature_names, sv, X.iloc[row_idx].to_numpy(), k=8)
+
+    # Why the system/model says so
+    st.markdown("### Why the system decided this")
+    why = render_bullet_points(contrib_df, pred_label, k=5)
+    for b in why:
+        st.markdown(f"- {b}")
+
+    st.dataframe(contrib_df, width="stretch")
+
+
+    # Plotly bar
+    bar_df = contrib_df.copy()
+    bar_df["abs_impact"] = bar_df["impact"].abs()
+    fig = px.bar(
+        bar_df.sort_values("abs_impact", ascending=True),
+        x="impact",
+        y="feature",
+        orientation="h",
+        title="Top feature impacts"
+    )
+    st.plotly_chart(fig, width="stretch")
+
+
+    # Waterfall plot
+    with st.expander("Show waterfall plot"):
+        exp = shap.Explanation(
+            values=sv,
+            base_values=base,
+            data=X.iloc[row_idx].to_numpy(),
+            feature_names=feature_names
+        )
+        plt.figure()
+        shap.plots.waterfall(exp, max_display=10, show=False)
+        st.pyplot(plt.gcf(), clear_figure=True)
+
+
 def selectable_table(df: pd.DataFrame, key: str = "grid") -> int:
     """
     Creates an interactive selectable grid and allows the user to select
@@ -221,6 +277,11 @@ def selectable_table(df: pd.DataFrame, key: str = "grid") -> int:
     # Return selected row index
     selected = grid.get("selected_rows", None)
 
+    if isinstance(selected, pd.DataFrame):
+        if not selected.empty and "index" in selected.columns:
+            return int(selected.iloc[0]["index"])
+        return st.session_state.get("selected_row_idx", 0)
+
     if isinstance(selected, list):
         if len(selected) > 0 and isinstance(selected[0], dict) and "index" \
         in selected[0]:
@@ -253,7 +314,7 @@ def compute_shap(model, X: pd.DataFrame, row_idx: int):
     pred_label = str(model.classes_[class_idx])
     confidence = float(proba[class_idx])
 
-    proba = model.predict_proba(X.iloc[[row_idx]]).to_numpy()[0]
+    proba = model.predict_proba(X.iloc[[row_idx]])[0]
     pairs = list(zip(model.classes_, proba))
 
     # Sort by probability (highest first)
@@ -364,51 +425,80 @@ def render_csv_mode(tab1, handler):
         st.subheader('Batch Process String Data')
         csv_file = st.file_uploader('Drop your system logs here', type=['csv'])
 
-        if csv_file:
-            df = pd.read_csv(csv_file)
-            with st.expander('Preview Uploaded Data'):
-                st.dataframe(df, width=True)
-            
-            raw_cols = ["vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature"]
+        if "history" not in st.session_state:
+            st.session_state.history = []
+        if "result" not in st.session_state:
+            st.session_state.result = None
+        if "selected_row_idx" not in st.session_state:
+            st.session_state.selected_row_idx = 0
 
-            missing = [c for c in raw_cols if c not in df.columns]
+        if not csv_file:
+            st.caption("Upload a CSV to begin.")
+            return
 
-            if missing:
-                st.error(f"🚨 Missing required columns: {', '.join(missing)}")
-            else:
-                if st.button("Analyze CSV Data", key="btn_csv"):
+        df = pd.read_csv(csv_file)
+        with st.expander('Preview Uploaded Data'):
+            st.dataframe(df, width=True)
+        
+        raw_cols = ["vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature"]
 
-                    # Each row is now a record
-                    data = df[raw_cols].to_dict("records")
+        missing = [c for c in raw_cols if c not in df.columns]
 
-                    # Send to the detection pipeline
-                    result = handler.start_flow(string_data=data)
+        if missing:
+            st.error(f"🚨 Missing required columns: {', '.join(missing)}")
+            return
+    
+        if st.button("Analyze CSV Data", key="btn_csv"):
 
-                    insert_prediction(
+            # Each row is now a record
+            data = df[raw_cols].to_dict("records")
+
+            # Send to the detection pipeline
+            st.session_state.result = handler.start_flow(string_data=data)
+            result = st.session_state.result
+
+            if result:
+                insert_prediction(
                         source="streamlit",
                         mode="electrical",
                         fault_type=str(result.result),
                         confidence=float(result.reading_confidence),
                         input_json=json.dumps(data)
                     )
+                st.session_state.history.append({
+                    "mode": "csv",
+                    "fault_type": result.result,
+                    "confidence": float(result.reading_confidence),
+                    "rows": len(df)
+                })
 
-                    if result:
-                        # Display summary cards
-                        c1, c2 = st.columns(2)
-                        c1.metric("System status", result.result)
-                        c2.metric("Confidence score", f"{result.reading_confidence:.1%}")
+        result = st.session_state.result
 
-                        st.session_state.history.append({
-                            "mode": "csv",
-                            "fault_type": result.result,
-                            "confidence": float(result.reading_confidence),
-                            "rows": len(df)
-                        })
+        if not result:
+            st.caption("Click **Analyze CSV Data** to see results.")
+            return
 
-                        # Individual strings
-                        st.subheader("Individual String Analysis")
-                        res_df = pd.DataFrame(result.result_readings)
-                        st.table(res_df[['string_id', 'fault_type', 'confidence']])
+        # Display summary cards
+        c1, c2 = st.columns(2)
+        c1.metric("System status", result.result)
+        c2.metric("Confidence score", f"{result.reading_confidence:.1%}")
+
+        # Individual strings
+        st.subheader("Individual String Analysis")
+        res_df = pd.DataFrame(result.result_readings)
+        view_df = res_df[['string_id', 'fault_type', 'confidence']].copy()
+        view_df["confidence"] = view_df["confidence"].astype(float)
+
+        st.caption("Tick ONE row checkbox to explain it (rerun is normal, selection persists.)")
+
+        selected_idx = selectable_table(view_df, key="string_select_grid")
+        st.session_state.selected_row_idx = int(selected_idx)
+
+        st.info(f"Selected row for explanation: {st.session_state.selected_row_idx}")
+
+        with st.expander("🧠 Explain selected prediction", expanded=True):
+            raw_df = df[raw_cols].copy()
+            render_shap_for_row(raw_df, row_idx=st.session_state.selected_row_idx)
 
 
 # Image mode
@@ -458,7 +548,7 @@ def render_image_mode(tab3, handler):
                         st.session_state.history.append({
                             "mode": "thermal",
                             "fault_type": result.result,
-                            "confidence": float(result.reading_confidence),
+                            "confidence": float(result.reading_confidence)
                         })
                         st.success(f"Primary Detection: **{result.result}**")
                         st.metric("Detection Confidence", f"{result.reading_confidence:.1%}")
