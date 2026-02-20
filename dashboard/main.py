@@ -4,6 +4,10 @@ from modules.ui_components import (render_sidebar, render_tabs,
                                     render_csv_mode, render_image_mode,
                                     render_css, render_page_config, render_history)
 from pathlib import Path
+from db import init_db
+
+# Make the database
+init_db()
 
 # Load page configurations and CSS
 render_page_config()
