@@ -3,15 +3,18 @@ from core.logger import LoggerFactory
 from handlers.fault_detection_handler import FaultDetectionHandler
 # from dashboard.core.logger import LoggerFactory
 # from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
+from db import init_db, insert_prediction
 import os
 import tempfile
 from pathlib import Path
+import json
 
 # Configure logging once
 LoggerFactory.setup()
 
-# Create the flask app
+# Create the flask app and initiate database
 app = Flask(__name__)
+init_db()
 
 # Setup paths for models
 BASE_DIR = Path(__file__).resolve().parent
@@ -43,6 +46,14 @@ def predict():
         # Run electrical detection
         result = handler.start_flow(string_data=data)
 
+        insert_prediction(
+            source="api",
+            mode="electrical",
+            fault_type=str(result.result),
+            confidence=float(result.reading_confidence),
+            input_json=json.dumps(data)
+        )
+
         return jsonify({
             "status": "success",
             "fault_type": result.result,
@@ -72,14 +83,25 @@ def predict_image():
         return jsonify({"error": "No selected file."}), 400
     
     temp_path = None
+    image_path = None
     try:
         # Save to a temporary file, suffix to identify as an image
         with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
             file.save(tmp.name)
             temp_path = tmp.name
+            image_path = tmp.name
 
         # Run detection
         result = handler.start_flow(image_data=temp_path)
+
+
+        insert_prediction(
+            source="api",
+            mode="thermal",
+            fault_type=str(result.result),
+            confidence=float(result.reading_confidence),
+            image_path=image_path
+        )
 
         # Return JSON result
         return jsonify({
