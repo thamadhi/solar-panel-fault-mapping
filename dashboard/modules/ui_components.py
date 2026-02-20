@@ -9,6 +9,9 @@ import joblib
 import numpy as np
 import shap
 import matplotlib.pyplot as plt
+from db import init_db, insert_prediction, fetch_latest
+import json
+
 
 
 # Map the columns as UI-friendly
@@ -381,6 +384,14 @@ def render_csv_mode(tab1, handler):
                     # Send to the detection pipeline
                     result = handler.start_flow(string_data=data)
 
+                    insert_prediction(
+                        source="streamlit",
+                        mode="electrical",
+                        fault_type=str(result.result),
+                        confidence=float(result.reading_confidence),
+                        input_json=json.dumps(data)
+                    )
+
                     if result:
                         # Display summary cards
                         c1, c2 = st.columns(2)
@@ -434,9 +445,16 @@ def render_image_mode(tab3, handler):
 
                         # Store in session state so it persists after reruns
                         st.session_state.thermal_result = handler.start_flow(image_data=image_path)
+                        result = st.session_state.thermal_result
+                        insert_prediction(
+                            source="api",
+                            mode="thermal",
+                            fault_type=str(result.result),
+                            confidence=float(result.reading_confidence),
+                            image_path=image_path
+                        )
 
                     if "thermal_result" in st.session_state:
-                        result = st.session_state.thermal_result
                         st.session_state.history.append({
                             "mode": "thermal",
                             "fault_type": result.result,
@@ -476,16 +494,10 @@ def render_history():
     Renders the session history for past predictions.
     Allows the user to clear the history.
     """
-    if "history" not in st.session_state:
-        st.session_state.history = []
     st.sidebar.subheader("Prediction History")
 
-    if st.session_state.history:
-        hist_df = pd.DataFrame(st.session_state.history)
-        st.sidebar.dataframe(hist_df, width="stretch")
+    rows = fetch_latest(limit=30)
+    if rows:
+        st.sidebar.dataframe(pd.DataFrame(rows), width="stretch")
     else:
-        st.sidebar.caption("No predictions yet.")
-
-    if st.sidebar.button("🗑️ Clear history"):
-        st.session_state.history = []
-        st.rerun()
+        st.sidebar.caption("No preditions yet.")
