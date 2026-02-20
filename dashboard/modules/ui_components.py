@@ -1,9 +1,7 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-# Save the uploaded image into a temporary file since streamlit uses memory
 import tempfile
-from tensorflow import keras
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 import joblib
 import numpy as np
@@ -11,32 +9,34 @@ import shap
 import matplotlib.pyplot as plt
 from db import insert_prediction, fetch_latest
 import json
+import tensorflow as tf
 
-
-
-# Map the columns as UI-friendly
-FRIENDLY = {
-    "vdc1": "String 1 voltage (V)",
-    "vdc2": "String 2 voltage (V)",
-    "idc1": "String 1 current (A)",
-    "idc2": "String 2 current (A)",
-    "irradiance": "Irradiance",
-    "temperature": "Temperature",
-    "power_string1": "String 1 power (V×A)",
-    "power_string2": "String 2 power (V×A)",
-    "total_power": "Total power",
-    "voltage_ratio": "Voltage ratio (vdc1/vdc2)",
-    "current_ratio": "Current ratio (idc1/idc2)",
-}
 
 @st.cache_resource
 def load_hotspot_model():
-    return keras.models.load_model("models/tuned_model.keras")
+    return tf.keras.models.load_model("models/tuned_model.keras")
 
 
 @st.cache_resource
 def load_electrical_model():
     return joblib.load("models/tuned_random_forest.pkl")
+
+
+# Map the columns as UI-friendly
+def get_friendly_names():
+     return {
+        "vdc1": "String 1 voltage (V)",
+        "vdc2": "String 2 voltage (V)",
+        "idc1": "String 1 current (A)",
+        "idc2": "String 2 current (A)",
+        "irradiance": "Irradiance",
+        "temperature": "Temperature",
+        "power_string1": "String 1 power (V×A)",
+        "power_string2": "String 2 power (V×A)",
+        "total_power": "Total power",
+        "voltage_ratio": "Voltage ratio (vdc1/vdc2)",
+        "current_ratio": "Current ratio (idc1/idc2)",
+    }
 
 
 def build_electrical_feature_df(df_raw: pd.DataFrame) -> pd.DataFrame:
@@ -61,6 +61,28 @@ def build_electrical_feature_df(df_raw: pd.DataFrame) -> pd.DataFrame:
     return X[feature_order]
 
 
+def get_shap_sign(impact):
+    if impact >= 0:
+        verb = "pushes forward"
+    else:
+        verb = "pushes away from"
+    return verb
+
+
+def get_helper_language(feat):
+    if feat in (
+        "total_power", "power_string1", "power_string2", "idc1", "idc2"
+    ):
+        level = "higher/lower than expected"
+    elif feat in ("voltage_ratio", "current_ratio"):
+        level = "unbalanced / ratio is off"
+    elif feat in ("irradiance", "temperature"):
+        level = "environmental condition"
+    else:
+        level = "important signal"
+    return level
+
+
 def render_bullet_points(
         contrib_df: pd.DataFrame, pred_label: str, k: int = 4
 ) -> list[str]:
@@ -73,25 +95,15 @@ def render_bullet_points(
         value = row["value"]
         impact = float(row["impact"])
 
-        name = FRIENDLY.get(feat, feat)
+        friendly_names = get_friendly_names()
+
+        name = friendly_names.get(feat, feat)
 
         # Direction based on SHAP sign
-        if impact >= 0:
-            verb = "pushes forward"
-        else:
-            verb = "pushes away from"
+        verb = get_shap_sign(impact)
 
         # Helper language
-        if feat in (
-            "total_power", "power_string1", "power_string2", "idc1", "idc2"
-        ):
-            level = "higher/lower than expected"
-        elif feat in ("voltage_ratio", "current_ratio"):
-            level = "unbalanced / ratio is off"
-        elif feat in ("irradiance", "temperature"):
-            level = "environmental condition"
-        else:
-            level = "important signal"
+        level = get_helper_language(feat)
 
         bullets.append(
             f"**{name}** = `{value:.3f}` → {level} → {verb} **{pred_label}** (impact `{impact:+.3f}`)"
@@ -125,13 +137,15 @@ def render_shap_explainability_section(raw_df: pd.DataFrame) -> None:
         None
     """
 
-    st.subheader("Explainability (Electrical Model)")
-
+    st.subheader("Explainability")
     model = load_electrical_model()
-
     # Build features
     X = build_electrical_feature_df(raw_df)
     feature_names = list(X.columns)
+
+    if len(raw_df) == 0:
+        st.warning("No rows to explain.")
+        return
 
     # Choose which row/string to explain
     row_idx = st.selectbox(
@@ -147,64 +161,21 @@ def render_shap_explainability_section(raw_df: pd.DataFrame) -> None:
 
     # Top contributors table
     contrib_df = topk_contributors(feature_names, sv, X.iloc[row_idx].to_numpy(), k=8)
-    st.dataframe(contrib_df)
-
-    # Plotly bar chart
-    bar_df = contrib_df.copy()
-    bar_df["abs_impact"] = bar_df["impact"].abs()
-    fig = px.bar(
-        bar_df.sort_values("abs_impact", ascending=True),
-        x="impact",
-        y="feature",
-        orientation="h",
-        title="Top feature impacts (SHAP)"
-    )
-    st.plotly_chart(fig, width="stretch")
-
-    # Waterfall plot
-    with st.expander("Show waterfall plot"):
-        exp = shap.Explanation(
-            values=sv,
-            base_values=base,
-            data=X.iloc[row_idx].to_numpy(),
-            feature_names=feature_names
-        )
-        plt.figure()
-        shap.plots.waterfall(exp, max_display=10, show=False)
-        st.pyplot(plt.gcf(), clear_figure=True)
-
-
-def render_shap_for_row(raw_df: pd.DataFrame, row_idx: int):
-
-    st.subheader("Explainability")
-
-    model = load_electrical_model()
-    X = build_electrical_feature_df(raw_df)
-    feature_names = list(X.columns)
-
-    # Clamp row index safely
-    if len(raw_df) == 0:
-        st.warning("No rows to explain.")
-        return
-    row_idx = max(0, min(int(row_idx), len(raw_df) - 1))
-
-    pred_label, conf, sv, base = compute_shap(model, X, row_idx=row_idx)
-
-    st.markdown(f"**Explaining row:** `{row_idx}`")
-    st.success(f"Predicted: **{pred_label}**  |  Confidence: **{conf:.1%}**")
-
-    contrib_df = topk_contributors(feature_names, sv, X.iloc[row_idx].to_numpy(), k=8)
-
     # Why the system/model says so
     st.markdown("### Why the system decided this")
     why = render_bullet_points(contrib_df, pred_label, k=5)
     for b in why:
         st.markdown(f"- {b}")
-
     st.dataframe(contrib_df, width="stretch")
 
+    # Plotly bar chart
+    render_plotly_barchart(contrib_df)
 
-    # Plotly bar
+    # Waterfall plot
+    render_waterfall_plot(sv, base, X, row_idx, feature_names)
+
+
+def render_plotly_barchart(contrib_df):
     bar_df = contrib_df.copy()
     bar_df["abs_impact"] = bar_df["impact"].abs()
     fig = px.bar(
@@ -217,7 +188,9 @@ def render_shap_for_row(raw_df: pd.DataFrame, row_idx: int):
     st.plotly_chart(fig, width="stretch")
 
 
-    # Waterfall plot
+def render_waterfall_plot(sv, base, X, row_idx, feature_names):
+    sv = np.array(sv).reshape(-1)
+    base = float(np.array(base).reshape(()))
     with st.expander("Show waterfall plot"):
         exp = shap.Explanation(
             values=sv,
@@ -299,7 +272,7 @@ def compute_shap(model, X: pd.DataFrame, row_idx: int):
     Args:
         model:
         X (pd.DataFrame):
-        row_idx (int):
+        row_idx (int): The row being computed SHAP for.
 
     Returns:
         None
@@ -411,6 +384,15 @@ def render_tabs():
     return tab1, tab2, tab3
 
 
+def render_session_state():
+    if "history" not in st.session_state:
+        st.session_state.history = []
+    if "result" not in st.session_state:
+        st.session_state.result = None
+    if "selected_row_idx" not in st.session_state:
+        st.session_state.selected_row_idx = 0
+
+
 def render_csv_mode(tab1, handler):
     """
     Loads the CSV mode to the user.
@@ -421,16 +403,12 @@ def render_csv_mode(tab1, handler):
         tab1: The CSV tab in the UI.
         handler: The detection handler for fault detection.
     """
+
     with tab1:
         st.subheader('Batch Process String Data')
         csv_file = st.file_uploader('Drop your system logs here', type=['csv'])
 
-        if "history" not in st.session_state:
-            st.session_state.history = []
-        if "result" not in st.session_state:
-            st.session_state.result = None
-        if "selected_row_idx" not in st.session_state:
-            st.session_state.selected_row_idx = 0
+        render_session_state()
 
         if not csv_file:
             st.caption("Upload a CSV to begin.")
@@ -458,19 +436,7 @@ def render_csv_mode(tab1, handler):
             result = st.session_state.result
 
             if result:
-                insert_prediction(
-                        source="streamlit",
-                        mode="electrical",
-                        fault_type=str(result.result),
-                        confidence=float(result.reading_confidence),
-                        input_json=json.dumps(data)
-                    )
-                st.session_state.history.append({
-                    "mode": "csv",
-                    "fault_type": result.result,
-                    "confidence": float(result.reading_confidence),
-                    "rows": len(df)
-                })
+                save_fault_details(result, data, df)
 
         result = st.session_state.result
 
@@ -478,27 +444,46 @@ def render_csv_mode(tab1, handler):
             st.caption("Click **Analyze CSV Data** to see results.")
             return
 
-        # Display summary cards
-        c1, c2 = st.columns(2)
-        c1.metric("System status", result.result)
-        c2.metric("Confidence score", f"{result.reading_confidence:.1%}")
+        render_csv_summary_cards(result, df, raw_cols)
 
-        # Individual strings
-        st.subheader("Individual String Analysis")
-        res_df = pd.DataFrame(result.result_readings)
-        view_df = res_df[['string_id', 'fault_type', 'confidence']].copy()
-        view_df["confidence"] = view_df["confidence"].astype(float)
 
-        st.caption("Tick ONE row checkbox to explain it (rerun is normal, selection persists.)")
+def save_fault_details(result, data, df):
+    insert_prediction(
+            source="streamlit",
+            mode="electrical",
+            fault_type=str(result.result),
+            confidence=float(result.reading_confidence),
+            input_json=json.dumps(data)
+        )
+    st.session_state.history.append({
+        "mode": "csv",
+        "fault_type": result.result,
+        "confidence": float(result.reading_confidence),
+        "rows": len(df)
+    })
 
-        selected_idx = selectable_table(view_df, key="string_select_grid")
-        st.session_state.selected_row_idx = int(selected_idx)
 
-        st.info(f"Selected row for explanation: {st.session_state.selected_row_idx}")
+def render_csv_summary_cards(result, df, raw_cols):
+    c1, c2 = st.columns(2)
+    c1.metric("System status", result.result)
+    c2.metric("Confidence score", f"{result.reading_confidence:.1%}")
 
-        with st.expander("🧠 Explain selected prediction", expanded=True):
-            raw_df = df[raw_cols].copy()
-            render_shap_for_row(raw_df, row_idx=st.session_state.selected_row_idx)
+    # Individual strings
+    st.subheader("Individual String Analysis")
+    res_df = pd.DataFrame(result.result_readings)
+    view_df = res_df[['string_id', 'fault_type', 'confidence']].copy()
+    view_df["confidence"] = view_df["confidence"].astype(float)
+
+    st.caption("Tick ONE row checkbox to explain it (rerun is normal, selection persists.)")
+
+    selected_idx = selectable_table(view_df, key="string_select_grid")
+    st.session_state.selected_row_idx = int(selected_idx)
+
+    st.info(f"Selected row for explanation: {st.session_state.selected_row_idx}")
+
+    with st.expander("🧠 Explain selected prediction", expanded=True):
+        raw_df = df[raw_cols].copy()
+        render_shap_explainability_section(raw_df)
 
 
 # Image mode
@@ -512,6 +497,7 @@ def render_image_mode(tab3, handler):
         tab3: The image tab in the UI.
         handler: The detection handler for fault detection.
     """
+
     with tab3:
         st.subheader("Thermal Analysis")
 
@@ -564,6 +550,7 @@ def render_css(css_file):
     Args:
         css_file: The file being rendered/loaded.
     """
+
     with open(css_file) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
@@ -572,6 +559,7 @@ def render_page_config():
     """
     Renders the page configurations.
     """
+
     st.set_page_config(
         page_title="Solar PV Fault Detection",
         page_icon="☀️",
@@ -584,6 +572,7 @@ def render_history():
     Renders the session history for past predictions.
     Allows the user to clear the history.
     """
+
     st.sidebar.subheader("Prediction History")
 
     rows = fetch_latest(limit=30)
