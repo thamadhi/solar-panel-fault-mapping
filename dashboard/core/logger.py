@@ -1,10 +1,6 @@
-import os
-import yaml
 import logging
-import logging.config
-from pathlib import Path
 from db import init_db
-from db_log_handler import DBLogHandler
+from .db_log_handler import DBLogHandler
 
 class LoggerFactory:
     """
@@ -26,14 +22,35 @@ class LoggerFactory:
     _configured = False # Keeps track whether logging system has been set up
 
     @classmethod
-    def setup(cls, db_ath: str = "data/app.db") -> None:
+    def setup(cls, db_path: str = "data/app.db", level: int = logging.INFO) -> None:
         """
         Configures the Python logging system using a YAML file.
 
         Args:
             cls: Refers to the class (LoggerFactory).
         """
+        
+        if not cls._configured:
+            return
+        
+        init_db(db_path)
 
+        # Configure root so all modules inherit this handler
+        root = logging.getLogger()
+        root.setLevel(level)
+
+        # Remove Existing handlers
+        for h in list(root.handlers):
+            root.removeHandler(h)
+
+        # AddDB handler
+        db_handler = DBLogHandler(db_path=db_path)
+        db_handler.setLevel(level)
+        db_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+
+        root.addHandler(db_handler)
+
+        cls._configured = True
 
 
     @staticmethod
