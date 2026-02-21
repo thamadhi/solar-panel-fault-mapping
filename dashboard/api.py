@@ -10,7 +10,7 @@ from pathlib import Path
 import json
 
 # Configure logging once
-LoggerFactory.setup()
+LoggerFactory.setup(db_path="data/app.db")
 
 # Create the flask app and initiate database
 app = Flask(__name__)
