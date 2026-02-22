@@ -1,6 +1,6 @@
 import logging
 from typing import Optional
-from db import insert_log
+from dashboard.db import insert_log
 
 
 class DBLogHandler(logging.Handler):
@@ -10,15 +10,21 @@ class DBLogHandler(logging.Handler):
 
     def __init__(self, db_path: str = "data/app.db") -> None:
         super().__init__()
-        self.db_path = db_path
+        self.__db_path = db_path
 
     def emit(self, record: logging.LogRecord) -> None:
         try:
+            # Formatted message (includes timestamp)
             msg = self.format(record)
 
             exc: Optional[str] = None
             if record.exc_info:
-                exc = self.formatException(record.exc_info)
+                # formatException belongs to the formatter
+                if self.formatter:
+                    exc = self.formatter.formatException(record.exc_info)
+                else:
+                    # Fallback
+                    exc = logging.Formatter().formatException(record.exc_info)
 
             insert_log(
                 level=record.levelname,
@@ -28,7 +34,7 @@ class DBLogHandler(logging.Handler):
                 func_name=record.funcName,
                 line_no=record.lineno,
                 exception=exc,
-                db_path=self.db_path
+                db_path=self.__db_path
             )
 
         except Exception:
