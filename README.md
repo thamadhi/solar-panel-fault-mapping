@@ -27,13 +27,13 @@
 
 ## 📌 Introduction
 
-This project develops an AI-driven system for automated detection, localisation, and diagnosis of solar photovoltaic (PV) systems. The system utilizies a multi-modal approach, combining both electrical and visual imagery to identify issues, assess the severity and provide actionable rectification guidance. This project iams to enhance the reliability and efficiency of solar farm operations by minimizing the diagnostic time, reduce downtime and preventing significant energy yield losses.
+This project develops an AI-driven system for automated detection, localisation, and diagnosis of solar photovoltaic (PV) systems. The system utilizies a multi-modal approach, combining both electrical and visual imagery to identify issues, assess the severity and provide actionable rectification guidance. This project aims to enhance the reliability and efficiency of solar farm operations by minimizing the diagnostic time, reduce downtime and preventing significant energy yield losses.
 
 ## 🔍 Summary of Key Features
 
 The core features of the system are summarized as follows:
 
--   **Multimodal Fault Detection** using electrical time-series data and thermal (hotspot) imagery
+-   **Multimodal Fault Detection** using electrical string data and thermal (hotspot) imagery
 -   **Precise Fault Localization** to identify the exact module or string with issues
 -   **Severity Assessment** quantifying power loss and economic impact
 -   **AI-Powered Rectification** with optimized repair recommendations

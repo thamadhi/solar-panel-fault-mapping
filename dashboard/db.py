@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from datetime import datetime
 from typing import List, Dict, Any, Optional
@@ -37,6 +38,8 @@ def init_db(db_path: str = DB_PATH) -> None:
     Returns:
         None.
     """
+    # Ensure folder exists
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
 
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
@@ -51,6 +54,20 @@ def init_db(db_path: str = DB_PATH) -> None:
             confidence REAL NOT NULL,
             image_path TEXT,
             input_json TEXT
+        );
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS Logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT NOT NULL,
+            level TEXT NOT NULL,
+            logger_name TEXT,
+            module TEXT,
+            func_name TEXT,
+            line_no INTEGER,
+            message TEXT,
+            exception TEXT        
         );
     """)
 

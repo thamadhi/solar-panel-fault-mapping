@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
-from core.logger import LoggerFactory
-from handlers.fault_detection_handler import FaultDetectionHandler
+from .core.logger import LoggerFactory
+from .handlers.fault_detection_handler import FaultDetectionHandler
 # from dashboard.core.logger import LoggerFactory
 # from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
-from db import init_db, insert_prediction
+from .db import init_db, insert_prediction
 import os
 import tempfile
 from pathlib import Path
