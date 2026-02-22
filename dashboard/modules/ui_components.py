@@ -7,19 +7,19 @@ import joblib
 import numpy as np
 import shap
 import matplotlib.pyplot as plt
-from db import insert_prediction, fetch_latest
+from dashboard.db import insert_prediction, fetch_latest
 import json
 import tensorflow as tf
 
 
 @st.cache_resource
 def load_hotspot_model():
-    return tf.keras.models.load_model("models/tuned_model.keras")
+    return tf.keras.models.load_model("dashboard/models/tuned_model.keras")
 
 
 @st.cache_resource
 def load_electrical_model():
-    return joblib.load("models/tuned_random_forest.pkl")
+    return joblib.load("dashboard/models/tuned_random_forest.pkl")
 
 
 # Map the columns as UI-friendly
@@ -326,7 +326,7 @@ def render_sidebar():
     Loads the main menu's sidebar
     """
     with st.sidebar:
-        st.image("handlers/cloudy.png", width=100)
+        st.image("assets/cloudy.png", width=100)
         st.title("Control Panel")
         st.info("This system uses AI to detect faults in solar PV arrays via electrical or" \
         " thermal imaging.")
