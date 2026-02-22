@@ -3,7 +3,6 @@ from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
 from dashboard.modules.ui_components import (render_sidebar, render_tabs,
                                     render_csv_mode, render_image_mode,
                                     render_css, render_page_config, render_history)
-from pathlib import Path
 from dashboard.db import init_db
 
 # Make the database
@@ -18,13 +17,14 @@ if "history" not in st.session_state:
     st.session_state.history = []
 
 # Setup paths
-BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = "dashboard/models/tuned_random_forest.pkl"
+ELECTRICAL_MODEL_PATH = "dashboard/models/tuned_random_forest.pkl"
+IMAGE_MODEL_PATH = "dashboard/models/tuned_model.keras"
 
 @st.cache_resource  # Return the same cached instance to improve performance
 def load_handler():
     return FaultDetectionHandler(
-        electrical_model_path=MODEL_PATH
+        electrical_model_path=ELECTRICAL_MODEL_PATH,
+        image_model_path=IMAGE_MODEL_PATH
     )
 
 # Load handlers and all other UI components

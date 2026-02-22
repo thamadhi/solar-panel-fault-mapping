@@ -343,7 +343,7 @@ def render_pie_chart(result):
         result: The result containing the fault details such as confidence
         and fault type.
     """
-    conf = float(result.reading_confidence or 0.0)
+    conf = float(result.image_confidence or 0.0)
     conf = max(0.0, min(conf, 1.0))  # clamp between 0 and 1
 
     chart_df = pd.DataFrame([
@@ -501,46 +501,42 @@ def render_image_mode(tab3, handler):
     with tab3:
         st.subheader("Thermal Analysis")
 
-        # Split into 2 columns, left for image, right for detection outputs
         img_col, det_col = st.columns([1, 1])
 
         with img_col:
             image_file = st.file_uploader("Upload Thermal Image", type=["jpg", "png", "jpeg"])
+            image_bytes = None
             if image_file:
-
-                # Show the uploaded image
-                st.image(image_file, caption="Preview Of Uploaded Image", width=True)
+                image_bytes = image_file.getvalue()
+                st.image(image_bytes, caption="Preview Of Uploaded Image", use_container_width=True)
 
         with det_col:
-            if image_file:
-                if st.button("Scan for Hotspots", key="scan_thermal"):
-                    with st.spinner("Analyzing Pixels..."):
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-                            tmp.write(image_file.read())
-                            image_path = tmp.name
+            if image_bytes and st.button("Scan for Hotspots", key="scan_thermal"):
+                with st.spinner("Analyzing Pixels..."):
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+                        tmp.write(image_bytes)
+                        image_path = tmp.name
 
-                        # Store in session state so it persists after reruns
-                        st.session_state.thermal_result = handler.start_flow(image_data=image_path)
-                        result = st.session_state.thermal_result
-                        insert_prediction(
-                            source="api",
-                            mode="thermal",
-                            fault_type=str(result.result),
-                            confidence=float(result.reading_confidence),
-                            image_path=image_path
-                        )
+                    result = handler.start_flow(image_data=image_path)
 
-                    if "thermal_result" in st.session_state:
-                        st.session_state.history.append({
-                            "mode": "thermal",
-                            "fault_type": result.result,
-                            "confidence": float(result.reading_confidence)
-                        })
-                        st.success(f"Primary Detection: **{result.result}**")
-                        st.metric("Detection Confidence", f"{result.reading_confidence:.1%}")
-                        
-                        # Render result pie chart
-                        render_pie_chart(result)
+                    # Add the hotspot prediction to the DB
+                    insert_prediction(
+                        source="streamlit",
+                        mode="thermal",
+                        fault_type=str(result.result),
+                        confidence=float(result.image_confidence),
+                        image_path=image_path
+                    )
+                    
+                    # Add to session state temporarily
+                    st.session_state.history.append({
+                        "mode": "thermal",
+                        "fault_type": result.result,
+                        "confidence": float(result.image_confidence)
+                    })
+                st.success(f"Detection Complete: **{result.result}**")
+                st.metric("Confidence", f"{result.image_confidence:.1%}")
+                render_pie_chart(result)
 
 
 def render_css(css_file):
