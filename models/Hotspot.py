@@ -2,11 +2,10 @@ from ultralytics import YOLO
 import os
 
 def main():
-    # 1. Load the model (YOLO26 is native NMS-free and edge-optimized)
+    # Load the model 
     model = YOLO("yolo26n.pt")
 
-    # 2. Train the model
-    # We use imgsz=512 for better hotspot detail (vs 416)
+    # Train the model
     # batch=2 to compensate for the higher resolution on 2GB VRAM
     results = model.train(
         data="myfile.yaml",
@@ -22,11 +21,11 @@ def main():
         cls=1.5
     )
 
-    # 3. Validation
+    # Validation
     metrics = model.val()
     print(f"mAP50-95: {metrics.box.map}")
 
-    # 4. Run Prediction (Test it on a new thermal image)
+    # Prediction (Test it on a new thermal image)
     # Replace 'path/to/thermal_image.jpg' with an actual file path
     test_image = "thermal_test.jpg"
     if os.path.exists(test_image):
@@ -41,4 +40,5 @@ if __name__ == '__main__':
 #results[0].show()  # Display results
 
 # Export the model to ONNX format for deployment
+
 #path = model.export(format="onnx")  # Returns the path to the exported model
