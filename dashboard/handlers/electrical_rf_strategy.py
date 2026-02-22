@@ -3,7 +3,7 @@ import numpy as np
 from typing import Dict, Any, List
 from typing_extensions import override
 from .base_strategy import FaultDetectionStrategy
-from core.logger import LoggerFactory
+from ..core.logger import LoggerFactory
 import joblib
 import pandas as pd
 
