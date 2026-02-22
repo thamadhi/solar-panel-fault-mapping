@@ -5,13 +5,13 @@ from typing_extensions import override
 
 # Local/project imports
 from .abstract_component_flow_handler import AbstractComponentFlowHandler
-from ..core.analysis_result import AnalysisResult
+from dashboard.core.analysis_result import AnalysisResult
 from .electrical_rf_strategy import ElectricalRF
 from .image_hotspot_strategy import ImageHotspotStrategy
-from ..core.fault import Fault
+from dashboard.core.fault import Fault
 from .detection_context import DetectionContext
 from .fault_factory import FaultFactory
-from ..core.logger import LoggerFactory
+from dashboard.core.logger import LoggerFactory
 # from .fault_observer import FaultObserver
 
 class FaultDetectionHandler(AbstractComponentFlowHandler):
