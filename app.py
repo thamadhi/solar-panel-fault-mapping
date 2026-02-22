@@ -1,10 +1,10 @@
 import streamlit as st
 from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
-from modules.ui_components import (render_sidebar, render_tabs,
+from dashboard.modules.ui_components import (render_sidebar, render_tabs,
                                     render_csv_mode, render_image_mode,
                                     render_css, render_page_config, render_history)
 from pathlib import Path
-from db import init_db
+from dashboard.db import init_db
 
 # Make the database
 init_db()
@@ -19,7 +19,7 @@ if "history" not in st.session_state:
 
 # Setup paths
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = str(BASE_DIR / "models" / "tuned_random_forest.pkl")
+MODEL_PATH = "dashboard/models/tuned_random_forest.pkl"
 
 @st.cache_resource  # Return the same cached instance to improve performance
 def load_handler():
