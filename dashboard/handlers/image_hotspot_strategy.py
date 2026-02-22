@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional, Tuple
 from typing_extensions import override
 from tensorflow import keras
 from .base_strategy import FaultDetectionStrategy
-from core.logger import LoggerFactory
+from dashboard.core.logger import LoggerFactory
 
 
 class ImageHotspotStrategy(FaultDetectionStrategy):
@@ -22,7 +22,14 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
     def _load_model(self, model_path: str) -> Optional[keras.Model]:
         """
         Load the tuned DenseNet model
+
+        Args:
+            model_path (str): The path of the image model being loaded.
+
+        Returns:
+            keras.Model: The loaded model for Hotspot classification.
         """
+
         try:
             if os.path.exists(model_path):
                 model = keras.models.load_model(model_path)
@@ -53,6 +60,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
         Raises:
             Exception: If the image was not found
         """
+
         try:
             img = cv2.imread(image_path)
             if img is None:
@@ -93,6 +101,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
         Raises:
             Exception: If the image path was not to be found
         """
+
         try:
             # Check if model is loaded
             if self.__model is None:

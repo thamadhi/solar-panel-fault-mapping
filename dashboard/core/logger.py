@@ -1,8 +1,6 @@
-import os
-import yaml
 import logging
-import logging.config
-from pathlib import Path
+from dashboard.db import init_db
+from .db_log_handler import DBLogHandler
 
 class LoggerFactory:
     """
@@ -24,21 +22,35 @@ class LoggerFactory:
     _configured = False # Keeps track whether logging system has been set up
 
     @classmethod
-    def setup(cls) -> None:
+    def setup(cls, db_path: str = "data/app.db", level: int = logging.INFO) -> None:
         """
         Configures the Python logging system using a YAML file.
 
         Args:
             cls: Refers to the class (LoggerFactory).
         """
+        
         if not cls._configured:
-            BASE_DIR = Path(__file__).resolve().parent
-            config_path = BASE_DIR / "logging_config.yaml"
-            os.makedirs(BASE_DIR.parent / "logs", exist_ok=True) # Rotating handler writes here
-            with open(config_path, "r") as f:
-                config = yaml.safe_load(f)  # read YAML, convert to dictionary
-                logging.config.dictConfig(config)   # Setup loggers, handlers
-            cls._configured = True  # Prevent duplicate handlers
+            return
+        
+        init_db(db_path)
+
+        # Configure root so all modules inherit this handler
+        root = logging.getLogger()
+        root.setLevel(level)
+
+        # Remove Existing handlers
+        for h in list(root.handlers):
+            root.removeHandler(h)
+
+        # AddDB handler
+        db_handler = DBLogHandler(db_path=db_path)
+        db_handler.setLevel(level)
+        db_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+
+        root.addHandler(db_handler)
+
+        cls._configured = True
 
 
     @staticmethod
