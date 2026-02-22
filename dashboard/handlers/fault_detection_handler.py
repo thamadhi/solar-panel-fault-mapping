@@ -5,13 +5,13 @@ from typing_extensions import override
 
 # Local/project imports
 from .abstract_component_flow_handler import AbstractComponentFlowHandler
-from core.analysis_result import AnalysisResult
+from dashboard.core.analysis_result import AnalysisResult
 from .electrical_rf_strategy import ElectricalRF
 from .image_hotspot_strategy import ImageHotspotStrategy
-from core.fault import Fault
+from dashboard.core.fault import Fault
 from .detection_context import DetectionContext
 from .fault_factory import FaultFactory
-from core.logger import LoggerFactory
+from dashboard.core.logger import LoggerFactory
 # from .fault_observer import FaultObserver
 
 class FaultDetectionHandler(AbstractComponentFlowHandler):
@@ -47,7 +47,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
                                 'power_string1', 'power_string2',
                                 'total_power', 
                                 'voltage_ratio', 'current_ratio']
-        self.__last_run_details = {}    # Model outputs
+        self.__last_run_details = {}    # Stores model outputs for each run
 
 
     # Implement overridden methods
@@ -172,6 +172,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         """
         processed = []
 
+        # Check if electrical data was uploaded
         if string_data is None:
             return processed
         
@@ -200,7 +201,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             }         
             processed.append(processed_item)
 
-        return processed           
+        return processed
 
 
     @property

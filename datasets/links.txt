@@ -2,9 +2,15 @@ https://www.kaggle.com/datasets/pkdarabi/solarpanel
 
 https://github.com/P-Darabi/SolarPanelsDefectDetector?tab=readme-ov-file
 
+https://www.kaggle.com/datasets/gitenavnath/solar-augmented-dataset
+
 https://huggingface.co/datasets/seyeddd/Solar-PV-Clean-Hotspot-Images
 
 https://github.com/clayton-h-costa/pv_fault_dataset
+
+
+# UPDATED DATASET
+https://huggingface.co/datasets/seyeddd/solar_pv_single_hotspot_clean_images
 
 
 #synthetic data generation - resources

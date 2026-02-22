@@ -2,8 +2,6 @@ import tempfile
 import os
 import io
 import numpy as np
-
-# Isolate logic from heavy dependencies
 from unittest.mock import Mock, patch, MagicMock
 from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
 from dashboard.core.logger import LoggerFactory
@@ -11,7 +9,6 @@ from dashboard.handlers.image_hotspot_strategy import ImageHotspotStrategy
 import logging
 import pytest
 import json
-
 
 @pytest.fixture
 def mocked_handler():
