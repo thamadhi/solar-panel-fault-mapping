@@ -17,9 +17,8 @@ app = Flask(__name__)
 init_db()
 
 # Setup paths for models
-BASE_DIR = Path(__file__).resolve().parent
-RANDOM_FOREST_MODEL_PATH = str(BASE_DIR / "models" / "tuned_random_forest.pkl")
-DENSENET_MODEL_PATH = str(BASE_DIR / "models" / "tuned_model.keras")
+RANDOM_FOREST_MODEL_PATH = "dashboard/models/tuned_random_forest.pkl"
+DENSENET_MODEL_PATH = "dashboard/models/tuned_model.keras"
 
 # Load fault detection handler once
 handler = FaultDetectionHandler(
@@ -99,7 +98,7 @@ def predict_image():
             source="api",
             mode="thermal",
             fault_type=str(result.result),
-            confidence=float(result.reading_confidence),
+            confidence=float(result.image_confidence),
             image_path=image_path
         )
 
@@ -107,7 +106,7 @@ def predict_image():
         return jsonify({
             "status": "success",
             "fault_type": result.result,
-            "confidence": result.reading_confidence,
+            "confidence": result.image_confidence,
         }), 200
     
     except Exception as e:
