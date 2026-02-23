@@ -15,11 +15,15 @@ class ElectricalRF(FaultDetectionStrategy):
 
     def __init__(self, model_path: str) -> None:
         """
-        Initializes the Random Forest.
+        Initializes the Random Forest model for electrical fault detection.
 
         Args:
             model_path (str): Path of the random forest model.
+
+        Returns:
+            None
         """
+
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
         
         # Use provided path or default

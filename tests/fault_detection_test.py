@@ -178,8 +178,8 @@ def test_hotspot_mock_model(mock_hotspot_cls, mock_rf_cls):
 
     assert result is not None
     assert result.result == "Hotspot"
-    assert 0.0 <= result.reading_confidence <= 1.0
-    assert abs(result.reading_confidence - 0.87) < 1e-9
+    assert 0.0 <= result.image_confidence <= 1.0
+    assert abs(result.image_confidence - 0.87) < 1e-9
 
 
 def test_logger_setup_runs_once():
@@ -594,7 +594,7 @@ def test_api_predict_image_success(mocked_handler, client):
     """
 
     mocked_handler.start_flow.return_value = MagicMock(
-        result="Hotspot", reading_confidence=0.87
+        result="Hotspot", image_confidence=0.87
     )
 
     dummy_img = (io.BytesIO(b"fake image bytes"), "x.jpg")

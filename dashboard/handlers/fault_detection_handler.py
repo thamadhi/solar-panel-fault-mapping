@@ -32,7 +32,11 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         Args:
             electrical_model_path (str): Path of the electrical model
             image_model_path (str): Path of the image model
+
+        Returns:
+            None
         """
+
         super().__init__()
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
         self.__electrical_strategy = ElectricalRF(electrical_model_path)
@@ -54,12 +58,16 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     @override
     def pre_process_data(self, image_data: Any = None, string_data: Any = None) -> None:
         """
-        Pre-process input data for fault detection
+        Pre-process input data for fault detection.
 
         Args:
-            image_data: Thermal image data
-            string_data: Electrical string measurement data
+            image_data: Thermal image data.
+            string_data: Electrical string measurement data.
+
+        Returns:
+            None
         """
+
         self.__logger.info("Pre-processing data...")
 
         try:
@@ -99,7 +107,13 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
     @override
     def apply_model(self) -> None:
-        """Used to apply the required model for detection"""
+        """
+        Used to apply the required model for detection
+        
+        Returns:
+            None
+        """
+
         self.__logger.info("Applying Model...")
 
         detection_results: List[Dict[str, Any]] = []
@@ -115,8 +129,6 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             if isinstance(result, dict) and "result" in result and isinstance(result["result"], dict):
                 result = result["result"]
 
-            self.__logger.info(f"[DEBUG] electrical result keys: {list(result.keys()) if isinstance(result, dict) else type(result)}")
-
             if isinstance(result, dict):
                 detection_results.append(result)
             else:
@@ -127,12 +139,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         if self.__processed_image_path:
             self.__detection_context.set_strategy(self.__image_strategy)
             result = self.__detection_context.perform_detection(self.__processed_image_path)
-            print(f"[DEBUG] image result: {result}")
             detection_results.append(result)
-
-        print(f"[DEBUG] detection_results = {detection_results}")
-        print(f"[DEBUG] chosen main_fault = {self.__last_run_details}")
-        print(f"[DEBUG] fault_type object set? {self.__fault_type is not None}")
 
         # Determine most significant fault
         if detection_results:
@@ -153,6 +160,15 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
     @override
     def present_results(self) -> None:
+        """
+        Overrides the `present_results` from the base class.
+        Checks if a thermal image was uploaded, and based on that the results
+        are displayed to the user.
+
+        Returns:
+            None        
+        """
+
         if not self.__fault_type:
             self.result = None
             return
@@ -223,12 +239,23 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
     @property
     def fault_type(self) -> Optional[Fault]:
-        """Returns the fault type"""
+        """
+        Returns the fault type
+        
+        Returns:
+            Optional[Fault]:
+        """
         return self.__fault_type
 
 
     @property
     def feature_names(self) -> List[str]:
+        """
+        Used to return the trained feature names used by the model.
+
+        Returns:
+            List[str]: The feature names inside a list.
+        """
         return self.__feature_names
 
 
