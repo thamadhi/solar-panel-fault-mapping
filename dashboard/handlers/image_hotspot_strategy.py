@@ -13,10 +13,10 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
     Detects hotspots from thermal images only
     """
 
-    def __init__(self, model_path: str = "") -> None:
+    def __init__(self, model_path: str) -> None:
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
         self.__IMAGE_SIZE = (224, 224)  # Standard size for CNN models
-        self.__model = self._load_model("models/tuned_model.keras")
+        self.__model = self._load_model(model_path)
 
 
     def _load_model(self, model_path: str) -> Optional[keras.Model]:
@@ -105,12 +105,14 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
         try:
             # Check if model is loaded
             if self.__model is None:
+                print("ABCED Model did not load!!!!!!!!!!!!!!!")
                 return {'fault_type': 'Normal Operation', 'confidence': 0.0,
                         'error': 'Model failed to load'}
 
             # Load and preprocess image
             image = self._load_and_preprocess_image(image_path)
             if image is None:
+                print("IMAGE DID NOT PREPROCESS!!!!!!!!!!")
                 return {'fault_type': 'Normal Operation', 'confidence': 0.0,
                         'error': 'Image load failed'}
             
@@ -119,8 +121,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
 
             # Binary classification
             hotspot_confidence = float(predictions[0])
-            clean_confidence = float(predictions[1]) if len(predictions) > 1 \
-                                                     else 1.0 - hotspot_confidence
+            clean_confidence = 1.0 - hotspot_confidence
 
             # Determine fault types based on confidence
             if hotspot_confidence > 0.5:
