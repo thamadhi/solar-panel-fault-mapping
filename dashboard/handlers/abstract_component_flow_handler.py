@@ -20,12 +20,12 @@ class AbstractComponentFlowHandler(ABC):
         """
         Execute the analysis workflow using the template method pattern.
         
-        image_data : Any
-            Input image data.
-        string_data : Any
-            Input textual data
-        returns : AnalysisResult
-            Result of the analysis
+        Args:
+            image_data (Any): Input image data.
+            string_data (Any): Input textual electrical data.
+
+        Returns: 
+            AnalysisResult: Result of the analysis.
         """
         
         self.logger.info("Starting %s", self.__class__.__name__)
@@ -38,6 +38,13 @@ class AbstractComponentFlowHandler(ABC):
     def pre_process_data(self, image_data: Any, string_data: Any) -> None:
         """
         Prepare data before analysis.
+
+        Args:
+            image_data (Any):
+            string_data (Any):
+
+        Returns:
+            None
         """
         pass
 
@@ -45,6 +52,9 @@ class AbstractComponentFlowHandler(ABC):
     def apply_model(self) -> Any:
         """
         Apply model logic
+
+        Returns:
+            Any:
         """
         pass
 
@@ -52,5 +62,8 @@ class AbstractComponentFlowHandler(ABC):
     def present_results(self) -> None:
         """
         Present analysis results
+
+        Returns:
+            None
         """
         pass
