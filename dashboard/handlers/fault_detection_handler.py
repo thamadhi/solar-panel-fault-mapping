@@ -24,8 +24,8 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
 
     def __init__(self,
-                 electrical_model_path: str = "models/tuned_random_forest.pkl",
-                 image_model_path: str = "models/tuned_model.keras") -> None:
+                 electrical_model_path: str = "dashboard/models/tuned_random_forest.pkl",
+                 image_model_path: str = "dashboard/models/tuned_model.keras") -> None:
         """
         Initializes a FaultDetectionHandler with the required models.
         
@@ -93,8 +93,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             Optional[str]: Path to processed image
         """
         if isinstance(image_data, str) and os.path.exists(image_data):
-            return image_data
-            #####
+            return image_data   # Only validate and move forward
         return None
 
 
@@ -128,7 +127,12 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         if self.__processed_image_path:
             self.__detection_context.set_strategy(self.__image_strategy)
             result = self.__detection_context.perform_detection(self.__processed_image_path)
+            print(f"[DEBUG] image result: {result}")
             detection_results.append(result)
+
+        print(f"[DEBUG] detection_results = {detection_results}")
+        print(f"[DEBUG] chosen main_fault = {self.__last_run_details}")
+        print(f"[DEBUG] fault_type object set? {self.__fault_type is not None}")
 
         # Determine most significant fault
         if detection_results:
@@ -149,15 +153,28 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
     @override
     def present_results(self) -> None:
-        """Used to present the detected fault to the user"""
-        if self.__fault_type:
+        if not self.__fault_type:
+            self.result = None
+            return
+
+        is_thermal = self.__processed_image_path is not None and not self.__processed_electrical_data
+
+        if is_thermal:
             self.result = AnalysisResult(
                 result=self.__fault_type.get_fault_type,
-                reading_confidence=self.__last_run_details.get('confidence', 0.0),
-                result_readings=self.__last_run_details.get("detailed_predictions", [])
+                image_confidence=float(self.__last_run_details.get("confidence", 0.0)),
+                reading_confidence=0.0,
+                result_images=[self.__processed_image_path],  # if you support this
+                result_readings=[]
             )
         else:
-            self.result = None
+            self.result = AnalysisResult(
+                result=self.__fault_type.get_fault_type,
+                reading_confidence=float(self.__last_run_details.get("confidence", 0.0)),
+                image_confidence=0.0,
+                result_readings=self.__last_run_details.get("detailed_predictions", []),
+                result_images=[]
+            )
 
 
     def _preprocess_string_data(self, string_data: Any) -> List[Dict[str, float]]:
