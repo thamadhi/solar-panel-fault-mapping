@@ -117,15 +117,53 @@ The project follows Agile methodology with the Scrum framework, which is managed
 | Fault Severity      | Random Forest                   |
 | Fault Rectification | Decision Tree                   |
 
-## Clone the repository
 
-``` bash
+## 🚀 How to Run the Application
+
+### Prerequisites
+- Python 3.11+
+- pip
+- (Recommended) Virtual environment
+
+---
+
+### 1️⃣ Clone the repository
+```bash
 git clone https://github.com/thamadhi/solar-panel-fault-mapping.git
 cd solar-panel-fault-mapping
 ```
 
-## Install dependencies
+### 2️⃣ Create and activate a virtual environment
 
-```         
+For mac:
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+For windows (PowerShell):
+```bash
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+### 3️⃣ Install dependencies
+```bash
 pip install -r requirements.txt
+```
+
+
+### ▶️ Running the Backend API (Flask)
+
+Start the Flask API first from the project root:
+
+```bash
+python -m dashboard.api
+```
+
+### ▶️ Running the Streamlit Dashboard
+
+Open a new terminal, activate the same .venv, then run:
+
+```bash
+streamlit run app.py
 ```
