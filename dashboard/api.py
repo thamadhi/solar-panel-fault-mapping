@@ -3,7 +3,7 @@ from dashboard.core.logger import LoggerFactory
 from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
 # from dashboard.core.logger import LoggerFactory
 # from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
-from dashboard.db import init_db, insert_prediction
+from dashboard.database.db import init_db, insert_prediction
 import os
 import tempfile
 import json

@@ -1,6 +1,5 @@
 import base64
 import streamlit as st
-
 from dashboard.pages.dashboard import show_dashboard_page
 from dashboard.pages.fault_detection import show_fault_detection_page
 from dashboard.pages.history import show_history_page

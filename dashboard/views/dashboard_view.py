@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from dashboard.db import fetch_latest, fetch_fault_trend_daily, get_conn
+from dashboard.database import fetch_latest, fetch_fault_trend_daily, get_conn
 
 class Dashboard:
     def __init__(self):
