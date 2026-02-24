@@ -459,7 +459,7 @@ def render_sidebar():
         - Version details
     """
     with st.sidebar:
-        st.image("assets/cloudy.png", width=100)
+        st.image("assets/cloudyRain.gif", width=100)
         st.title("Control Panel")
         st.info("This system uses AI to detect faults in solar PV arrays via electrical or" \
         " thermal imaging.")
