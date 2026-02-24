@@ -1,0 +1,66 @@
+/* Text and background color */
+.stApp {
+    background-color: #111827;
+    color: #F3F4F6;
+}
+
+.brand-text {
+    color: #FBBF24;
+    font-weight: 700;
+}
+
+/* Default button styling */
+div.stButton > button {
+    border-radius: 100px !important;
+    padding: 10px 28px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    border: 2px solid #374151 !important;
+    background-color: transparent !important;
+    color: #D1D5DB !important;
+}
+
+div.stButton > button[kind="primary"] {
+    background: #FBBF24 !important;
+    color: #000000 !important;
+    border: 2px solid #FBBF24 !important;
+    box-shadow: 0px 4px 12px rgba(251, 191, 36, 0.2);
+}
+
+/* Button hover effect*/
+div.stButton > button:hover {
+    transform: translateY(-2px);
+    border-color: #FBBF24 !important;
+    color: white !important;
+}
+
+div.stButton > button[kind="primary"]:hover {
+    color: #000000 !important;
+    background: #FCD34D !important;
+}
+
+/* Feature card styling */
+.feature-card {
+    background: #1F2937;
+    padding: 30px;
+    border-radius: 20px;
+    border: 1px solid #374151;
+    text-align: center;
+    min-height: 250px;
+}
+
+.feature-card h3 {
+    color: #FBBF24 !important;
+    margin-top: 15px !important;
+}
+
+h1 {
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
+}
+
+.hero-sub {
+    color: #9CA3AF !important;
+    font-size: 1.2rem !important;
+    line-height: 1.6 !important;
+}

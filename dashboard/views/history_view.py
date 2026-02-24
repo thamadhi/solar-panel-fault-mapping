@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from dashboard.db import fetch_latest
+from dashboard.database import fetch_latest
 
 
 def show_history():

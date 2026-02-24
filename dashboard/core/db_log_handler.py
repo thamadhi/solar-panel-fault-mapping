@@ -1,6 +1,6 @@
 import logging
 from typing import Optional
-from dashboard.db import insert_log
+from dashboard.database import insert_log
 
 
 class DBLogHandler(logging.Handler):

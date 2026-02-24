@@ -1,6 +1,6 @@
 # dashboard/user_repo.py
-from dashboard.db import get_conn
-from dashboard.security import hash_password
+from dashboard.database.db import get_conn
+from dashboard.authentication.security import hash_password
 
 def create_user(user_type: str, username: str, email: str, password: str) -> int:
     conn = get_conn()

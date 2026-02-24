@@ -1,7 +1,7 @@
-from dashboard.db import get_user_by_username
-from dashboard.security import verify_password
+from dashboard.database.db import get_user_by_username
+from dashboard.authentication.security import verify_password
 from dashboard.models.user import User
-from dashboard.user_repo import create_user, username_exists, email_exists
+from dashboard.database.user_repo import create_user, username_exists, email_exists
 
 
 def login(username: str, password: str) -> User | None:
