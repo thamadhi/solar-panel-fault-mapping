@@ -239,3 +239,33 @@ def create_default_admin():
             email="admin@solar.com",
             password="admin123"
         )
+
+def fetch_latest_faults(limit: int = 5) -> List[Dict[str, Any]]:
+
+    conn = get_conn()
+    rows = conn.execute(
+        """
+        SELECT id, created_at, source, mode, fault_type, confidence
+        FROM Predictions
+        ORDER BY datetime(created_at) DESC
+        LIMIT ?
+        """, (limit,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def fetch_fault_trend_daily(days: int = 30) -> List[Dict[str, Any]]:
+
+    conn = get_conn()
+    rows = conn.execute(
+        """
+        SELECT date(created_at) AS day, COUNT(*) AS count
+        FROM Predictions
+        WHERE date(created_at) >= date('now', ?)
+        GROUP BY date(created_at)
+        ORDER BY day ASC
+        """, (f"-{days} days",)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
