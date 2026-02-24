@@ -3,7 +3,7 @@ import pandas as pd
 from dashboard.db import fetch_latest
 
 
-def show_history():
+def show_history_page():
     st.title("📜 Prediction History")
     limit = st.number_input("Number of records", min_value=10, max_value=1000, value=100)
     records = fetch_latest(limit=limit)
