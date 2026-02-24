@@ -1,6 +1,5 @@
 import streamlit as st
 from dashboard.auth_service import login, register_user
-from dashboard.auth_service import login, register_user
 
 
 def render_auth_screen():

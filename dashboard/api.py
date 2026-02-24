@@ -6,7 +6,6 @@ from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
 from dashboard.db import init_db, insert_prediction
 import os
 import tempfile
-from pathlib import Path
 import json
 
 # Configure logging once

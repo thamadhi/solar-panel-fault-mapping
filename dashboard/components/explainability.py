@@ -1,44 +1,9 @@
-import streamlit as st
-import plotly.express as px
-import pandas as pd
-import tempfile
-from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
-import joblib
 import numpy as np
-import shap
+import streamlit as st
 import matplotlib.pyplot as plt
-from dashboard.db import insert_prediction, fetch_latest
-import json
-import tensorflow as tf
-import sklearn
-
-
-@st.cache_resource
-def load_hotspot_model() -> tf.keras.Model:
-    """
-    Load the pretrained CNN thermal hotspot detection model.
-
-    This function is cached using Streamlit's `cache_resource`
-    decorator to prevent reloading the model on every script rerun.
-
-    Returns:
-        tf.keras.Model: Loaded Keras model for thermal image classification.
-    """
-    return tf.keras.models.load_model("dashboard/models/tuned_model.keras")
-
-
-@st.cache_resource
-def load_electrical_model() -> sklearn.base.BaseEstimator:
-    """
-    Load the pretrained electrical Random Forest model.
-
-    The model is cached to avoid repeated disk reads and
-    improve performance.
-
-    Returns:
-        sklearn.base.BaseEstimator: Trained Random Forest classifier.
-    """
-    return joblib.load("dashboard/models/tuned_random_forest.pkl")
+import pandas as pd
+import shap
+import plotly.express as px
 
 
 # Map the columns as UI-friendly
@@ -234,7 +199,7 @@ def topk_contributors(feature_names: list[str],
     return pd.DataFrame(rows)
 
 
-def render_shap_explainability_section(raw_df: pd.DataFrame) -> None:
+def render_shap_explainability_section(raw_df: pd.DataFrame, model) -> None:
     """
     Renders the SHAP plots for the user.
 
@@ -246,7 +211,6 @@ def render_shap_explainability_section(raw_df: pd.DataFrame) -> None:
     """
 
     st.subheader("Explainability")
-    model = load_electrical_model()
     # Build features
     X = build_electrical_feature_df(raw_df)
     feature_names = list(X.columns)
@@ -324,68 +288,6 @@ def render_waterfall_plot(sv, base, X, row_idx, feature_names):
         st.pyplot(plt.gcf(), clear_figure=True)
 
 
-def selectable_table(df: pd.DataFrame, key: str = "grid") -> int:
-    """
-    Creates an interactive selectable grid and allows the user to select
-    one row for analysis.
-
-    Args:
-        df (pd.DataFrame): The dataframe being displayed.
-    """
-
-    # Prepare the table to be interactive
-    gb = GridOptionsBuilder.from_dataframe(df)
-
-    # Enable default column settings
-    gb.configure_default_column(
-        filter=True,
-        sortable=True,  # Sort columns
-        resizable=True  # Drag column width
-    )
-
-    # Page size adjusted to screen size
-    gb.configure_pagination(paginationAutoPageSize=True)
-
-    # Allow row selection
-    gb.configure_selection(
-        selection_mode="single",
-        use_checkbox=True
-    )
-
-    # Convert to config dictionary
-    grid_options = gb.build()
-
-    # Create the AgGrid table
-    grid = AgGrid(
-        df.reset_index(drop=False),
-        gridOptions=grid_options,
-
-        # Re-run script when selection changes
-        update_mode=GridUpdateMode.SELECTION_CHANGED,
-        data_return_mode="AS_INPUT",    # Exactly as shown in grid
-        fit_columns_on_grid_load=True,
-        theme="streamlit",
-        key=key
-    )
-
-    # Return selected row index
-    selected = grid.get("selected_rows", None)
-
-    if isinstance(selected, pd.DataFrame):
-        if not selected.empty and "index" in selected.columns:
-            return int(selected.iloc[0]["index"])
-        return st.session_state.get("selected_row_idx", 0)
-
-    if isinstance(selected, list):
-        if len(selected) > 0 and isinstance(selected[0], dict) and "index" \
-        in selected[0]:
-            return int(selected[0]["index"])
-        return st.session_state.get("selected_row_idx", 0)
-    
-    # If nothing is selected
-    return st.session_state.get("selected_row_idx", 0)
-
-
 def compute_shap(model, X: pd.DataFrame, row_idx: int):
     """
     Computes the SHAP values for the selected row.
@@ -449,24 +351,6 @@ def compute_shap(model, X: pd.DataFrame, row_idx: int):
     return pred_label, confidence, sv, base
 
 
-def render_sidebar():
-    """
-    Render the application sidebar.
-
-    Displays:
-        - Logo
-        - System information
-        - Version details
-    """
-    with st.sidebar:
-        st.image("assets/cloudyRain.gif", width=100)
-        st.title("Control Panel")
-        st.info("This system uses AI to detect faults in solar PV arrays via electrical or" \
-        " thermal imaging.")
-        st.divider()
-        st.caption("Version: 1.0.0")
-
-
 def render_pie_chart(result):
     """
     Renders a pie chart visualizing the class distirbution confidence
@@ -499,231 +383,3 @@ def render_pie_chart(result):
     )
 
     st.plotly_chart(fig, width="stretch")
-
-
-def render_tabs():
-    """
-    Loads the initial UI and tabs to the user.
-
-    Returns:
-        tab1, tab2, tab3: Tabs used to input data for predictions.
-    """
-    st.title("☀️ Solar PV Fault Detection")
-    st.markdown("---")
-
-    # Input selection using tabs
-    tab1, tab2, tab3 = st.tabs(['📄 CSV Batch Analysis', '✍️ Manual Diagnostic', '🖼️ Thermal Vision'])
-
-    return tab1, tab2, tab3
-
-
-def render_session_state() -> None:
-    """
-    Initialize required session state variables.
-
-    Ensures:
-        - Prediction history persists across reruns.
-        - Selected row index is preserved.    
-    """
-
-    if "history" not in st.session_state:
-        st.session_state.history = []
-    if "result" not in st.session_state:
-        st.session_state.result = None
-    if "selected_row_idx" not in st.session_state:
-        st.session_state.selected_row_idx = 0
-
-
-def render_csv_mode(tab1, handler):
-    """
-    Render the CSV batch processing tab.
-
-    Workflow:
-        1. User uploads CSV.
-        2. Validate required columns.
-        3. Send data to detection pipeline.
-        4. Store result in database.
-        5. Display prediction summary and explainability.
-    
-    Args:
-        tab1: Streamlit tab container.
-        handler: Fault detection handler (pipeline entry).
-    """
-
-    with tab1:
-        st.subheader('Batch Process String Data')
-        csv_file = st.file_uploader('Drop your system logs here', type=['csv'])
-
-        render_session_state()
-
-        if not csv_file:
-            st.caption("Upload a CSV to begin.")
-            return
-
-        df = pd.read_csv(csv_file)
-        with st.expander('Preview Uploaded Data'):
-            st.dataframe(df, width=True)
-        
-        raw_cols = ["vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature"]
-
-        missing = [c for c in raw_cols if c not in df.columns]
-
-        if missing:
-            st.error(f"🚨 Missing required columns: {', '.join(missing)}")
-            return
-    
-        if st.button("Analyze CSV Data", key="btn_csv"):
-
-            # Each row is now a record
-            data = df[raw_cols].to_dict("records")
-
-            # Send to the detection pipeline
-            st.session_state.result = handler.start_flow(string_data=data)
-            result = st.session_state.result
-
-            if result:
-                save_fault_details(result, data, df)
-
-        result = st.session_state.result
-
-        if not result:
-            st.caption("Click **Analyze CSV Data** to see results.")
-            return
-
-        render_csv_summary_cards(result, df, raw_cols)
-
-
-def save_fault_details(result, data, df):
-    insert_prediction(
-            source="streamlit",
-            mode="electrical",
-            fault_type=str(result.result),
-            confidence=float(result.reading_confidence),
-            input_json=json.dumps(data)
-        )
-    st.session_state.history.append({
-        "mode": "csv",
-        "fault_type": result.result,
-        "confidence": float(result.reading_confidence),
-        "rows": len(df)
-    })
-
-
-def render_csv_summary_cards(result, df, raw_cols):
-    c1, c2 = st.columns(2)
-    c1.metric("System status", result.result)
-    c2.metric("Confidence score", f"{result.reading_confidence:.1%}")
-
-    # Individual strings
-    st.subheader("Individual String Analysis")
-    res_df = pd.DataFrame(result.result_readings)
-    view_df = res_df[['string_id', 'fault_type', 'confidence']].copy()
-    view_df["confidence"] = view_df["confidence"].astype(float)
-
-    st.caption("Tick ONE row checkbox to explain it (rerun is normal, selection persists.)")
-
-    selected_idx = selectable_table(view_df, key="string_select_grid")
-    st.session_state.selected_row_idx = int(selected_idx)
-
-    st.info(f"Selected row for explanation: {st.session_state.selected_row_idx}")
-
-    with st.expander("🧠 Explain selected prediction", expanded=True):
-        raw_df = df[raw_cols].copy()
-        render_shap_explainability_section(raw_df)
-
-
-# Image mode
-def render_image_mode(tab3, handler):
-    """
-    Loads the image mode to the user for hotspot classifications.
-    Accepts a hotspot/clean solar panel image and classifies it
-    and displays the confidence with the fault type.
-
-    Args:
-        tab3: The image tab in the UI.
-        handler: The detection handler for fault detection.
-    """
-
-    with tab3:
-        st.subheader("Thermal Analysis")
-
-        img_col, det_col = st.columns([1, 1])
-
-        with img_col:
-            image_file = st.file_uploader("Upload Thermal Image", type=["jpg", "png", "jpeg"])
-            image_bytes = None
-            if image_file:
-                image_bytes = image_file.getvalue()
-                st.image(image_bytes, caption="Preview Of Uploaded Image", use_container_width=True)
-
-        with det_col:
-            if image_bytes and st.button("Scan for Hotspots", key="scan_thermal"):
-                with st.spinner("Analyzing Pixels..."):
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-                        tmp.write(image_bytes)
-                        image_path = tmp.name
-
-                    result = handler.start_flow(image_data=image_path)
-
-                    # Add the hotspot prediction to the DB
-                    insert_prediction(
-                        source="streamlit",
-                        mode="thermal",
-                        fault_type=str(result.result),
-                        confidence=float(result.image_confidence),
-                        image_path=image_path
-                    )
-                    
-                    # Add to session state temporarily
-                    st.session_state.history.append({
-                        "mode": "thermal",
-                        "fault_type": result.result,
-                        "confidence": float(result.image_confidence)
-                    })
-                st.success(f"Detection Complete: **{result.result}**")
-                st.metric("Confidence", f"{result.image_confidence:.1%}")
-                render_pie_chart(result)
-
-
-def render_css(css_file):
-    """
-    Renders CSS into the page.
-    
-    Args:
-        css_file: The file being rendered/loaded.
-    """
-
-    with open(css_file) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
-
-def render_page_config():
-    """
-    Renders the page configurations.
-
-    Sets:
-        - Page title
-        - Page icon
-        - Layout mode
-    """
-
-    st.set_page_config(
-        page_title="Solar PV Fault Detection",
-        page_icon="☀️",
-        layout="wide"   # Better data display
-    )
-
-
-def render_history():
-    """
-    Renders the session history for past predictions.
-    Allows the user to clear the history.
-    """
-
-    st.sidebar.subheader("Prediction History")
-
-    rows = fetch_latest(limit=30)
-    if rows:
-        st.sidebar.dataframe(pd.DataFrame(rows), width="stretch")
-    else:
-        st.sidebar.caption("No preditions yet.")
