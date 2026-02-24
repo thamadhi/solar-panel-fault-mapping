@@ -25,44 +25,48 @@ def render_csv_mode(tab1, handler):
 
     with tab1:
         st.subheader('Batch Process String Data')
-        csv_file = st.file_uploader('Drop your system logs here', type=['csv'])
-
-        render_session_state()
-
-        if not csv_file:
-            st.caption("Upload a CSV to begin.")
-            return
-
-        df = pd.read_csv(csv_file)
-        with st.expander('Preview Uploaded Data'):
-            st.dataframe(df, width=True)
         
-        raw_cols = ["vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature"]
+        # Grouping upload logic
+        with st.container(border=True):
+            csv_file = st.file_uploader('Drop your system logs here', type=['csv'])
 
-        missing = [c for c in raw_cols if c not in df.columns]
+            render_session_state()
 
-        if missing:
-            st.error(f"🚨 Missing required columns: {', '.join(missing)}")
-            return
-    
-        if st.button("Analyze CSV Data", key="btn_csv"):
+            if not csv_file:
+                st.info("💡 Upload a CSV file to begin the diagnostic process.")
+                return
 
-            # Each row is now a record
-            data = df[raw_cols].to_dict("records")
+            df = pd.read_csv(csv_file)
+            with st.expander('Preview Uploaded Data'):
+                st.dataframe(df, use_container_width=True)
+            
+            raw_cols = ["vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature"]
+            missing = [c for c in raw_cols if c not in df.columns]
 
-            # Send to the detection pipeline
-            st.session_state.result = handler.start_flow(string_data=data)
-            result = st.session_state.result
+            if missing:
+                st.error(f"🚨 Missing required columns: {', '.join(missing)}")
+                return
+        
+            if st.button("Analyze CSV Data", key="btn_csv", type="primary", use_container_width=True):
+                # Using status for better feedback
+                with st.status("Running fault detection pipeline...") as status:
+                    # Each row is now a record
+                    data = df[raw_cols].to_dict("records")
 
-            if result:
-                save_fault_details(result, data, df)
+                    # Send to the detection pipeline
+                    st.session_state.result = handler.start_flow(string_data=data)
+                    result = st.session_state.result
+
+                    if result:
+                        save_fault_details(result, data, df)
+                    status.update(label="Analysis Complete!", state="complete", expanded=False)
 
         result = st.session_state.result
 
         if not result:
-            st.caption("Click **Analyze CSV Data** to see results.")
             return
 
+        st.divider()
         render_csv_summary_cards(result, df, raw_cols)
 
 
@@ -83,27 +87,35 @@ def save_fault_details(result, data, df):
 
 
 def render_csv_summary_cards(result, df, raw_cols):
-    c1, c2 = st.columns(2)
-    c1.metric("System status", result.result)
-    c2.metric("Confidence score", f"{result.reading_confidence:.1%}")
+    
+    # Base metrics at the top
+    c1, c2, c3 = st.columns(3)
+    c1.metric("System Status", result.result)
+    c2.metric("Mean Confidence", f"{result.reading_confidence:.1%}")
+    c3.metric("Records Analyzed", len(df))
 
-    # Individual strings
-    st.subheader("Individual String Analysis")
-    res_df = pd.DataFrame(result.result_readings)
-    view_df = res_df[['string_id', 'fault_type', 'confidence']].copy()
-    view_df["confidence"] = view_df["confidence"].astype(float)
+    st.markdown("---")
 
-    st.caption("Tick ONE row checkbox to explain it (rerun is normal, selection persists.)")
+    # Side by side table and explanation
+    col_list, col_exp = st.columns([1, 1], gap="medium")
 
-    selected_idx = selectable_table(view_df, key="string_select_grid")
-    st.session_state.selected_row_idx = int(selected_idx)
+    with col_list:
+        st.subheader("Individual String Analysis")
+        res_df = pd.DataFrame(result.result_readings)
+        view_df = res_df[['string_id', 'fault_type', 'confidence']].copy()
+        view_df["confidence"] = view_df["confidence"].astype(float)
 
-    st.info(f"Selected row for explanation: {st.session_state.selected_row_idx}")
+        st.caption("Tick ONE row checkbox to explain it.")
+        selected_idx = selectable_table(view_df, key="string_select_grid")
+        st.session_state.selected_row_idx = int(selected_idx)
 
-    with st.expander("🧠 Explain selected prediction", expanded=True):
-        raw_df = df[raw_cols].copy()
-        model = load_electrical_model()
-        render_shap_explainability_section(raw_df, model)
+    with col_exp:
+        st.subheader("AI Explanation")
+        with st.container(border=True):
+            st.info(f"Analysis for String ID: **{st.session_state.selected_row_idx}**")
+            raw_df = df[raw_cols].copy()
+            model = load_electrical_model()
+            render_shap_explainability_section(raw_df, model)
 
 
 # Image mode
@@ -121,42 +133,53 @@ def render_image_mode(tab3, handler):
     with tab3:
         st.subheader("Thermal Analysis")
 
-        img_col, det_col = st.columns([1, 1])
+        # UI Enhancement: Better visual balance for image processing
+        img_col, det_col = st.columns([1, 1], gap="large")
 
         with img_col:
-            image_file = st.file_uploader("Upload Thermal Image", type=["jpg", "png", "jpeg"])
-            image_bytes = None
-            if image_file:
-                image_bytes = image_file.getvalue()
-                st.image(image_bytes, caption="Preview Of Uploaded Image", use_container_width=True)
+            with st.container(border=True):
+                image_file = st.file_uploader("Upload Thermal Image", type=["jpg", "png", "jpeg"])
+                image_bytes = None
+                if image_file:
+                    image_bytes = image_file.getvalue()
+                    st.image(image_bytes, caption="Uploaded Thermal Capture", use_container_width=True)
 
         with det_col:
-            if image_bytes and st.button("Scan for Hotspots", key="scan_thermal"):
-                with st.spinner("Analyzing Pixels..."):
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-                        tmp.write(image_bytes)
-                        image_path = tmp.name
+            if image_bytes:
+                if st.button("Scan for Hotspots", key="scan_thermal", type="primary", use_container_width=True):
+                    with st.spinner("Analyzing Pixels..."):
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+                            tmp.write(image_bytes)
+                            image_path = tmp.name
 
-                    result = handler.start_flow(image_data=image_path)
+                        result = handler.start_flow(image_data=image_path)
 
-                    # Add the hotspot prediction to the DB
-                    insert_prediction(
-                        source="streamlit",
-                        mode="thermal",
-                        fault_type=str(result.result),
-                        confidence=float(result.image_confidence),
-                        image_path=image_path
-                    )
-                    
-                    # Add to session state temporarily
-                    st.session_state.history.append({
-                        "mode": "thermal",
-                        "fault_type": result.result,
-                        "confidence": float(result.image_confidence)
-                    })
-                st.success(f"Detection Complete: **{result.result}**")
-                st.metric("Confidence", f"{result.image_confidence:.1%}")
-                render_pie_chart(result)
+                        # Add the hotspot prediction to the DB
+                        insert_prediction(
+                            source="streamlit",
+                            mode="thermal",
+                            fault_type=str(result.result),
+                            confidence=float(result.image_confidence),
+                            image_path=image_path
+                        )
+                        
+                        # Add to session state temporarily
+                        st.session_state.history.append({
+                            "mode": "thermal",
+                            "fault_type": result.result,
+                            "confidence": float(result.image_confidence)
+                        })
+                        
+                        # Store in session for persistence on rerun
+                        st.session_state.last_thermal_result = result
+
+                if "last_thermal_result" in st.session_state:
+                    res = st.session_state.last_thermal_result
+                    st.success(f"Detection Complete: **{res.result}**")
+                    st.metric("Confidence", f"{res.image_confidence:.1%}")
+                    render_pie_chart(res)
+            else:
+                st.info("Upload an image to activate thermal scanning.")
 
 
 def render_tabs():
@@ -167,7 +190,7 @@ def render_tabs():
         tab1, tab2, tab3: Tabs used to input data for predictions.
     """
     st.title("☀️ Solar PV Fault Detection")
-    st.markdown("---")
+    st.markdown("Provide system data below to identify performance anomalies.")
 
     # Input selection using tabs
     tab1, tab2, tab3 = st.tabs(['📄 CSV Batch Analysis', '✍️ Manual Diagnostic', '🖼️ Thermal Vision'])
