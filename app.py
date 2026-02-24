@@ -1,9 +1,9 @@
 import streamlit as st
 from dashboard.components.layout import render_css, render_page_config
-from dashboard.db import init_db
+from dashboard.database.db import init_db
 from dashboard.app_state import init_state
-from dashboard.auth_ui import render_auth_screen
-from dashboard.navigation import AppRouter
+from dashboard.authentication.auth_ui import render_auth_screen
+from dashboard.app_router import AppRouter
 
 # Make the database
 init_db()

@@ -1,4 +1,4 @@
-from dashboard.history_view import show_history
+from dashboard.views.history_view import show_history
 
 
 def show_history_page():

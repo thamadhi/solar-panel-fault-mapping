@@ -1,7 +1,7 @@
 import streamlit as st
 import json
 import tempfile
-from dashboard.db import insert_prediction
+from dashboard.database.db import insert_prediction
 import pandas as pd
 from dashboard.app_models import load_electrical_model
 from dashboard.components.explainability import render_shap_explainability_section, render_pie_chart
