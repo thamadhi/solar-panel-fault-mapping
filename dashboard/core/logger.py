@@ -1,6 +1,6 @@
 import logging
-from dashboard.db import init_db
-from .db_log_handler import DBLogHandler
+from dashboard.database.db import init_db
+from dashboard.core.db_log_handler import DBLogHandler
 
 class LoggerFactory:
     """
