@@ -45,8 +45,19 @@ div.stButton > button[kind="primary"]:hover {
     padding: 30px;
     border-radius: 20px;
     border: 1px solid #374151;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    height: 100%;
+    min-height: 360px;
     text-align: center;
-    min-height: 250px;
+}
+
+/* Make columns stretch properly */
+div[data-testid="column"] > div {
+    height: 100%;
 }
 
 .feature-card h3 {
@@ -63,4 +74,54 @@ h1 {
     color: #9CA3AF !important;
     font-size: 1.2rem !important;
     line-height: 1.6 !important;
+}
+
+
+/* Card buttons */
+button[key^="card_"] {
+    width: 100% !important;
+    text-align: left !important;
+    background: #1F2937 !important;
+    border: 1px solid #374151 !important;
+    border-radius: 20px !important;
+    padding: 26px !important;
+    color: #F3F4F6 !important;
+    transition: all 0.2s ease !important;
+    height: 360px !important;
+    white-space: normal !important;
+}
+
+/* Hover */
+button[key^="card_"]:hover {
+    transform: translateY(-4px) !important;
+    border-color: #FBBF24 !important;
+}
+
+/* Interactive Feature Cards (override global button style) */
+div.stButton > button[key^="card_"] {
+    width: 100% !important;
+    height: 360px !important;            /* card height */
+    border-radius: 20px !important;      /* card corners (NOT pill) */
+    padding: 26px !important;            /* card padding */
+    background: #1F2937 !important;      /* card bg */
+    border: 1px solid #374151 !important;
+    color: #F3F4F6 !important;
+    text-align: left !important;
+    white-space: normal !important;      /* allow wrap */
+    line-height: 1.4 !important;
+    display: flex !important;            /* enables vertical layout */
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+}
+
+/* Hover */
+div.stButton > button[key^="card_"]:hover {
+    transform: translateY(-4px) !important;
+    border-color: #FBBF24 !important;
+}
+
+/* Remove focus glow if any */
+div.stButton > button[key^="card_"]:focus {
+    box-shadow: none !important;
 }
