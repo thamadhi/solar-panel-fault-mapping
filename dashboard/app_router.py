@@ -13,23 +13,45 @@ class AppRouter:
     def render_side_bar(self) -> str:
         data_url = self._gif_to_base64("assets/cloudyRain.gif")
 
+        # Safe read
+        user = st.session_state.get("user")  # could be None
+
         with st.sidebar:
-            st.markdown(f'<img src="data:image/gif;base64,{data_url}" alt="gif">', unsafe_allow_html=True)
-            st.write(f"Welcome, **{st.session_state.user.username}**")
+            st.markdown(
+                f'<img src="data:image/gif;base64,{data_url}" alt="gif">',
+                unsafe_allow_html=True
+            )
+
+            if user is None:
+                st.write("Welcome 👋 Please log in.")
+                st.divider()
+
+                # Keep nav but limit pages when not logged in
+                page = st.radio(
+                    "Go to",
+                    ["Login"],  # Dashboard??????
+                    index=0,
+                    format_func=lambda x: f"📍 {x}",
+                    key="nav_page"
+                )
+                return page
+
+            # Logged in case
+            st.write(f"Welcome, **{user.username}**")
             st.divider()
 
             page = st.radio(
                 "Go to",
                 ["Dashboard", "Fault Detection", "Localisation", "Severity",
-                 "Rectification", "Reports", "History"],
+                "Rectification", "Reports", "History"],
                 index=0,
                 format_func=lambda x: f"📍 {x}",
                 key="nav_page"
             )
 
             st.divider()
-            st.write(f"Logged in as: **{st.session_state.user.username}**")
-            st.write(f"Role: **{st.session_state.user.type}**")
+            st.write(f"Logged in as: **{user.username}**")
+            st.write(f"Role: **{getattr(user, 'type', 'User')}**")  # safe
 
             if st.button("Logout", key="sidebar_logout"):
                 st.session_state.user = None
