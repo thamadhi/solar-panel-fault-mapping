@@ -1,21 +1,18 @@
-import numpy as np
 import streamlit as st
-import matplotlib.pyplot as plt
 import pandas as pd
-import shap
 import plotly.express as px
 
 
 # Map the columns as UI-friendly
 def get_friendly_names():
-     """
+    """
     Provide UI-friendly display labels for model feature names.
 
     Returns:
-        dict[str, str]: Mapping from raw feature names to display labels.     
-     """
+        dict[str, str]: Mapping from raw feature names to display labels.
+    """
 
-     return {
+    return {
         "vdc1": "String 1 voltage (V)",
         "vdc2": "String 2 voltage (V)",
         "idc1": "String 1 current (A)",
@@ -30,46 +27,6 @@ def get_friendly_names():
     }
 
 
-def build_electrical_feature_df(df_raw: pd.DataFrame) -> pd.DataFrame:
-    """
-    Build the engineered features for the Random Forest model.
-
-    Feature engineering includes:
-        - Power per string (Voltage x Current)
-        - Total power
-        - Voltage ratio
-        - Current ratio
-
-    Args:
-        df_raw (pd.DataFrame): Raw electrical readings.
-
-    Returns:
-        pd.DataFrame: Feature dataframe in correct order for model prediction.
-    """
-
-    # Copy to avoid mutating original dataframe
-    X = df_raw.copy()
-
-    # Calculate power per string
-    X["power_string1"] = X["vdc1"] * X["idc1"]
-    X["power_string2"] = X["vdc2"] * X["idc2"]
-
-    # Total system power
-    X["total_power"] = X["power_string1"] + X["power_string2"]
-
-    # Avoid division by zero for ratios
-    X["voltage_ratio"] = X["vdc1"] / (X["vdc2"] + 1e-9)
-    X["current_ratio"] = X["idc1"] / (X["idc2"] + 1e-9)
-
-    # Ensure the features are in the right order
-    feature_order = [
-        "vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature",
-        "power_string1", "power_string2", "total_power",
-        "voltage_ratio", "current_ratio"
-    ]
-    return X[feature_order]
-
-
 def get_shap_sign(impact: float) -> str:
     """
     Convrt a SHAP contribution sign into a human-readable direction phrase.
@@ -77,16 +34,23 @@ def get_shap_sign(impact: float) -> str:
     Positive SHAP values increase the model output for the predicted class,
     while negative SHAP values decrease it.
 
+    NOTE:
+        In the new architecture, SHAP values are computed in the Flask API
+        and sent to Streamlit. This function still converts the sign into
+        a readable phrase for UI bullet points.
+
     Args:
         impact (float): SHAP contribution value for one feature.
 
     Returns:
-        str: Direction phrase describing a feature's effect on the prediction. 
+        str: Direction phrase describing a feature's effect on the prediction.
     """
 
+    # If impact is positive, feature pushes the prediction toward the class
     if impact >= 0:
         verb = "pushes forward"
     else:
+        # If impact is negative, feature pushes the prediction away
         verb = "pushes away from"
     return verb
 
@@ -102,19 +66,27 @@ def get_helper_language(feat: str) -> str:
         feat (str): Feature name (raw/engineered)
 
     Returns:
-        str: Helper phrase describing what that feature typically represents.    
+        str: Helper phrase describing what that feature typically represents.
     """
 
+    # Power/current/total power features indicate output level
     if feat in (
         "total_power", "power_string1", "power_string2", "idc1", "idc2"
     ):
         level = "higher/lower than expected"
+
+    # Ratios usually indicate imbalance between strings
     elif feat in ("voltage_ratio", "current_ratio"):
         level = "unbalanced / ratio is off"
+
+    # Environmental conditions
     elif feat in ("irradiance", "temperature"):
         level = "environmental condition"
+
+    # Default fallback
     else:
         level = "important signal"
+
     return level
 
 
@@ -142,109 +114,36 @@ def render_bullet_points(
     Returns:
         list[str]: List of markdown-formatted bullet strings.
     """
-    
+
     bullets = []
+
+    # Take top-k contributors (already sorted in API response, but safe anyway)
     top = contrib_df.head(k)
 
+    # Friendly name mapping for UI display
+    friendly_names = get_friendly_names()
+
+    # Build each bullet line
     for _, row in top.iterrows():
-        feat = str(row["feature"])
-        value = row["value"]
-        impact = float(row["impact"])
+        feat = str(row["feature"])           # raw feature name
+        value = float(row["value"])          # actual feature value
+        impact = float(row["impact"])        # SHAP contribution
 
-        friendly_names = get_friendly_names()
-
+        # Replace raw feature name with a friendly label if available
         name = friendly_names.get(feat, feat)
 
         # Direction based on SHAP sign
         verb = get_shap_sign(impact)
 
-        # Helper language
+        # Helper language based on feature category
         level = get_helper_language(feat)
 
+        # Build bullet string (markdown)
         bullets.append(
             f"**{name}** = `{value:.3f}` → {level} → {verb} **{pred_label}** (impact `{impact:+.3f}`)"
         )
+
     return bullets
-
-
-def topk_contributors(feature_names: list[str],
-                      shap_vals_1d: np.ndarray,
-                      x_row_1d: np.ndarray,
-                      k: int = 5) -> pd.DataFrame:
-    """
-    Extract top-k most impactful features based on absolute SHAP values.
-
-    Args:
-        feature_names (list[str]): Feature names.
-        shap_vals_1d (np.ndarray): SHAP values for selected row.
-        x_row_1d (np.ndarray): Actual feature values.
-        k (int): Number of top contributors.
-
-    Returns:
-        pd.DataFrame: Sorted feature contributions.
-    """
-
-    # Sort by absolute impact (descending)
-    order = np.argsort(np.abs(shap_vals_1d))[::-1][:k]
-    rows = []
-
-    for i in order:
-        rows.append({
-            "feature": feature_names[i],
-            "value": float(x_row_1d[i]),
-            "impact": float(shap_vals_1d[i]),
-            "direction": "pushes forward" if shap_vals_1d[i] >= 0 else \
-                "pushes away"
-        })
-    return pd.DataFrame(rows)
-
-
-def render_shap_explainability_section(raw_df: pd.DataFrame, model) -> None:
-    """
-    Renders the SHAP plots for the user.
-
-    Args:
-        raw_df (pd.DataFrame): The raw CSV file entered by the user.
-
-    Returns:
-        None
-    """
-
-    st.subheader("Explainability")
-    # Build features
-    X = build_electrical_feature_df(raw_df)
-    feature_names = list(X.columns)
-
-    if len(raw_df) == 0:
-        st.warning("No rows to explain.")
-        return
-
-    # Choose which row/string to explain
-    row_idx = st.selectbox(
-        "Select string (row index) to explain",
-        options=list(range(len(raw_df))),
-        index=0
-    )
-
-    pred_label, conf, sv, base = compute_shap(model, X, row_idx=row_idx)
-
-    st.markdown(f"**Explaining row:** `{row_idx}`")
-    st.success(f"Predicted: {pred_label} | Confidence: **{conf:1%}**")
-
-    # Top contributors table
-    contrib_df = topk_contributors(feature_names, sv, X.iloc[row_idx].to_numpy(), k=8)
-    # Why the system/model says so
-    st.markdown("### Why the system decided this")
-    why = render_bullet_points(contrib_df, pred_label, k=5)
-    for b in why:
-        st.markdown(f"- {b}")
-    st.dataframe(contrib_df, width="stretch")
-
-    # Plotly bar chart
-    render_plotly_barchart(contrib_df)
-
-    # Waterfall plot
-    render_waterfall_plot(sv, base, X, row_idx, feature_names)
 
 
 def render_plotly_barchart(contrib_df: pd.DataFrame) -> None:
@@ -258,11 +157,16 @@ def render_plotly_barchart(contrib_df: pd.DataFrame) -> None:
         contrib_df (pd.DataFrame): Contributor dataframe.
 
     Returns:
-        None    
+        None
     """
 
+    # Copy so we don't mutate original
     bar_df = contrib_df.copy()
+
+    # Add a helper abs column for sorting
     bar_df["abs_impact"] = bar_df["impact"].abs()
+
+    # Horizontal bar chart
     fig = px.bar(
         bar_df.sort_values("abs_impact", ascending=True),
         x="impact",
@@ -270,104 +174,91 @@ def render_plotly_barchart(contrib_df: pd.DataFrame) -> None:
         orientation="h",
         title="Top feature impacts"
     )
-    st.plotly_chart(fig, width="stretch")
+
+    # Render chart
+    st.plotly_chart(fig, use_container_width=True)
 
 
-def render_waterfall_plot(sv, base, X, row_idx, feature_names):
-    sv = np.array(sv).reshape(-1)
-    base = float(np.array(base).reshape(()))
-    with st.expander("Show waterfall plot"):
-        exp = shap.Explanation(
-            values=sv,
-            base_values=base,
-            data=X.iloc[row_idx].to_numpy(),
-            feature_names=feature_names
-        )
-        plt.figure()
-        shap.plots.waterfall(exp, max_display=10, show=False)
-        st.pyplot(plt.gcf(), clear_figure=True)
-
-
-def compute_shap(model, X: pd.DataFrame, row_idx: int):
+def render_explainability_from_api(exp_json: dict) -> None:
     """
-    Computes the SHAP values for the selected row.
+    Renders the SHAP plots for the user.
+
+    NOTE:
+        Previously this function computed SHAP inside Streamlit:
+        - built engineered features
+        - ran shap.TreeExplainer(model)
+        - made plots
+
+        In the new "Streamlit calls API" architecture:
+        - Flask API computes SHAP + top contributors
+        - Streamlit ONLY renders what the API returns
 
     Args:
-        model: Trained tree-based classification model
-        X (pd.DataFrame): Feature matrix
-        row_idx (int): index of the row being computed.
+        exp_json (dict): JSON returned from API endpoint `/explain/electrical`.
 
     Returns:
-        tuple:
-            pred_label (str): Predicted class label.
-            confidence (float): Probability of predicted class.
-            shap_values (np.ndarray): SHAP contribution per feature.
-            base_value (float): Expected model output.
+        None
     """
 
-    # Get the row
-    x_row = X.iloc[[row_idx]]
-    x_np = x_row.to_numpy() # Since the model was trained with numpy arrays
+    st.subheader("Explainability")
 
-    # Predict probabilities
-    proba = model.predict_proba(x_np)[0]
-    class_idx = int(np.argmax(proba))
-    pred_label = str(model.classes_[class_idx])
-    confidence = float(proba[class_idx])
+    # Validate payload
+    if not exp_json or exp_json.get("status") != "success":
+        st.warning("No explainability result returned.")
+        return
 
-    proba = model.predict_proba(X.iloc[[row_idx]])[0]
-    pairs = list(zip(model.classes_, proba))
+    # Extract key info
+    pred_label = str(exp_json.get("pred_label", "Unknown"))
+    conf = float(exp_json.get("confidence", 0.0))
 
-    # Sort by probability (highest first)
-    pairs.sort(key=lambda x: x[1], reverse=True)
+    # Contributors list must exist
+    contributors = exp_json.get("contributors", [])
+    if not contributors:
+        st.warning("No contributors found in API response.")
+        return
 
-    # Display the top 2 predictions
-    st.write(f"Top predictions: **{pairs[0][0]} ({pairs[0][1]:.1%})**, "
-            f"2nd: **{pairs[1][0]} ({pairs[1][1]:.1%})**")
-    
-    # Warn if confidence is low
-    if pairs[0][1] < 0.60:
-        st.warning("Low confidence - treat this result as uncertain.")
+    # Convert to dataframe for table + plotting
+    contrib_df = pd.DataFrame(contributors)
 
-    # Create SHAP explainer for tree-based model
-    explainer = shap.TreeExplainer(model)   # For tree based models
-    shap_values = explainer.shap_values(x_row)
+    # Main headline result
+    st.success(f"Predicted: {pred_label} | Confidence: **{conf:1%}**")
 
-    # Multi class returns list[n_classes] each (n_samples, n_features)
-    if isinstance(shap_values, list):
-        sv = np.array(shap_values[class_idx])[0]    # (n_features,)
-        base = explainer.expected_value[class_idx]
-    else:
-        sv = np.array(shap_values)
+    # Explain in bullet points
+    st.markdown("### Why the system decided this")
+    why = render_bullet_points(contrib_df, pred_label, k=5)
+    for b in why:
+        st.markdown(f"- {b}")
 
-        # (n_samples, n_features, n_classes)
-        if sv.ndim == 3:
-            sv = sv[0, :, class_idx]
-            base = explainer.expected_value[class_idx]
-        else:   # Binary fallback
-            sv = sv[0]
-            base = explainer.expected_value
+    # Table view for transparency
+    st.dataframe(contrib_df, use_container_width=True)
 
-    return pred_label, confidence, sv, base
+    # Plotly chart for visual explanation
+    render_plotly_barchart(contrib_df)
 
 
 def render_pie_chart(result):
     """
     Renders a pie chart visualizing the class distirbution confidence
     during hotpsot detection.
-    
+
     Args:
         result: The result containing the fault details such as confidence
         and fault type.
     """
-    conf = float(result.image_confidence or 0.0)
-    conf = max(0.0, min(conf, 1.0))  # clamp between 0 and 1
 
+    # Get confidence safely
+    conf = float(getattr(result, "image_confidence", 0.0) or 0.0)
+
+    # Clamp to [0, 1]
+    conf = max(0.0, min(conf, 1.0))
+
+    # Convert to dataframe for plotly
     chart_df = pd.DataFrame([
-        {"fault_type": result.result, "confidence": conf},
+        {"fault_type": getattr(result, "result", "Unknown"), "confidence": conf},
         {"fault_type": "Remaining Probability", "confidence": 1.0 - conf},
     ])
 
+    # Create donut chart
     fig = px.pie(
         chart_df,
         values="confidence",
@@ -376,10 +267,12 @@ def render_pie_chart(result):
         title="Prediction Confidence Distribution"
     )
 
+    # Layout tweaks
     fig.update_layout(
         showlegend=True,
         margin=dict(t=50, b=0, l=0, r=0),
         legend=dict(orientation="h", yanchor="bottom", y=-0.2)
     )
 
-    st.plotly_chart(fig, width="stretch")
+    # Render
+    st.plotly_chart(fig, use_container_width=True)

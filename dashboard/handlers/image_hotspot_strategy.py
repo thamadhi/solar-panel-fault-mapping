@@ -105,14 +105,12 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
         try:
             # Check if model is loaded
             if self.__model is None:
-                print("ABCED Model did not load!!!!!!!!!!!!!!!")
                 return {'fault_type': 'Normal Operation', 'confidence': 0.0,
                         'error': 'Model failed to load'}
 
             # Load and preprocess image
             image = self._load_and_preprocess_image(image_path)
             if image is None:
-                print("IMAGE DID NOT PREPROCESS!!!!!!!!!!")
                 return {'fault_type': 'Normal Operation', 'confidence': 0.0,
                         'error': 'Image load failed'}
             

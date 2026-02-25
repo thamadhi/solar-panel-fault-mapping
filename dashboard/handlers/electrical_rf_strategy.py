@@ -141,3 +141,11 @@ class ElectricalRF(FaultDetectionStrategy):
             'confidence': overall['confidence'],
             'detailed_predictions': results
         }
+
+
+    @property
+    def model(self):
+        return self.__model
+
+    def to_feature_df(self, data):
+        return self._to_feature_df(data)

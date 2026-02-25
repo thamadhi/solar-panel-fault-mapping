@@ -1,5 +1,7 @@
 import streamlit as st
-from dashboard.authentication.auth_service import login, register_user
+from dashboard.authentication.auth_service import register_user
+from dashboard.api_client import api_login
+from dashboard.models.user import User
 
 
 def render_auth_screen(key_prefix: str = "auth"):
@@ -17,51 +19,39 @@ def render_auth_screen(key_prefix: str = "auth"):
     if "auth_view" not in st.session_state:
         st.session_state.auth_view = "login"
 
-    # Login view
     if st.session_state.auth_view == "login":
         st.subheader("Login")
 
-        # Username input
-        username = st.text_input(
-            "Username",
-            key=f"{key_prefix}_login_user"
-        )
+        username = st.text_input("Username", key=f"{key_prefix}_login_user")
+        password = st.text_input("Password", type="password", key=f"{key_prefix}_login_pass")
 
-        # Password input (masked)
-        password = st.text_input(
-            "Password",
-            type="password",
-            key=f"{key_prefix}_login_pass"
-        )
+        if st.button("Login", key=f"{key_prefix}_login_btn", type="primary"):
+            try:
+                res = api_login(username, password)
 
-        # Login button
-        if st.button(
-            "Login",
-            key=f"{key_prefix}_login_btn",
-            type="primary"
-        ):
-            # Call authentication service
-            user = login(username, password)
+                if res.get("status") == "success":
+                    # Convert dict -> User object
+                    u = res["user"]
+                    st.session_state.user = User(
+                        id=u["id"],
+                        type=u["type"],
+                        username=u["username"],
+                        email=u["email"]
+                    )
 
-            if user:
-                # Store logged-in user in session
-                st.session_state.user = user
+                    st.session_state.api_token = res["token"]
+                    st.session_state.show_auth = False
 
-                # Hide auth screen
-                st.session_state.show_auth = False
+                    st.success("Login successful!")
+                    st.rerun()
 
-                st.success("Login successful!")
+                else:
+                    st.error("Invalid username or password")
 
-                # Rerun app to refresh UI
-                st.rerun()
-            else:
-                st.error("Invalid username or password")
+            except Exception as e:
+                st.error(str(e))
 
-        # Switch to register view
-        if st.button(
-            "Create an account",
-            key=f"{key_prefix}_go_register"
-        ):
+        if st.button("Create an account", key=f"{key_prefix}_go_register"):
             st.session_state.auth_view = "register"
             st.rerun()
 

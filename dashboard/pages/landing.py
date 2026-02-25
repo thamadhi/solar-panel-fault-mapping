@@ -1,6 +1,12 @@
 import streamlit as st
 from dashboard.authentication.auth_ui import render_auth_screen
 import streamlit.components.v1 as components
+import base64
+from pathlib import Path
+
+
+def img_to_base64(path: str) -> str:
+    return base64.b64encode(Path(path).read_bytes()).decode()
 
 
 def show_landing_page():
@@ -62,9 +68,15 @@ def show_landing_page():
 
     # Right column with the image
     with hero_col_right:
-        st.image(
-            "assets/solar-panels.png",
-            width=300
+        img_b64 = img_to_base64("assets/array.jpg")
+
+        st.markdown(
+            f"""
+            <div class="circle-image">
+                <img src="data:image/jpg;base64,{img_b64}" alt="Solar Array">
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
     st.write("##")
