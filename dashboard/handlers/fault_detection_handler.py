@@ -249,6 +249,14 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
 
     @property
+    def electrical_model(self):
+        return self.__electrical_strategy.model
+    
+    def build_electrical_features(self, records: List[Dict[str, float]]):
+        return self.__electrical_strategy.to_feature_df(records)
+
+
+    @property
     def feature_names(self) -> List[str]:
         """
         Used to return the trained feature names used by the model.
