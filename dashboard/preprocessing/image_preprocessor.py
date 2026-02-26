@@ -42,10 +42,10 @@ class ImagePreprocessor(Preprocessor):
         if img is None:
             return None
         
-        img = self._bgr_to_rgb(img)     # Convert color
-        img = self._resize(img)         # Resize image
-        img = self._normalize(img)      # Normalize image
-        img = self._expand_dims(img)    # (1,H,W,C)
+        img = self._bgr_to_rgb(img)
+        img = self._resize(img)
+        img = self._normalize(img)
+        img = self._expand_dims(img)
 
         return img
 

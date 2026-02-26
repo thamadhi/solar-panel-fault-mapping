@@ -17,7 +17,7 @@ class Dashboard:
     def show(self):
         st.title("📊 Dashboard")
 
-        # metrics
+        # Metrics
         total = self._query("SELECT COUNT(*) FROM Predictions")[0][0]
         avg = self._query("SELECT AVG(confidence) FROM Predictions")[0][0]
         fault_counts = self._query(

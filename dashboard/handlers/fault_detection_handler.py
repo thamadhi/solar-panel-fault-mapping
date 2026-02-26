@@ -1,18 +1,20 @@
 # Standard libraries
-import os
 from typing import Any, Dict, List, Optional
 from typing_extensions import override
 
 # Local/project imports
-from .abstract_component_flow_handler import AbstractComponentFlowHandler
+from dashboard.handlers.abstract_component_flow_handler import AbstractComponentFlowHandler
 from dashboard.core.analysis_result import AnalysisResult
-from .electrical_rf_strategy import ElectricalRF
-from .image_hotspot_strategy import ImageHotspotStrategy
+from dashboard.handlers.electrical_rf_strategy import ElectricalRF
+from dashboard.handlers.image_hotspot_strategy import ImageHotspotStrategy
 from dashboard.core.fault import Fault
-from .detection_context import DetectionContext
-from .fault_factory import FaultFactory
+from dashboard.handlers.detection_context import DetectionContext
+from dashboard.handlers.fault_factory import FaultFactory
 from dashboard.core.logger import LoggerFactory
+from dashboard.preprocessing.electrical_preprocessor import ElectricalPreprocesor
+from dashboard.preprocessing.image_preprocessor import ImagePreprocessor
 # from .fault_observer import FaultObserver
+
 
 class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
@@ -28,7 +30,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
                  image_model_path: str = "dashboard/models/tuned_model.keras") -> None:
         """
         Initializes a FaultDetectionHandler with the required models.
-        
+
         Args:
             electrical_model_path (str): Path of the electrical model
             image_model_path (str): Path of the image model
@@ -45,6 +47,8 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         self.__processed_electrical_data: List[Dict[str, float]] = []
         self.__processed_image_path: Optional[str] = None
         self.__detection_context = DetectionContext(self.__electrical_strategy)
+        self.__electrical_preprocessor = ElectricalPreprocesor()
+        self.__image_preprocessor = ImagePreprocessor()
         self.__result: Optional[AnalysisResult] = None
         self.__feature_names = ['vdc1', 'vdc2', 'idc1', 'idc2',
                                 'irradiance', 'temperature',
@@ -78,31 +82,16 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
             # Process electrical data
             if string_data:
-                self.__processed_electrical_data = self._preprocess_string_data(string_data)
+                self.__processed_electrical_data = self.__electrical_preprocessor.preprocess(string_data)
                 self.__logger.info(f"Processed {len(self.__processed_electrical_data)} electrical readings")
             
             # Process image data
             if image_data:
-                self.__processed_image_path = self._preprocess_image_data(image_data)
+                self.__processed_image_path = self.__image_preprocessor.preprocess(image_data)
                 if self.__processed_image_path:
                     self.__logger.info(f"Processed image: {self.__processed_image_path}")
         except Exception as e:
             self.__logger.error(f"Preprocessing error: {e}")
-
-    
-    def _preprocess_image_data(self, image_data: Any) -> Optional[str]:
-        """
-        Pre-process image data
-
-        Args:
-            image_data (Any): Image data (path or array)
-
-        Returns:
-            Optional[str]: Path to processed image
-        """
-        if isinstance(image_data, str) and os.path.exists(image_data):
-            return image_data   # Only validate and move forward
-        return None
 
 
     @override
@@ -193,48 +182,8 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             )
 
 
-    def _preprocess_string_data(self, string_data: Any) -> List[Dict[str, float]]:
-        """
-        Used to preprocess the electrical data entered by the user
-
-        Args:
-            string_data (Any): The string data
-
-        Returns:
-            List[Dict[str, float]]: Processed electrical data
-        """
-        processed = []
-
-        # Check if electrical data was uploaded
-        if string_data is None:
-            return processed
-        
-        if isinstance(string_data, list) and len(string_data) > 0:
-            for item in string_data:
-                if isinstance(item, dict):
-                    processed_item = {
-                    'vdc1': float(item.get('vdc1', item.get('voltage_V', 0.0))),
-                    'vdc2': float(item.get('vdc2', item.get('voltage_V', 0.0))),
-                    'idc1': float(item.get('idc1', item.get('current_A', 0.0))),
-                    'idc2': float(item.get('idc2', item.get('current_A', 0.0))),
-                    'irradiance': float(item.get('irradiance', item.get('Irradiance_Wm2', 0.0))),
-                    'temperature': float(item.get('temperature', item.get('temperature_C', 25.0)))
-                    }
-                    processed.append(processed_item)
-
-        # Handle single measurement
-        elif isinstance(string_data, dict):
-            processed_item = {
-            'vdc1': float(string_data.get('vdc1', string_data.get('voltage_V', 0.0))),
-            'vdc2': float(string_data.get('vdc2', string_data.get('voltage_V', 0.0))),
-            'idc1': float(string_data.get('idc1', string_data.get('current_A', 0.0))),
-            'idc2': float(string_data.get('idc2', string_data.get('current_A', 0.0))),
-            'irradiance': float(string_data.get('irradiance', string_data.get('Irradiance_Wm2', 0.0))),
-            'temperature': float(string_data.get('temperature', string_data.get('temperature_C', 25.0)))
-            }         
-            processed.append(processed_item)
-
-        return processed
+    def build_electrical_features(self, records: List[Dict[str, float]]):
+        return self.__electrical_preprocessor.preprocess(records)
 
 
     @property
@@ -251,9 +200,6 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     @property
     def electrical_model(self):
         return self.__electrical_strategy.model
-    
-    def build_electrical_features(self, records: List[Dict[str, float]]):
-        return self.__electrical_strategy.to_feature_df(records)
 
 
     @property
