@@ -2,6 +2,7 @@ import os
 import sqlite3
 from datetime import datetime
 from typing import List, Dict, Any, Optional
+from dashboard.authentication.security import hash_password
 
 DB_PATH = "data/app.db"
 
@@ -69,6 +70,16 @@ def init_db(db_path: str = DB_PATH) -> None:
             message TEXT,
             exception TEXT        
         );
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS Users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            type TEXT NOT NULL,
+            username TEXT NOT NULL UNIQUE,
+            email TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL        
+        )
     """)
 
     conn.commit()
@@ -193,3 +204,68 @@ def fetch_logs(limit: int = 100, db_path: str = DB_PATH) -> List[Dict[str, Any]]
     rows = cur.fetchall()
     conn.close()
     return [dict(row) for row in rows]
+
+
+def create_user(user_type: str, username: str, email: str, password: str) -> int:
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO Users(type, username, email, password_hash) VALUES (?, ?, ?, ?)",
+        (user_type, username, email, hash_password(password))
+    )
+    conn.commit()
+    user_id = cur.lastrowid
+    conn.close()
+    return user_id
+
+
+def get_user_by_username(username: str):
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM Users WHERE username = ?", (username,)
+    )
+    row = cur.fetchone()
+    conn.close()
+    return row
+
+
+def create_default_admin():
+    existing = get_user_by_username("admin")
+    if existing is None:
+        create_user(
+            user_type="Admin",
+            username="admin",
+            email="admin@solar.com",
+            password="admin123"
+        )
+
+def fetch_latest_faults(limit: int = 5) -> List[Dict[str, Any]]:
+
+    conn = get_conn()
+    rows = conn.execute(
+        """
+        SELECT id, created_at, source, mode, fault_type, confidence
+        FROM Predictions
+        ORDER BY datetime(created_at) DESC
+        LIMIT ?
+        """, (limit,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def fetch_fault_trend_daily(days: int = 30) -> List[Dict[str, Any]]:
+
+    conn = get_conn()
+    rows = conn.execute(
+        """
+        SELECT date(created_at) AS day, COUNT(*) AS count
+        FROM Predictions
+        WHERE date(created_at) >= date('now', ?)
+        GROUP BY date(created_at)
+        ORDER BY day ASC
+        """, (f"-{days} days",)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]

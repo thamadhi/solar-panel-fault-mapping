@@ -2,7 +2,7 @@ import os
 import sqlite3
 import json
 from pathlib import Path
-from dashboard.db import (
+from dashboard.database.db import (
     DB_PATH, get_conn, init_db,
     insert_prediction, fetch_latest,
     insert_log, fetch_logs
