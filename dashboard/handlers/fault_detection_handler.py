@@ -80,16 +80,15 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             self.__processed_image_path = None
             self.__fault_type = None
 
-            # Process electrical data
-            if string_data:
-                self.__processed_electrical_data = self.__electrical_preprocessor.preprocess(string_data)
+            # Electrical
+            if string_data is not None:
+                self.__processed_electrical_data = string_data
                 self.__logger.info(f"Processed {len(self.__processed_electrical_data)} electrical readings")
-            
-            # Process image data
-            if image_data:
-                self.__processed_image_path = self.__image_preprocessor.preprocess(image_data)
-                if self.__processed_image_path:
-                    self.__logger.info(f"Processed image: {self.__processed_image_path}")
+
+            # Thermal
+            if image_data is not None and isinstance(image_data, str) and image_data.strip():
+                self.__processed_image_path = image_data  # keep path only
+                self.__logger.info(f"Received image path: {self.__processed_image_path}")
         except Exception as e:
             self.__logger.error(f"Preprocessing error: {e}")
 
@@ -108,15 +107,9 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         detection_results: List[Dict[str, Any]] = []
 
         # Apply electrical model if electrical data exists
-        if self.__processed_electrical_data:
+        if self.__processed_electrical_data is not None and len(self.__processed_electrical_data) > 0:
             self.__detection_context.set_strategy(self.__electrical_strategy)
             result = self.__detection_context.perform_detection(self.__processed_electrical_data)
-
-            # Unwrap if context returns (dict,) or {"result": dict}
-            if isinstance(result, tuple) and len(result) and isinstance(result[0], dict):
-                result = result[0]
-            if isinstance(result, dict) and "result" in result and isinstance(result["result"], dict):
-                result = result["result"]
 
             if isinstance(result, dict):
                 detection_results.append(result)
@@ -125,10 +118,12 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
         
         # Apply image model if image data exists
-        if self.__processed_image_path:
+        if self.__processed_image_path is not None:
             self.__detection_context.set_strategy(self.__image_strategy)
             result = self.__detection_context.perform_detection(self.__processed_image_path)
-            detection_results.append(result)
+        
+            if isinstance(result, dict):
+                detection_results.append(result)
 
         # Determine most significant fault
         if detection_results:
