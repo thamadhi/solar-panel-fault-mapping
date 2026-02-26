@@ -34,7 +34,7 @@ class DetectionContext:
 
     def perform_detection(self, data: Any) -> Dict[str, Any]:
         """
-        Method called by the context for fault detection
+        Method called by the context for fault detection.
         
         Args:
             data (Any):
