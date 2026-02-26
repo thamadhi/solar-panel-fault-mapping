@@ -1,11 +1,12 @@
 import os
 import cv2
 import numpy as np
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional
 from typing_extensions import override
 from tensorflow import keras
 from .base_strategy import FaultDetectionStrategy
 from dashboard.core.logger import LoggerFactory
+from dashboard.preprocessing.image_preprocessor import ImagePreprocessor
 
 
 class ImageHotspotStrategy(FaultDetectionStrategy):
@@ -15,7 +16,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
 
     def __init__(self, model_path: str) -> None:
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
-        self.__IMAGE_SIZE = (224, 224)  # Standard size for CNN models
+        self.__preprocessor = ImagePreprocessor()
         self.__model = self._load_model(model_path)
 
 
@@ -40,52 +41,6 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
             self.__logger.error(f"Error loading DenseNet model: {e}")
             return None
 
-    
-    @property
-    def IMAGE_SIZE(self) -> Tuple[int, int]:
-        """Returns the image size for image processing as a tuple"""
-        return self.__IMAGE_SIZE
-    
-
-    def _load_and_preprocess_image(self, image_path: str) -> Optional[np.ndarray]:
-        """
-        Load and preprocess image for DenseNet
-
-        Args:
-            image_path (str): Path of the image
-
-        Returns:
-            Optional[np.ndarray]: The normalized image
-
-        Raises:
-            Exception: If the image was not found
-        """
-
-        try:
-            img = cv2.imread(image_path)
-            if img is None:
-                self.__logger.error(f"Failed to read image: {image_path}")
-                return None
-            
-            # Convert BGR to RGB
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-            # Resize to model input size
-            img = cv2.resize(img, self.__IMAGE_SIZE)
-
-            # Normalize to [0,1]
-            img = img.astype(np.float32) / 255.0
-
-            # Add batch dimension - expand the shape of the array
-            # by inserting a new axis (dimension) at a position
-            img = np.expand_dims(img, axis=0)
-
-            return img
-        
-        except Exception as e:
-            self.__logger.error(f"Image processing error: {e}")
-            return None
-
 
     @override
     def detect(self, image_path: str) -> Dict[str, Any]:
@@ -105,14 +60,12 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
         try:
             # Check if model is loaded
             if self.__model is None:
-                print("ABCED Model did not load!!!!!!!!!!!!!!!")
                 return {'fault_type': 'Normal Operation', 'confidence': 0.0,
                         'error': 'Model failed to load'}
 
             # Load and preprocess image
-            image = self._load_and_preprocess_image(image_path)
+            image = self.__preprocessor.preprocess(image_path)
             if image is None:
-                print("IMAGE DID NOT PREPROCESS!!!!!!!!!!")
                 return {'fault_type': 'Normal Operation', 'confidence': 0.0,
                         'error': 'Image load failed'}
             
@@ -148,6 +101,3 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                     'confidence': 0.0,
                     'error': str(e)
             }
-
-    def get_image_hotspot_strategy():
-        return ImageHotspotStrategy()
