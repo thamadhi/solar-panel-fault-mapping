@@ -1,3 +1,17 @@
+"""
+Flask API server.
+
+This module expodes REST endpoints for:
+
+- Electrical fault prediction
+- Thermal fault detection
+- SHAP-based model explainability
+- JWT-based user authentication
+
+The API acts as the backend service between the Streamlit frontend
+and the machine learning models.
+"""
+
 from flask import Flask, request, jsonify
 from dashboard.core.logger import LoggerFactory
 from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
@@ -11,18 +25,23 @@ from functools import wraps
 from dashboard.authentication.jwt_utils import verify_token
 
 import numpy as np
-import pandas as pd
 import shap
 
 
+# Application setup
 LoggerFactory.setup(db_path="data/app.db")
 
+# Setup flask instance
 app = Flask(__name__)
+
+# Initialize database
 init_db()
 
+# Model configurations
 RANDOM_FOREST_MODEL_PATH = "dashboard/models/tuned_random_forest.pkl"
 DENSENET_MODEL_PATH = "dashboard/models/tuned_model.keras"
 
+# Load fault detection handler once at startup
 handler = FaultDetectionHandler(
     electrical_model_path=RANDOM_FOREST_MODEL_PATH,
     image_model_path=DENSENET_MODEL_PATH
@@ -30,9 +49,20 @@ handler = FaultDetectionHandler(
 
 
 def require_auth(fn):
+    """
+    Decorator to enforce JWT authentication on protected routes:
+
+    Checks:
+        - Authorization header exists.
+        - Token is valid and not expired.
+
+    Attaches:
+        request.user -> Decoded token claims.
+    """
     @wraps(fn)
     def wrapper(*args, **kwargs):
         auth = request.headers.get("Authorization", "")
+
         if not auth.startswith("Bearer "):
             return jsonify({"status": "error", "message": "Missing Bearer token"}), 401
 
@@ -40,26 +70,37 @@ def require_auth(fn):
 
         try:
             claims = verify_token(token)
-            request.user = claims  # attach claims if you want role checks
+            request.user = claims  # Attach claims for role checks
         except Exception:
             return jsonify({"status": "error", "message": "Invalid/expired token"}), 401
 
         return fn(*args, **kwargs)
+
     return wrapper
 
 
 @app.route("/predict", methods=["POST"])
 @require_auth
 def predict():
+    """
+    Predict electrical fauls using structured input data.
+
+    Expects:
+        JSON body containing the electrical readings (list or dict).
+
+    Returns:
+        fault_type, confidence, and processed readings.
+    """
     data = request.get_json(silent=True)
 
     if not data:
         return jsonify({"error": "No JSON body provided"}), 400
 
     try:
-        # data can be dict or list; your handler handles both
+        # Data can be dict or list since handler handles both
         result = handler.start_flow(string_data=data)
 
+        # Store prediction in database
         insert_prediction(
             source="api",
             mode="electrical",
@@ -72,7 +113,7 @@ def predict():
             "status": "success",
             "fault_type": result.result,
             "confidence": float(result.reading_confidence),
-            "result_readings": result.result_readings  # helpful for UI table
+            "result_readings": result.result_readings  # Helpful for UI table
         }), 200
 
     except Exception as e:
@@ -82,6 +123,15 @@ def predict():
 @app.route("/predict-image", methods=["POST"])
 @require_auth
 def predict_image():
+    """
+    Predict thermal hotspot faults from uploaded image.
+
+    Expects:
+        Multipart/form-data with 'image' file.
+
+    Returns:
+        fault_type and confidence score.
+    """
     if "image" not in request.files:
         return jsonify({"error": "No image in this request."}), 400
 
@@ -119,7 +169,6 @@ def predict_image():
         return jsonify({"status": "error", "message": str(e)}), 500
 
     finally:
-        # ✅ FIX: guard None
         if temp_path and os.path.exists(temp_path):
             os.remove(temp_path)
 
@@ -128,6 +177,8 @@ def predict_image():
 @require_auth
 def explain_electrical():
     """
+    Provide SHAP-based explanations for selected electrical record.
+
     Body:
     {
       "records": [ {vdc1,vdc2,idc1,idc2,irradiance,temperature}, ... ],
@@ -135,9 +186,9 @@ def explain_electrical():
     }
 
     Returns:
-    {
-      pred_label, confidence, contributors:[...]
-    }
+        - Predicted label
+        - Confidence score
+        - Top feature contributions
     """
     body = request.get_json(silent=True)
     if not body:
@@ -151,10 +202,11 @@ def explain_electrical():
 
     try:
         row_idx = int(row_idx)
+
         if row_idx < 0 or row_idx >= len(records):
             return jsonify({"error": "row_idx out of range"}), 400
 
-        # Build engineered features using the SAME pipeline as RF strategy
+        # Build engineered features using the same pipeline as RF strategy
         X = handler.build_electrical_features(records)
         feature_names = list(X.columns)
 
@@ -176,12 +228,10 @@ def explain_electrical():
         # Handle multiclass vs binary
         if isinstance(shap_values, list):
             sv = np.array(shap_values[class_idx])[0]
-            base = explainer.expected_value[class_idx]
         else:
             sv = np.array(shap_values)
             if sv.ndim == 3:
                 sv = sv[0, :, class_idx]
-                base = explainer.expected_value[class_idx]
             else:
                 sv = sv[0]
                 base = explainer.expected_value
@@ -213,7 +263,20 @@ def explain_electrical():
 
 @app.route("/auth/login", methods=["POST"])
 def api_login():
+    """
+    Authenticate user and generate JWT token.
+
+    Expects:
+        {
+        "username": "...",
+        "password": "..."
+        }
+
+    Returns:
+        JWT token and user metadeta.
+    """
     body = request.get_json(silent=True)
+
     if not body:
         return jsonify({"error": "No JSON body provided"}), 400
 
@@ -221,6 +284,7 @@ def api_login():
     password = str(body.get("password", ""))
 
     row = get_user_by_username(username=username)
+
     if row is None or not verify_password(password, row["password_hash"]):
         return jsonify({"status": "error", "message": "Invalid credentials"}), 401
 
@@ -237,6 +301,6 @@ def api_login():
         }
     }), 200
 
-
+# Application entry point
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)
