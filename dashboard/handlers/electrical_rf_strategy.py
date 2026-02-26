@@ -5,7 +5,7 @@ from typing_extensions import override
 from .base_strategy import FaultDetectionStrategy
 from dashboard.core.logger import LoggerFactory
 import joblib
-import pandas as pd
+from dashboard.preprocessing.electrical_preprocessor import ElectricalPreprocesor
 
 
 class ElectricalRF(FaultDetectionStrategy):
@@ -44,45 +44,7 @@ class ElectricalRF(FaultDetectionStrategy):
             "voltage_ratio", "current_ratio"
         ]
 
-
-    def _to_feature_df(self, data: List[Dict[str, float]]) -> pd.DataFrame:
-        """
-        Extracts features from electrical data for the random forest.
-
-        Args:
-            data (List[Dict]): The data containing the features.
-
-        Returns:
-            pd.DataFrame: Dataframe containing all the features.
-        """
-
-        # Get raw features
-        rows = []
-        
-        for row in data:
-            rows.append({
-                "vdc1": float(row.get("vdc1", 0.0)),
-                "vdc2": float(row.get("vdc2", 0.0)),
-                "idc1": float(row.get("idc1", 0.0)),
-                "idc2": float(row.get("idc2", 0.0)),
-                "irradiance": float(row.get("irradiance", 0.0)),
-                "temperature": float(row.get("temperature", 25.0))
-            })
-
-        X = pd.DataFrame(rows, columns=self.__raw_cols)
-
-        # Create engineered features
-        X["power_string1"] = X["vdc1"] * X["idc1"]
-        X["power_string2"] = X["vdc2"] * X["idc2"]
-        X["total_power"] = X["power_string1"] + X["power_string2"]
-
-        # Safe divide
-        X["voltage_ratio"] = X["vdc1"] / (X["vdc2"] + 1e-9)
-        X["current_ratio"] = X["idc1"] / (X["idc2"] + 1e-9)
-
-        # Ensure correct feature order
-        X = X[self.__feature_order]
-        return X
+        self.__preprocessor = ElectricalPreprocesor()
 
 
     @override
@@ -110,7 +72,7 @@ class ElectricalRF(FaultDetectionStrategy):
             }
 
         try:
-            X = self._to_feature_df(data)
+            X = self.__preprocessor.preprocess(data)
             X_np = X.to_numpy()
             y_pred = self.__model.predict(X_np)    # Labels
             y_proba = self.__model.predict_proba(X_np)  # Probabilities
