@@ -1,40 +1,23 @@
 import streamlit as st
-from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
-from dashboard.modules.ui_components import (render_sidebar, render_tabs,
-                                    render_csv_mode, render_image_mode,
-                                    render_css, render_page_config, render_history)
-from dashboard.db import init_db
+from dashboard.components.layout import render_css, render_page_config
+from dashboard.database.db import init_db
+from dashboard.app_state import init_state
+from dashboard.authentication.auth_ui import render_auth_screen
+from dashboard.app_router import AppRouter
+from dashboard.pages.landing import show_landing_page
 
 # Make the database
 init_db()
+init_state()
 
-# Load page configurations and CSS
 render_page_config()
 render_css("assets/styles.css")
+render_css("assets/landing.css")
 
-# Initiate once
-if "history" not in st.session_state:
-    st.session_state.history = []
+app_router = AppRouter()
 
-# Setup paths
-ELECTRICAL_MODEL_PATH = "dashboard/models/tuned_random_forest.pkl"
-IMAGE_MODEL_PATH = "dashboard/models/tuned_model.keras"
-
-@st.cache_resource  # Return the same cached instance to improve performance
-def load_handler():
-    return FaultDetectionHandler(
-        electrical_model_path=ELECTRICAL_MODEL_PATH,
-        image_model_path=IMAGE_MODEL_PATH
-    )
-
-# Load handlers and all other UI components
-handler = load_handler()
-render_sidebar()
-
-# Load input tabs
-tab1, tab2, tab3 = render_tabs()
-render_csv_mode(tab1, handler=handler)
-render_image_mode(tab3, handler=handler)
-
-# Show history again so it has new predictions
-render_history()
+# Register or login the user
+if st.session_state.user is None:
+    show_landing_page()
+else:
+    app_router.run()
