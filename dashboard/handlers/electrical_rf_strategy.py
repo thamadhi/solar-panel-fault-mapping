@@ -2,7 +2,7 @@ import os
 import numpy as np
 from typing import Dict, Any, List
 from typing_extensions import override
-from .base_strategy import FaultDetectionStrategy
+from dashboard.handlers.base_strategy import FaultDetectionStrategy
 from dashboard.core.logger import LoggerFactory
 import joblib
 from dashboard.preprocessing.electrical_preprocessor import ElectricalPreprocesor
@@ -108,6 +108,3 @@ class ElectricalRF(FaultDetectionStrategy):
     @property
     def model(self):
         return self.__model
-
-    def to_feature_df(self, data):
-        return self._to_feature_df(data)

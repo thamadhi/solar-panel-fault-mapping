@@ -1,6 +1,4 @@
 import os
-import cv2
-import numpy as np
 from typing import Dict, Any, Optional
 from typing_extensions import override
 from tensorflow import keras

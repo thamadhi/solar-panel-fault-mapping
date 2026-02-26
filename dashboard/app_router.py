@@ -51,7 +51,7 @@ class AppRouter:
 
             st.divider()
             st.write(f"Logged in as: **{user.username}**")
-            st.write(f"Role: **{getattr(user, 'type', 'User')}**")  # safe
+            st.write(f"Role: **{getattr(user, 'type', 'User')}**")
 
             if st.button("Logout", key="sidebar_logout"):
                 st.session_state.user = None
