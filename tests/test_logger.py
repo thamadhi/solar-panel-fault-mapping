@@ -1,6 +1,9 @@
 import logging
 from dashboard.core.db_log_handler import DBLogHandler
+import dashboard.database.db as db
 import sqlite3
+import pytest
+
 
 def test_logger():
 
@@ -26,7 +29,6 @@ def test_logger():
     except ZeroDivisionError:
         logger.exception("Test exception log")
 
-    # ---- VERIFY DB CONTENT ----
     conn = sqlite3.connect("data/app.db")
     cur = conn.cursor()
 
