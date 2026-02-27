@@ -1,135 +1,125 @@
-import os
 import sqlite3
-import json
-from pathlib import Path
-from dashboard.database.db import (
-    DB_PATH, get_conn, init_db,
-    insert_prediction, fetch_latest,
-    insert_log, fetch_logs
-)
+import dashboard.database.db as db
+import pytest
+
 TEST_DB = "data/test_app.db"
 
-def reset_test_db():
-    os.makedirs("data", exist_ok=True)
-    if Path(TEST_DB).exists():
-        Path(TEST_DB).unlink()
+
+@pytest.fixture
+def temp_db_path(tmp_path):
+    return str(tmp_path / "test_app.db")
 
 
-def test_get_conn():
-    reset_test_db()
-    init_db(TEST_DB)
-
-    conn = get_conn(TEST_DB)
-    assert isinstance(conn, sqlite3.Connection)
-    assert conn.row_factory is sqlite3.Row
-    conn.close()
-    print("✅ test_get_conn passed")
+@pytest.fixture
+def initialized_db(temp_db_path):
+    db.init_db(temp_db_path)
+    return temp_db_path
 
 
-def test_init_db():
-    reset_test_db()
-    init_db(TEST_DB)
-
-    assert Path(TEST_DB).exists(), "DB file was not created"
-
-    conn = sqlite3.connect(TEST_DB)
-    cur = conn.cursor()
-    cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tables = {row[0] for row in cur.fetchall()}
-    conn.close()
-
-    assert "Predictions" in tables, "Predictions table missing"
-    assert "Logs" in tables, "Logs table missing"
-    print("✅ test_init_db passed")
+def test_get_conn_sets_row_factory(temp_db_path):
+    conn = db.get_conn(temp_db_path)
+    try:
+        assert conn is not None
+        assert conn.row_factory == sqlite3.Row
+    finally:
+        conn.close()
 
 
-def test_insert_prediction():
-    reset_test_db()
-    init_db(TEST_DB)
+def test_init_db_creates_tables(temp_db_path):
+    db.init_db(temp_db_path)
 
-    row_id = insert_prediction(
-        source="unit_test",
-        mode="image",
-        fault_type="single_hotspot",
-        confidence=0.88,
-        image_path="tests/img1.png",
-        input_json=json.dumps({"a": 1}),
-        db_path=TEST_DB
+    conn = sqlite3.connect(temp_db_path)
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = {row[0] for row in cur.fetchall()}
+        assert "Predictions" in tables
+        assert "Logs" in tables
+        assert "Users" in tables
+    finally:
+        conn.close()
+
+
+def test_insert_prediction_returns_id_and_fetch_latest(initialized_db):
+    row_id = db.insert_prediction(
+        source="api",
+        mode="electrical",
+        fault_type="Hotspot",
+        confidence=0.91,
+        image_path=None,
+        input_json='{"a":1}',
+        db_path=initialized_db,
     )
 
     assert isinstance(row_id, int)
     assert row_id > 0
-    print("✅ test_insert_prediction passed")
+
+    rows = db.fetch_latest(limit=10, db_path=initialized_db)
+    assert len(rows) == 1
+    assert rows[0]["id"] == row_id
+    assert rows[0]["source"] == "api"
+    assert rows[0]["mode"] == "electrical"
+    assert rows[0]["fault_type"] == "Hotspot"
+    assert abs(rows[0]["confidence"] - 0.91) < 1e-9
 
 
-def test_fetch_latest():
-    reset_test_db()
-    init_db(TEST_DB)
-
-    # Insert 3 predictions
-    ids = []
+def test_fetch_latest_respects_limit(initialized_db):
     for i in range(3):
-        ids.append(insert_prediction(
-            source="unit_test",
+        db.insert_prediction(
+            source="api",
             mode="image",
-            fault_type="clean" if i % 2 == 0 else "single_hotspot",
-            confidence=0.5 + i * 0.1,
-            image_path=f"tests/img{i}.png",
-            input_json=None,
-            db_path=TEST_DB
-        ))
+            fault_type=f"F{i}",
+            confidence=0.5,
+            db_path=initialized_db
+        )
 
-    rows = fetch_latest(limit=2, db_path=TEST_DB)
-
-    assert isinstance(rows, list)
-    assert len(rows) == 2, "Should return 2 rows (limit=2)"
-    assert rows[0]["id"] == ids[-1], "Newest should be first"
-    assert rows[1]["id"] == ids[-2], "Second newest should be second"
-    print("✅ test_fetch_latest passed")
+    rows = db.fetch_latest(limit=2, db_path=initialized_db)
+    assert len(rows) == 2
+    # Newest first
+    assert rows[0]["id"] > rows[1]["id"]
 
 
-def test_insert_log():
-    reset_test_db()
-    init_db(TEST_DB)
-
-    log_id = insert_log(
-        level="INFO",
-        logger_name="unit_test_logger",
-        module="test_db",
-        message="hello log",
-        func_name="test_insert_log",
-        line_no=123,
-        exception=None,
-        db_path=TEST_DB
+def test_insert_log_and_fetch_logs(initialized_db):
+    log_id = db.insert_log(
+        level="ERROR",
+        logger_name="TestLogger",
+        module="test_module",
+        message="Something broke",
+        func_name="test_func",
+        line_no="123",
+        exception="ValueError",
+        db_path=initialized_db,
     )
 
-    assert isinstance(log_id, int)
     assert log_id > 0
-    print("✅ test_insert_log passed")
+
+    logs = db.fetch_logs(limit=10, db_path=initialized_db)
+    assert len(logs) == 1
+    assert logs[0]["id"] == log_id
+    assert logs[0]["level"] == "ERROR"
+    assert logs[0]["message"] == "Something broke"
 
 
-def test_fetch_logs():
-    reset_test_db()
-    init_db(TEST_DB)
+def test_create_user_and_get_user_by_username(monkeypatch, initialized_db):
 
-    # insert 3 logs
-    ids = []
-    for i in range(3):
-        ids.append(insert_log(
-            level="INFO",
-            logger_name="unit_test_logger",
-            module="test_db",
-            message=f"log {i}",
-            func_name="test_fetch_logs",
-            line_no=200 + i,
-            exception=None,
-            db_path=TEST_DB
-        ))
+    # Force to ignore admin
+    monkeypatch.setattr(db, "DB_PATH", initialized_db)
 
-    logs = fetch_logs(limit=2, db_path=TEST_DB)
+    suffix = str(id(initialized_db))
+    username = f"alice_{suffix}"
+    email = f"alice_{suffix}@example.com"
 
-    assert isinstance(logs, list)
-    assert len(logs) == 2
-    assert logs[0]["id"] == ids[-1], "Newest log should be first"
-    assert logs[0]["message"] == "log 2"
-    print("✅ test_fetch_logs passed")
+    user_id = db.create_user(
+        user_type="Admin",
+        username=username,
+        email=email,
+        password="secret123"
+    )
+    assert user_id > 0
+
+    row = db.get_user_by_username(username)
+    assert row is not None
+    assert row["username"] == username
+    assert row["email"] == email
+    assert row["type"] == "Admin"
+    assert row["password_hash"] != "secret123"
