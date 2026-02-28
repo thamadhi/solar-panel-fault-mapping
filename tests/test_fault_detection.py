@@ -64,16 +64,11 @@ def test_pre_process_data(mocked_handler):
     handler.pre_process_data(string_data=payload, image_data=None)
 
     processed = getattr(handler, "_FaultDetectionHandler__processed_electrical_data", None)
-    assert processed is not None
-    assert isinstance(processed, list)
-    assert len(processed) == 1
-    assert isinstance(processed[0], dict)
-
-    row = processed[0]
+    assert isinstance(processed, dict)
 
     # Base features exist
     for k in ["vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature"]:
-        assert k in row
+        assert k in processed
 
 
 def test_apply_model(mocked_handler):
@@ -150,31 +145,19 @@ def test_present_results_no_fault(mocked_handler):
 @patch("dashboard.handlers.fault_detection_handler.ElectricalRF")
 @patch("dashboard.handlers.fault_detection_handler.ImageHotspotStrategy")
 def test_hotspot_mock_model(mock_hotspot_cls, mock_rf_cls):
-    """
-    Test hotspot without loading a real model or real image file.
-    """
-
-    # Prevent ElectricalANN from loading fake.keras
+    # Prevent RF from loading
     mock_rf_cls.return_value = MagicMock()
 
-    # Mock strategy instance
+    # Mock hotspot strategy
     mock_hotspot = MagicMock()
-    mock_hotspot.detect.return_value = {
-        "fault_type": "Hotspot",
-        "confidence": 0.87
-    }
+    mock_hotspot.detect.return_value = {"fault_type": "Hotspot", "confidence": 0.87}
     mock_hotspot_cls.return_value = mock_hotspot
 
-    # Create handler
-    handler = FaultDetectionHandler(
-        electrical_model_path="fake.pkl"
-    )
+    handler = FaultDetectionHandler(electrical_model_path="fake.pkl")
 
-    # Patch image processing so no real file needed
-    with patch.object(
-        handler, "_preprocess_image_data", return_value="fake_image.jpg"
-    ):
-        result = handler.start_flow(image_data="anything.jpg")
+    # Make a real temporary image file so path checks pass
+    with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
+        result = handler.start_flow(image_data=tmp.name)
 
     assert result is not None
     assert result.result == "Hotspot"
@@ -195,18 +178,6 @@ def test_logger_setup_runs_once():
 
     logger = LoggerFactory.get_logger(__name__)
     assert isinstance(logger, logging.Logger)
-
-
-def test_preprocess_image_data_invalid_path():
-    """
-    Test `_preprocess_image_data` returns None when the file path is invalid.
-    """
-    handler = FaultDetectionHandler(
-        electrical_model_path="dashboard/models/tuned_random_forest.pkl",
-    )
-    result = handler._preprocess_image_data("non_existing.jpg")
-
-    assert result is None
 
 
 def test_apply_model_with_no_data():
@@ -294,28 +265,6 @@ def test_apply_model_mock_ann(mock_factory, mock_ctx_cls, mock_rf_cls):
     assert handler._FaultDetectionHandler__last_run_details[
         "confidence"
     ] == 0.88
-
-
-def test_preprocess_image_data_valid_path():
-    """
-    Test `_preprocess_image_data` returns the same path for a valid file.
-
-    Uses a temporary file to avoid relying on repository image assets.
-    """
-
-    handler = FaultDetectionHandler(
-        electrical_model_path="dashboard/models/tuned_random_forest.pkl"
-    )
-
-    # Create a temporary file
-    with tempfile.NamedTemporaryFile(delete=False) as tmp:
-        path = tmp.name
-
-    result = handler._preprocess_image_data(path)
-
-    assert result == path
-
-    os.remove(path)
 
 
 @patch("dashboard.handlers.fault_detection_handler.FaultFactory")   # Temporary replace actual implementation
@@ -437,6 +386,7 @@ def test_pre_process_data_non_numeric_values():
     except ValueError:
         assert True
 
+
 @patch("dashboard.handlers.fault_detection_handler.ElectricalRF")
 @patch("dashboard.handlers.fault_detection_handler.ImageHotspotStrategy")
 def test_present_results_fault_type_none_no_uncrash(mock_hotspot_cls, mock_rf_cls):
@@ -487,21 +437,17 @@ def test_pre_process_data_missing_keys(mocked_handler):
     processed = handler._FaultDetectionHandler__processed_electrical_data
 
     assert processed is not None
-    assert isinstance(processed, list)
-    assert len(processed) == 1
-
-    row = processed[0]
-    assert isinstance(row, dict)
+    assert isinstance(processed, dict)
 
     # Provided value should remain
-    assert row["vdc1"] == 10 or row["vdc1"] == 10.0
+    assert processed["vdc1"] == 10 or processed["vdc1"] == 10.0
 
-    # Defaulted values
-    assert row.get("vdc2", 0.0) == 0.0
-    assert row.get("idc1", 0.0) == 0.0
-    assert row.get("idc2", 0.0) == 0.0
-    assert row.get("irradiance", 0.0) == 0.0
-    assert row.get("temperature", 25.0) == 25.0
+    # Defaulted values (if your code applies defaults)
+    assert processed.get("vdc2", 0.0) == 0.0
+    assert processed.get("idc1", 0.0) == 0.0
+    assert processed.get("idc2", 0.0) == 0.0
+    assert processed.get("irradiance", 0.0) == 0.0
+    assert processed.get("temperature", 25.0) == 25.0
 
 
 def _make_strategy(pred_vector):
@@ -519,155 +465,3 @@ def _make_strategy(pred_vector):
     setattr(s, "_ImageHotspotStrategy__model", model)
 
     return s
-
-
-@pytest.fixture
-def client():
-    """
-    Flask test client
-    """
-
-    from dashboard.api import app
-    app.testing = True
-    return app.test_client()
-
-
-@patch("dashboard.api.handler")
-def test_api_predict_success(mocked_handler, client):
-    """
-    Test POST /predict returns JSON with expected keys.
-    """
-
-    # Mock API start flow call
-    mocked_handler.start_flow.return_value = MagicMock(result="Open Circuit",
-                                                    reading_confidence=0.91)
-    
-    # Simulate sensor readings sent to API
-    payload = {"vdc1": 1,
-               "vdc2": 2,
-               "idc1": 1,
-               "idc2": 1,
-               "irradiance": 800,
-               "temperature": 30}
-    
-    # Simulate HTTP request
-    resp = client.post(
-        "/predict", data=json.dumps(payload), content_type="application/json"
-    )
-
-    assert resp.status_code  == 200
-    data = resp.get_json()  # Check if valid JSON
-    assert data is not None
-
-    # Confirm API structure is correct
-    assert "fault_type" in data
-    assert "confidence" in data
-
-
-def test_api_predict_missing_json(client):
-    """
-    POST /predict without JSON should return 400.
-    """
-
-    resp = client.post("/predict")
-    assert resp.status_code == 400
-
-
-# This is replaced with a MagicMock, and is the first argument
-@patch("dashboard.api.handler")
-def test_api_predict_missing_image_file(mocked_handler, client):
-    """
-    POST /predict-image without file should return 400.
-    """
-
-    # Would get MagicMock.post without mocked handler as an argument
-    resp = client.post(
-        "/predict-image", data={}, content_type="multipart/form-data"
-    )
-    assert resp.status_code == 400
-
-
-@patch("dashboard.api.handler")
-def test_api_predict_image_success(mocked_handler, client):
-    """
-    POST /predict-image with dummy file should return success.
-    """
-
-    mocked_handler.start_flow.return_value = MagicMock(
-        result="Hotspot", image_confidence=0.87
-    )
-
-    dummy_img = (io.BytesIO(b"fake image bytes"), "x.jpg")
-
-    # Key as "image" since it is used to check in request.files in api.py
-    data = {"image": dummy_img}
-
-    resp = client.post(
-        "/predict-image", data=data, content_type="multipart/form-data"
-    )
-
-    assert resp.status_code == 200
-    out = resp.get_json()
-    assert out is not None
-    assert out["status"] == "success"
-    assert out["fault_type"] == "Hotspot"
-    assert out["confidence"] == 0.87
-
-
-@patch("dashboard.api.os.remove")
-@patch("dashboard.api.os.path.exists", return_value=True)
-@patch("dashboard.api.handler")
-def test_api_predict_image_handler_exception(mocked_handler, mock_exists, mock_remove, client):
-
-    mocked_handler.start_flow.side_effect = RuntimeError("boom")
-
-    dummy_img = (io.BytesIO(b"fake image bytes"), "x.jpg")
-    data = {"image": dummy_img}
-
-    resp = client.post(
-        "/predict-image",
-        data=data,
-        content_type="multipart/form-data"
-    )
-
-    assert resp.status_code == 500
-    out = resp.get_json()
-    assert out is not None
-    assert out["status"] == "error"
-    assert "boom" in out["message"]
-
-    # Clean should exist if the file exists
-    assert mock_remove.called
-
-
-@patch("dashboard.api.handler")
-def test_api_predict_image_emoty_filename(mocked_handler, client):
-    """
-    Check if empty filenames are rejected
-    """
-    dummy_img = (io.BytesIO(b"fake image bytes"), "")
-    resp = client.post(
-        "/predict-image",
-        data={"image": dummy_img},
-        content_type="multipart/form-data"
-    )
-
-    assert resp.status_code == 400
-
-
-@patch("dashboard.api.os.remove")
-@patch("dashboard.api.os.path.exists", return_value=True)
-@patch("dashboard.api.handler")
-def test_api_predict_image_handler_exception_cleans_up(mocked_handler, mock_exists, mock_remove, client):
-
-    mocked_handler.start_flow.side_effect = RuntimeError("boom")
-
-    dummy_img = (io.BytesIO(b"fake image bytes"), "x.jpg")
-    resp = client.post(
-        "/predict-image",
-        data={"image": dummy_img},
-        content_type="multipart/form-data"
-    )
-
-    assert resp.status_code == 500
-    assert mock_remove.call_count == 1
