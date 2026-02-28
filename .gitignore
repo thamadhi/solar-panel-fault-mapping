@@ -80,3 +80,4 @@ Thumbs.db
 src/fault-detection/DL-comparisons/dl_mlflow_outputs/
 
 .db
+data/
