@@ -2,7 +2,7 @@ import os
 import time
 import jwt
 
-JWT_SECRET = os.getenv("JWT_SECRET", "change_this_secret")
+JWT_SECRET = os.getenv("JWT_SECRET", "a_very_long_random_secret_key_at_least_32_chars")
 JWT_ALGO = "HS256"
 JWT_EXP_SECONDS = 60 * 60 * 24  # 24 hours
 

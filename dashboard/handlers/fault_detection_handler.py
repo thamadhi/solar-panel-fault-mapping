@@ -5,11 +5,11 @@ from typing_extensions import override
 # Local/project imports
 from dashboard.handlers.abstract_component_flow_handler import AbstractComponentFlowHandler
 from dashboard.core.analysis_result import AnalysisResult
-from dashboard.handlers.electrical_rf_strategy import ElectricalRF
-from dashboard.handlers.image_hotspot_strategy import ImageHotspotStrategy
+from dashboard.strategies.electrical_rf_strategy import ElectricalRF
+from dashboard.strategies.image_hotspot_strategy import ImageHotspotStrategy
 from dashboard.core.fault import Fault
-from dashboard.handlers.detection_context import DetectionContext
-from dashboard.handlers.fault_factory import FaultFactory
+from dashboard.context.detection_context import DetectionContext
+from dashboard.factory.fault_factory import FaultFactory
 from dashboard.core.logger import LoggerFactory
 from dashboard.preprocessing.electrical_preprocessor import ElectricalPreprocesor
 from dashboard.preprocessing.image_preprocessor import ImagePreprocessor
@@ -44,8 +44,8 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         self.__electrical_strategy = ElectricalRF(electrical_model_path)
         self.__image_strategy = ImageHotspotStrategy(image_model_path)
         self.__fault_type: Optional[Fault] = None
-        self.__processed_electrical_data: List[Dict[str, float]] = []
-        self.__processed_image_path: Optional[str] = None
+        self.__processed_electrical_data = None     # Pandas dataframe
+        self.__processed_image_path = None          # Numpy path (1,H,W,C)
         self.__detection_context = DetectionContext(self.__electrical_strategy)
         self.__electrical_preprocessor = ElectricalPreprocesor()
         self.__image_preprocessor = ImagePreprocessor()
@@ -76,19 +76,22 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
         try:
             # Reset stored data
-            self.__processed_electrical_data = []
+            self.__processed_electrical_data = None
             self.__processed_image_path = None
             self.__fault_type = None
 
             # Electrical
-            if string_data is not None:
-                self.__processed_electrical_data = string_data
-                self.__logger.info(f"Processed {len(self.__processed_electrical_data)} electrical readings")
+            if string_data is not None and len(string_data) > 0:
+                self.__processed_electrical_data = self.__electrical_preprocessor.preprocess(string_data)
+                self.__logger.info(f"Electrical features shape: {self.__processed_electrical_data.shape}")
 
             # Thermal
             if image_data is not None and isinstance(image_data, str) and image_data.strip():
-                self.__processed_image_path = image_data  # keep path only
-                self.__logger.info(f"Received image path: {self.__processed_image_path}")
+                self.__processed_image_path = self.__image_preprocessor.preprocess(image_data)
+                if self.__processed_image_path is None:
+                    self.__logger.error("Image processing failed.")
+                else:
+                    self.__logger.info("Image processing complete.")
         except Exception as e:
             self.__logger.error(f"Preprocessing error: {e}")
 
@@ -157,7 +160,8 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             self.result = None
             return
 
-        is_thermal = self.__processed_image_path is not None and not self.__processed_electrical_data
+        is_thermal = self.__processed_image_path is not None \
+        and self.__processed_electrical_data is None
 
         if is_thermal:
             self.result = AnalysisResult(

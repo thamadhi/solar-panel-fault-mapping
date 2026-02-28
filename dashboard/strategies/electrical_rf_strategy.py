@@ -1,11 +1,11 @@
 import os
 import numpy as np
-from typing import Dict, Any, List
+import pandas as pd
+from typing import Dict, Any
 from typing_extensions import override
-from dashboard.handlers.base_strategy import FaultDetectionStrategy
+from dashboard.strategies.base_strategy import FaultDetectionStrategy
 from dashboard.core.logger import LoggerFactory
 import joblib
-from dashboard.preprocessing.electrical_preprocessor import ElectricalPreprocesor
 
 
 class ElectricalRF(FaultDetectionStrategy):
@@ -44,16 +44,14 @@ class ElectricalRF(FaultDetectionStrategy):
             "voltage_ratio", "current_ratio"
         ]
 
-        self.__preprocessor = ElectricalPreprocesor()
-
 
     @override
-    def detect(self, data: List[Dict[str, float]]) -> Dict[str, Any]:
+    def detect(self, X: pd.DataFrame) -> Dict[str, Any]:
         """
         Makes predictions for the Random Forest model.
 
         Args:
-            data (List[Dict[str, float]]): List of the electrical measurements
+            X: Dataframe with engineered features in correct order.
 
         Returns:
             Dictionary with prediction results.
@@ -65,14 +63,13 @@ class ElectricalRF(FaultDetectionStrategy):
                 'error': 'Model not loaded'
             }
         
-        if not data:
+        if X is None or len(X) == 0:
             return {
                 'fault_type': 'Normal Operation',
                 'confidence': 0.0
             }
 
         try:
-            X = self.__preprocessor.preprocess(data)
             X_np = X.to_numpy()
             y_pred = self.__model.predict(X_np)    # Labels
             y_proba = self.__model.predict_proba(X_np)  # Probabilities

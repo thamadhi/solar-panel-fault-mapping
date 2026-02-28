@@ -1,4 +1,4 @@
-from core.analysis_result import AnalysisResult
+from dashboard.core.analysis_result import AnalysisResult
 
 class ReportHandler:
     def __init__(self, 
