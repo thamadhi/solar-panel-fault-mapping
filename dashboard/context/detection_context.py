@@ -1,4 +1,4 @@
-from .base_strategy import FaultDetectionStrategy
+from dashboard.strategies.base_strategy import FaultDetectionStrategy
 from typing import Any, Dict
 
 

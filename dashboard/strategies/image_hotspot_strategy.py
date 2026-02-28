@@ -2,9 +2,8 @@ import os
 from typing import Dict, Any, Optional
 from typing_extensions import override
 from tensorflow import keras
-from .base_strategy import FaultDetectionStrategy
+from dashboard.strategies.base_strategy import FaultDetectionStrategy
 from dashboard.core.logger import LoggerFactory
-from dashboard.preprocessing.image_preprocessor import ImagePreprocessor
 
 
 class ImageHotspotStrategy(FaultDetectionStrategy):
@@ -14,34 +13,11 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
 
     def __init__(self, model_path: str) -> None:
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
-        self.__preprocessor = ImagePreprocessor()
         self.__model = self._load_model(model_path)
 
 
-    def _load_model(self, model_path: str) -> Optional[keras.Model]:
-        """
-        Load the tuned DenseNet model
-
-        Args:
-            model_path (str): The path of the image model being loaded.
-
-        Returns:
-            keras.Model: The loaded model for Hotspot classification.
-        """
-
-        try:
-            if os.path.exists(model_path):
-                model = keras.models.load_model(model_path)
-                return model
-            else:
-                return None
-        except Exception as e:
-            self.__logger.error(f"Error loading DenseNet model: {e}")
-            return None
-
-
     @override
-    def detect(self, image_path: str) -> Dict[str, Any]:
+    def detect(self, image_tensor) -> Dict[str, Any]:
         """
         Detects hotspot from thermal image
 
@@ -61,14 +37,12 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                 return {'fault_type': 'Normal Operation', 'confidence': 0.0,
                         'error': 'Model failed to load'}
 
-            # Load and preprocess image
-            image = self.__preprocessor.preprocess(image_path)
-            if image is None:
+            if image_tensor is None:
                 return {'fault_type': 'Normal Operation', 'confidence': 0.0,
                         'error': 'Image load failed'}
             
             # Get predictions
-            predictions = self.__model.predict(image, verbose=0)[0]
+            predictions = self.__model.predict(image_tensor, verbose=0)[0]
 
             # Binary classification
             hotspot_confidence = float(predictions[0])
@@ -99,3 +73,25 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                     'confidence': 0.0,
                     'error': str(e)
             }
+
+
+    def _load_model(self, model_path: str) -> Optional[keras.Model]:
+        """
+        Load the tuned DenseNet model
+
+        Args:
+            model_path (str): The path of the image model being loaded.
+
+        Returns:
+            keras.Model: The loaded model for Hotspot classification.
+        """
+
+        try:
+            if os.path.exists(model_path):
+                model = keras.models.load_model(model_path)
+                return model
+            else:
+                return None
+        except Exception as e:
+            self.__logger.error(f"Error loading DenseNet model: {e}")
+            return None
