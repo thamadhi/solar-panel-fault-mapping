@@ -1,5 +1,5 @@
 import sqlite3
-import dashboard.database.db as db
+import src.database.db as db
 import pytest
 
 TEST_DB = "data/test_app.db"

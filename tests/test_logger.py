@@ -1,6 +1,6 @@
 import logging
-from dashboard.core.db_log_handler import DBLogHandler
-import dashboard.database.db as db
+from src.core.db_log_handler import DBLogHandler
+import src.database.db as db
 import sqlite3
 import pytest
 

@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-import dashboard.authentication.auth_service as auth
+import src.authentication.auth_service as auth
 
 
 class FakeRow(dict):
