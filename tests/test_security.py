@@ -1,5 +1,5 @@
 import pytest
-import dashboard.authentication.security as security
+import src.authentication.security as security
 
 
 def test_hash_password_salt_and_hash():
