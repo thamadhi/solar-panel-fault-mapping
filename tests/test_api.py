@@ -11,7 +11,7 @@ def auth_headers():
 
 @pytest.fixture
 def client(monkeypatch):
-    import dashboard.api as api
+    import src.api as api
 
     # Auth bypass: require_auth uses api.verify_token()
     monkeypatch.setattr(
