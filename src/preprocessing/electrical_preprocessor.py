@@ -14,7 +14,24 @@ class ElectricalPreprocesor(Preprocessor):
             "voltage_ratio", "current_ratio"
         ]
 
-    def preprocess(self, data):
+    def preprocess(self, data: List[Dict[str, float]]) -> pd.DataFrame:
+        """
+        Performs feature engineering on raw electrical data
+        and converts it into a structured Dataframe ready for predictions.
+
+        Args:
+            data (List[Dict[str, float]]):
+                List of dictionaries containing raw electrical measurements.
+                Each dictionary should include:
+                    - vdc1, vdc2
+                    - idc1, idc2,
+                    - irradiance
+                    - temperature
+
+        Returns:
+            pd.DataFrame: Processed DataFrame with engineered features in
+            the correct order expected by the electrical Random Forest model.
+        """
         data = self._perform_feature_engineering(data)
         return data
 
