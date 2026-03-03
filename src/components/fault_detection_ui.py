@@ -185,7 +185,7 @@ def render_csv_summary_cards(api_res, df, raw_cols):
 
             # Call explainability API endpoint
             # NOTE:
-            # Streamlit does NOT compute SHAP locally.
+            # Streamlit does not compute SHAP locally.
             # It delegates explanation logic to the Flask backend
             # to maintain clean separation of concerns.
             exp = explain_electrical(records, row_idx, token=token)

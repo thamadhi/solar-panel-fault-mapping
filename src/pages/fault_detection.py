@@ -6,7 +6,7 @@ from src.components.fault_detection_ui import (
 )
 
 
-def show_fault_detection_page():
+def show_fault_detection_page() -> None:
     st.markdown("---")
 
     tab1, tab3 = render_tabs()
