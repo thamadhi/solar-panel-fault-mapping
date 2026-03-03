@@ -4,7 +4,7 @@ import plotly.express as px
 
 
 # Map the columns as UI-friendly
-def get_friendly_names():
+def get_friendly_names() -> dict:
     """
     Provide UI-friendly display labels for model feature names.
 
@@ -236,7 +236,7 @@ def render_explainability_from_api(exp_json: dict) -> None:
     render_plotly_barchart(contrib_df)
 
 
-def render_pie_chart(result):
+def render_pie_chart(result) -> None:
     """
     Renders a pie chart visualizing the class distirbution confidence
     during hotpsot detection.

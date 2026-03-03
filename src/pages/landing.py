@@ -6,10 +6,43 @@ from pathlib import Path
 
 
 def img_to_base64(path: str) -> str:
+    """
+    Convert an image file to a Base64-encoded string for HTML embedding.
+
+    Args:
+        path (str): Relative ot absolute path to the image file.
+
+    Returns:
+        str: Base64-encoded representation of the file contents.
+
+    Raises:
+        FileNotFoundError: If the provided path does not exist.
+        PermissionError: If the file cannot be read due to permissions.
+    """
     return base64.b64encode(Path(path).read_bytes()).decode()
 
 
-def show_landing_page():
+def show_landing_page() -> None:
+    """
+    Renders the landing page UI to the user.
+
+    Page Sections:
+        - Top bar with product branding + Sign In button
+        - Hero area with title, subtitle, and call-to-action (Launch Dashboard)
+        - Hero image embdedded as Base64 inside HTML
+        - Features grid (4 feature cards)
+        - Footer message
+        - Conditional authentical section (login/register UI)
+
+    Side Effects:
+        - Updates `st.session_state`: to control navigation between
+            landing and auth UI.
+        - Calls `st.rerun()` after button clicks to refresh UI state immediately.
+        - Injects a JavaScript snippet (assets/scrolls.js) to perform scrolling.
+
+    Returns:
+        None
+    """
 
     left_col, right_col = st.columns([8, 2])
 

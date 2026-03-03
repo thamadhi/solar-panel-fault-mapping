@@ -42,7 +42,7 @@ class Hotspot(Fault):
         self.__image_data = []
 
 
-    def add_image(self, img):
+    def add_image(self, img) -> None:
         """
         Used to add an image into the list of images
         
@@ -52,7 +52,7 @@ class Hotspot(Fault):
         self.__image_data.append(img)
 
 
-    def get_image_array(self):
+    def get_image_array(self) -> list:
         return self.__image_data
 
 
@@ -66,11 +66,11 @@ class ShortCircuit(Fault):
         self.__string_data = []   # Store electrical readings
 
 
-    def add_reading(self, reading: str):
+    def add_reading(self, reading: str) -> None:
         self.__string_data.append(reading)
 
 
-    def get_reading_array(self):
+    def get_reading_array(self) -> list:
         return self.__string_data
 
 
@@ -88,7 +88,7 @@ class OpenCircuit(Fault):
         self.__string_data.append(reading)
 
 
-    def get_reading_array(self):
+    def get_reading_array(self) -> list:
         return self.__string_data
 
 
@@ -100,12 +100,11 @@ class Shadowing(Fault):
     def __init__(self, __id: int) -> None:
         super().__init__(__id, "Shadowing")
         self.__string_data = []
-        self.__image_data = []
 
 
-    def add_reading(self, reading: str):
+    def add_reading(self, reading: str) -> None:
         self.__string_data.append(reading)
 
 
-    def get_reading_array(self):
+    def get_reading_array(self) -> list:
         return self.__string_data

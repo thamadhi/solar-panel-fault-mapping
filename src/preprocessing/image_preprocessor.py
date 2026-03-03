@@ -25,10 +25,12 @@ class ImagePreprocessor(Preprocessor):
         self.__IMAGE_SIZE = (224, 224)
 
 
-    def preprocess(self, data: Any) -> Optional[np.ndarray]:
+    def preprocess(self, data: str) -> Optional[np.ndarray]:
         """
+        Preprocess a thermal image for hot spot classification.
+
         Args:
-            data (Any): Image path (str)
+            data (str): File path to the input image.
 
         Returns:
             Optional[np.ndarray]: Preprocessed tensor (1, H, W, 3) or None.

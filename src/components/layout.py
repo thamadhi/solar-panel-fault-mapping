@@ -1,6 +1,6 @@
 import streamlit as st
 
-def render_css(css_file):
+def render_css(css_file) -> None:
     """
     Renders CSS into the page.
     
@@ -12,7 +12,7 @@ def render_css(css_file):
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 
-def render_page_config():
+def render_page_config() -> None:
     """
     Renders the page configurations.
 
