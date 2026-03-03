@@ -5,6 +5,7 @@ class FaultFactory:
     """
     Demonstrates the Factory Method design pattern.
     """
+
     @staticmethod
     def create_fault(fault_name: str, fault_id: int = 0) -> Fault:
         """

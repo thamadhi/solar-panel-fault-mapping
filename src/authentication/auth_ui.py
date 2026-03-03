@@ -30,7 +30,6 @@ def render_auth_screen(key_prefix: str = "auth"):
                 res = api_login(username, password)
 
                 if res.get("status") == "success":
-                    # Convert dict -> User object
                     u = res["user"]
                     st.session_state.user = User(
                         id=u["id"],
@@ -95,7 +94,7 @@ def render_auth_screen(key_prefix: str = "auth"):
             key=f"{key_prefix}_register_btn",
             type="primary"
         ):
-            # Basic validation: check password match
+            # Check password match
             if new_password != confirm_password:
                 st.error("Passwords do not match.")
             else:
