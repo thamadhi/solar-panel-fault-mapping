@@ -26,8 +26,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
 
     def __init__(self,
-                 electrical_model_path: str = "src/models/tuned_random_forest.pkl",
-                 image_model_path: str = "src/models/tuned_model.keras") -> None:
+                 electrical_model_path: str, image_model_path: str) -> None:
         """
         Initializes a FaultDetectionHandler with the required models.
 
