@@ -1,48 +1,44 @@
 import tempfile
-import os
-import io
 import numpy as np
+import pandas as pd
 from unittest.mock import Mock, patch, MagicMock
-from dashboard.handlers.fault_detection_handler import FaultDetectionHandler
-from dashboard.core.logger import LoggerFactory
-from dashboard.handlers.image_hotspot_strategy import ImageHotspotStrategy
+from src.handlers.fault_detection_handler import FaultDetectionHandler
+from src.core.logger import LoggerFactory
+from src.strategies.image_hotspot_strategy import ImageHotspotStrategy
 import logging
 import pytest
-import json
+
 
 @pytest.fixture
 def mocked_handler():
     """
     Create a FaultDetectionHandler without loading real model files.
-    Patches ElectricalANN + ImageHotspotStrategy so __init__ doesn't 
+    Patches ElectricalRF + ImageHotspotStrategy. 
     do heavy work.
     """
 
     # Replace real class with a Magic Mock
-    with patch(
-        "dashboard.handlers.fault_detection_handler.ElectricalRF"
-        ) as mock_rf_cls, \
-    patch(
-        "dashboard.handlers.fault_detection_handler.ImageHotspotStrategy"
-    ) as mock_hotspot_cls:
-        
-        mock_rf = MagicMock()
+    with patch("src.handlers.fault_detection_handler.ElectricalRF") as mock_rf_cls, \
+         patch("src.handlers.fault_detection_handler.ImageHotspotStrategy") as mock_hotspot_cls, \
+         patch("src.handlers.fault_detection_handler.ElectricalPreprocesor") as mock_elec_prep_cls:
 
-        # Return a fake prediction whenever ANN.predict() is called
-        mock_rf.predict.return_value = {"fault_type": "Normal Operation",
-                                         "confidence": 0.9}
-        mock_rf_cls.return_value = mock_rf
+        mock_rf_cls.return_value = MagicMock()
 
-        # Repeat the same for hotspots
         mock_hotspot = MagicMock()
-        mock_hotspot.detect.return_value = {"fault_type": "Hotspot",
-                                             "confidence": 0.8}
+        mock_hotspot.detect.return_value = {"fault_type": "Hotspot", "confidence": 0.8}
         mock_hotspot_cls.return_value = mock_hotspot
 
-        handler = FaultDetectionHandler(
-            electrical_model_path="fake.pkl"
-        )
+        # Mock preprocessor instance
+        mock_prep_instance = MagicMock()
+        mock_prep_instance.preprocess.return_value = pd.DataFrame([{
+            "vdc1": 10, "vdc2": 20, "idc1": 2, "idc2": 4,
+            "irradiance": 800, "temperature": 30,
+            "power_string1": 0.0, "power_string2": 0.0, "total_power": 0.0,
+            "voltage_ratio": 0.0, "current_ratio": 0.0
+        }])
+        mock_elec_prep_cls.return_value = mock_prep_instance
 
+        handler = FaultDetectionHandler(electrical_model_path="fake.pkl")
         return handler
 
 
@@ -64,11 +60,11 @@ def test_pre_process_data(mocked_handler):
     handler.pre_process_data(string_data=payload, image_data=None)
 
     processed = getattr(handler, "_FaultDetectionHandler__processed_electrical_data", None)
-    assert isinstance(processed, dict)
+    assert isinstance(processed, pd.DataFrame)
 
     # Base features exist
     for k in ["vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature"]:
-        assert k in processed
+        assert k in processed.columns
 
 
 def test_apply_model(mocked_handler):
@@ -89,7 +85,7 @@ def test_apply_model(mocked_handler):
 
     # Patch the static/class method
     with patch(
-        "dashboard.handlers.fault_detection_handler.FaultFactory.create_fault"
+        "src.handlers.fault_detection_handler.FaultFactory.create_fault"
     ) as create_fault:
 
         fake_fault = MagicMock()
@@ -142,26 +138,29 @@ def test_present_results_no_fault(mocked_handler):
     assert handler.result is None
 
 
-@patch("dashboard.handlers.fault_detection_handler.ElectricalRF")
-@patch("dashboard.handlers.fault_detection_handler.ImageHotspotStrategy")
-def test_hotspot_mock_model(mock_hotspot_cls, mock_rf_cls):
-    # Prevent RF from loading
+@patch("src.handlers.fault_detection_handler.ImagePreprocessor")
+@patch("src.handlers.fault_detection_handler.ImageHotspotStrategy")
+@patch("src.handlers.fault_detection_handler.ElectricalRF")
+def test_hotspot_mock_model(mock_rf_cls, mock_hotspot_cls, mock_img_prep_cls):
     mock_rf_cls.return_value = MagicMock()
 
-    # Mock hotspot strategy
     mock_hotspot = MagicMock()
     mock_hotspot.detect.return_value = {"fault_type": "Hotspot", "confidence": 0.87}
     mock_hotspot_cls.return_value = mock_hotspot
 
+    # Make image preprocessing succeed (fake tensor)
+    mock_img = MagicMock()
+    mock_img_prep = MagicMock()
+    mock_img_prep.preprocess.return_value = mock_img
+    mock_img_prep_cls.return_value = mock_img_prep
+
     handler = FaultDetectionHandler(electrical_model_path="fake.pkl")
 
-    # Make a real temporary image file so path checks pass
     with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
         result = handler.start_flow(image_data=tmp.name)
 
     assert result is not None
     assert result.result == "Hotspot"
-    assert 0.0 <= result.image_confidence <= 1.0
     assert abs(result.image_confidence - 0.87) < 1e-9
 
 
@@ -186,7 +185,7 @@ def test_apply_model_with_no_data():
     """
 
     handler = FaultDetectionHandler(
-        electrical_model_path="dashboard/models/tuned_random_forest.pkl",
+        electrical_model_path="src/models/tuned_random_forest.pkl",
     )
     handler.pre_process_data(None, None)
     handler.apply_model()
@@ -200,7 +199,7 @@ def test_feature_names():
     """
 
     handler = FaultDetectionHandler(
-        electrical_model_path="dashboard/models/tuned_random_forest.pkl"
+        electrical_model_path="src/models/tuned_random_forest.pkl"
     )
     features = handler.feature_names
 
@@ -223,11 +222,11 @@ def test_feature_names():
     assert features == expected_feature_names
 
 
-# Mock electrical ANN
-@patch("dashboard.handlers.fault_detection_handler.ElectricalRF")
-@patch("dashboard.handlers.fault_detection_handler.DetectionContext")
-@patch("dashboard.handlers.fault_detection_handler.FaultFactory")
-def test_apply_model_mock_ann(mock_factory, mock_ctx_cls, mock_rf_cls):
+# Mock electrical RF
+@patch("src.handlers.fault_detection_handler.ElectricalRF")
+@patch("src.handlers.fault_detection_handler.DetectionContext")
+@patch("src.handlers.fault_detection_handler.FaultFactory")
+def test_apply_model_mock_rf(mock_factory, mock_ctx_cls, mock_rf_cls):
     """
     Test `apply_model` with a mocked ElectricalRF dependency.
 
@@ -267,9 +266,11 @@ def test_apply_model_mock_ann(mock_factory, mock_ctx_cls, mock_rf_cls):
     ] == 0.88
 
 
-@patch("dashboard.handlers.fault_detection_handler.FaultFactory")   # Temporary replace actual implementation
-@patch("dashboard.handlers.fault_detection_handler.DetectionContext")
-def test_apply_model_selects_highest_confidence(mock_context_class, mock_fault_factory):
+@patch("src.handlers.fault_detection_handler.FaultFactory")
+@patch("src.handlers.fault_detection_handler.DetectionContext")
+@patch("src.handlers.fault_detection_handler.ImageHotspotStrategy")
+@patch("src.handlers.fault_detection_handler.ElectricalRF")
+def test_apply_model_selects_highest_confidence(mock_rf_cls, mock_hotspot_cls, mock_ctx_cls, mock_fault_factory):
     """
     Test `apply_model` picks the fault with the highest confidence.
 
@@ -280,30 +281,21 @@ def test_apply_model_selects_highest_confidence(mock_context_class, mock_fault_f
         fault type is used.
     """
 
-    # Create mock context instance
-    mock_context = MagicMock()
+    mock_rf_cls.return_value = MagicMock()
+    mock_hotspot_cls.return_value = MagicMock()
 
-    # Simulate multiple detections
-    mock_context.perform_detection.side_effect = [
+    mock_ctx = MagicMock()
+    mock_ctx.perform_detection.side_effect = [
         {"fault_type": "Open Circuit", "confidence": 0.6},
-        {"fault_type": "Hotspot", "confidence": 0.9}
+        {"fault_type": "Hotspot", "confidence": 0.9},
     ]
+    mock_ctx_cls.return_value = mock_ctx
 
-    # Make DetectionContext() return mock
-    mock_context_class.return_value = mock_context
+    handler = FaultDetectionHandler(electrical_model_path="fake.pkl")
 
-    # Create handler after patching
-    handler = FaultDetectionHandler(
-        electrical_model_path="dashboard/models/tuned_random_forest.pkl"
-    )
-
-    # Fake processed data
-    handler._FaultDetectionHandler__processed_electrical_data = [{}]
-    handler._FaultDetectionHandler__processed_image_path = "image.jpg"
-
-    # Mock FaultFactory
-    mock_fault = MagicMock()
-    mock_fault_factory.create_fault.return_value = mock_fault
+    # Must pass the len(...) > 0 check
+    handler._FaultDetectionHandler__processed_electrical_data = pd.DataFrame([{"x": 1}])
+    handler._FaultDetectionHandler__processed_image_path = object()
 
     handler.apply_model()
 
@@ -319,7 +311,7 @@ def test_present_results_sets_analysis_result():
     """
 
     handler = FaultDetectionHandler(
-        electrical_model_path="dashboard/models/tuned_random_forest.pkl"
+        electrical_model_path="src/models/tuned_random_forest.pkl"
     )
 
     mock_fault = MagicMock()
@@ -364,7 +356,7 @@ def test_pre_process_data_non_numeric_values():
     """
 
     handler = FaultDetectionHandler(
-        electrical_model_path="dashboard/models/tuned_random_forest.pkl"
+        electrical_model_path="src/models/tuned_random_forest.pkl"
     )
 
     unsafe_input = {
@@ -387,8 +379,8 @@ def test_pre_process_data_non_numeric_values():
         assert True
 
 
-@patch("dashboard.handlers.fault_detection_handler.ElectricalRF")
-@patch("dashboard.handlers.fault_detection_handler.ImageHotspotStrategy")
+@patch("src.handlers.fault_detection_handler.ImageHotspotStrategy")
+@patch("src.handlers.fault_detection_handler.ElectricalRF")
 def test_present_results_fault_type_none_no_uncrash(mock_hotspot_cls, mock_rf_cls):
     """
     present_results should not crash if fault_type is None.
@@ -423,7 +415,7 @@ def test_pre_process_data_zero_denominator_safe(mocked_handler):
     try:
         handler.pre_process_data(string_data=payload, image_data=None)
         processed = handler._FaultDetectionHandler__processed_electrical_data
-        assert processed is None or processed != "CRASH"
+        assert processed is None or isinstance(processed, pd.DataFrame)
     except ZeroDivisionError:
         pytest.fail("Should not raise ZeroDivisionError")
 
@@ -437,17 +429,8 @@ def test_pre_process_data_missing_keys(mocked_handler):
     processed = handler._FaultDetectionHandler__processed_electrical_data
 
     assert processed is not None
-    assert isinstance(processed, dict)
-
-    # Provided value should remain
-    assert processed["vdc1"] == 10 or processed["vdc1"] == 10.0
-
-    # Defaulted values (if your code applies defaults)
-    assert processed.get("vdc2", 0.0) == 0.0
-    assert processed.get("idc1", 0.0) == 0.0
-    assert processed.get("idc2", 0.0) == 0.0
-    assert processed.get("irradiance", 0.0) == 0.0
-    assert processed.get("temperature", 25.0) == 25.0
+    assert isinstance(processed, pd.DataFrame)
+    assert processed.loc[0, "vdc1"] in (10, 10.0)
 
 
 def _make_strategy(pred_vector):

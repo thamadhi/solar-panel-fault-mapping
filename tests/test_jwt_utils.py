@@ -2,7 +2,7 @@ import time
 import jwt
 import pytest
 
-import dashboard.authentication.jwt_utils as jwt_utils
+import src.authentication.jwt_utils as jwt_utils
 
 
 def test_create_and_verify_token_success():

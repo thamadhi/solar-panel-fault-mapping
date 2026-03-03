@@ -11,7 +11,7 @@ def auth_headers():
 
 @pytest.fixture
 def client(monkeypatch):
-    import dashboard.api as api
+    import src.api as api
 
     # Auth bypass: require_auth uses api.verify_token()
     monkeypatch.setattr(
@@ -24,7 +24,7 @@ def client(monkeypatch):
     return api.app.test_client()
 
 
-@patch("dashboard.api.handler")
+@patch("src.api.handler")
 def test_api_predict_success(mocked_handler, client, auth_headers):
     mocked_handler.start_flow.return_value = MagicMock(
         result="Open Circuit",
@@ -68,7 +68,7 @@ def test_api_predict_missing_json(client, auth_headers):
     assert "error" in data
 
 
-@patch("dashboard.api.handler")
+@patch("src.api.handler")
 def test_api_predict_image_success(mocked_handler, client, auth_headers):
     mocked_handler.start_flow.return_value = MagicMock(
         result="Hotspot",
@@ -90,7 +90,7 @@ def test_api_predict_image_success(mocked_handler, client, auth_headers):
     assert abs(out["confidence"] - 0.87) < 1e-9
 
 
-@patch("dashboard.api.handler")
+@patch("src.api.handler")
 def test_api_predict_missing_image_file(mocked_handler, client, auth_headers):
     resp = client.post(
         "/predict-image",
@@ -101,9 +101,9 @@ def test_api_predict_missing_image_file(mocked_handler, client, auth_headers):
     assert resp.status_code == 400
 
 
-@patch("dashboard.api.os.remove")
-@patch("dashboard.api.os.path.exists", return_value=True)
-@patch("dashboard.api.handler")
+@patch("src.api.os.remove")
+@patch("src.api.os.path.exists", return_value=True)
+@patch("src.api.handler")
 def test_api_predict_image_handler_exception(mocked_handler, mock_exists, mock_remove, client, auth_headers):
     mocked_handler.start_flow.side_effect = RuntimeError("boom")
 
@@ -122,7 +122,7 @@ def test_api_predict_image_handler_exception(mocked_handler, mock_exists, mock_r
     assert mock_remove.called
 
 
-@patch("dashboard.api.handler")
+@patch("src.api.handler")
 def test_api_predict_image_empty_filename(mocked_handler, client, auth_headers):
     dummy_img = (io.BytesIO(b"fake image bytes"), "")
     resp = client.post(
@@ -133,9 +133,9 @@ def test_api_predict_image_empty_filename(mocked_handler, client, auth_headers):
     )
     assert resp.status_code == 400
 
-@patch("dashboard.api.os.remove")
-@patch("dashboard.api.os.path.exists", return_value=True)
-@patch("dashboard.api.handler")
+@patch("src.api.os.remove")
+@patch("src.api.os.path.exists", return_value=True)
+@patch("src.api.handler")
 def test_api_predict_image_handler_exception_cleans_up(mocked_handler, mock_exists, mock_remove, client, auth_headers):
     mocked_handler.start_flow.side_effect = RuntimeError("boom")
 
