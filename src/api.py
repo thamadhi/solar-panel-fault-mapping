@@ -23,6 +23,7 @@ import tempfile
 import json
 from functools import wraps
 from src.authentication.jwt_utils import verify_token
+from huggingface_hub import hf_hub_download
 
 import numpy as np
 import shap
@@ -31,6 +32,8 @@ import shap
 # Application setup
 LoggerFactory.setup(db_path="data/app.db")
 
+HF_REPO_ID = "seyeddd/solar-pv-fault-detection-models"
+
 # Setup flask instance
 app = Flask(__name__)
 
@@ -38,8 +41,15 @@ app = Flask(__name__)
 init_db()
 
 # Model configurations
-RANDOM_FOREST_MODEL_PATH = "src/models/tuned_random_forest.pkl"
-DENSENET_MODEL_PATH = "src/models/tuned_model.keras"
+RANDOM_FOREST_MODEL_PATH = hf_hub_download(
+    repo_id=HF_REPO_ID,
+    filename="tuned_random_forest.pkl"
+)
+
+DENSENET_MODEL_PATH = hf_hub_download(
+    repo_id=HF_REPO_ID,
+    filename="tuned_model.keras"
+)
 
 # Load fault detection handler once at startup
 handler = FaultDetectionHandler(
