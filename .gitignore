@@ -80,3 +80,20 @@ Thumbs.db
 src/fault-detection/DL-comparisons/dl_mlflow_outputs/
 
 .db
+data/
+# === Large model files ===
+dashboard/models/best_neural_network.keras
+dashboard/models/ann_scaler.pkl
+
+# === Datasets ===
+datasets/dataset_amb.mat
+datasets/dataset_elec.mat
+datasets/fault_detection.csv
+
+# === MLflow artifacts ===
+src/fault-detection/model-comparisons/mlflow.db
+src/fault-detection/model-comparisons/mlruns/
+src/fault-detection/model-comparisons/metrics_summary.csv
+
+# === Notebooks checkpoints ===
+.ipynb_checkpoints/

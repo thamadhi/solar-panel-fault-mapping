@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import pytest
 
-from dashboard.preprocessing.image_preprocessor import ImagePreprocessor
+from src.preprocessing.image_preprocessor import ImagePreprocessor
 
 
 @pytest.fixture

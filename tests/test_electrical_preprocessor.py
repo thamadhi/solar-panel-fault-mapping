@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 
-from dashboard.preprocessing.electrical_preprocessor import ElectricalPreprocesor
+from src.preprocessing.electrical_preprocessor import ElectricalPreprocesor
 
 
 @pytest.fixture
