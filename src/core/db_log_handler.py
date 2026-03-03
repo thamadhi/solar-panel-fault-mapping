@@ -12,6 +12,7 @@ class DBLogHandler(logging.Handler):
         super().__init__()
         self.__db_path = db_path
 
+
     def emit(self, record: logging.LogRecord) -> None:
         try:
             # Formatted message (includes timestamp)
