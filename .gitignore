@@ -77,7 +77,7 @@ dist/
 .DS_Store
 Thumbs.db
 
-src/fault-detection/DL-comparisons/dl_mlflow_outputs/
+notebooks/fault-detection/DL-comparisons/dl_mlflow_outputs/
 
 .db
 data/
@@ -91,9 +91,9 @@ datasets/dataset_elec.mat
 datasets/fault_detection.csv
 
 # === MLflow artifacts ===
-src/fault-detection/model-comparisons/mlflow.db
-src/fault-detection/model-comparisons/mlruns/
-src/fault-detection/model-comparisons/metrics_summary.csv
+notebooks/fault-detection/model-comparisons/mlflow.db
+notebooks/fault-detection/model-comparisons/mlruns/
+notebooks/fault-detection/model-comparisons/metrics_summary.csv
 
 # === Notebooks checkpoints ===
 .ipynb_checkpoints/
