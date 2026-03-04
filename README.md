@@ -1,18 +1,18 @@
 # Table of Contents
 
 -   [Group Members](#group-members)
--   [📌 Introduction](#-introduction)
--   [🔍 Summary of Key Features](#-summary-of-key-features)
+-   [📌 Introduction](#introduction)
+-   [🔍 Summary of Key Features](#summary-of-key-features)
 -   [Components](#components)
     -   [Fault Detection](#fault-detection)
     -   [Fault Localization](#fault-localization)
     -   [Fault Severity](#fault-severity)
     -   [Fault Rectification](#fault-rectification)
     -   [Centralized Dashboard](#centralized-dashboard)
--   [🛠 Tech Stack](#-tech-stack)
+-   [🛠 Tech Stack](#tech-stack)
 -   [Project Management Methodology](#project-management-methodology)
 -   [Folder Structure](#folder-structure)
--   [Models / Algorithms](#models--algorithms)
+-   [Models / Algorithms](#models-algorithms)
 -   [Clone the repository](#clone-the-repository)
 -   [Install dependencies](#install-dependencies)
 
@@ -27,7 +27,7 @@
 
 ## 📌 Introduction
 
-This project develops an AI-driven system for automated detection, localisation, and diagnosis of solar photovoltaic (PV) systems. The system utilizies a multi-modal approach, combining both electrical and visual imagery to identify issues, assess the severity and provide actionable rectification guidance. This project aims to enhance the reliability and efficiency of solar farm operations by minimizing the diagnostic time, reduce downtime and preventing significant energy yield losses.
+This project develops an AI-driven system for automated detection, localisation, and diagnosis of solar photovoltaic (PV) systems. The system utilizes a multi-modal approach, combining both electrical and visual imagery to identify issues, assess the severity and provide actionable rectification guidance. This project aims to enhance the reliability and efficiency of solar farm operations by minimizing the diagnostic time, reduce downtime and preventing significant energy yield losses.
 
 ## 🔍 Summary of Key Features
 
@@ -63,20 +63,45 @@ A Streamlit-based dashboard provides a user-friendly interface for operators to 
 
 ## 🛠 Tech Stack
 
--   **Backend**: Python
--   **Frontend**: Streamlit, CSS
--   **Computer Vision**: OpenCV
--   **Project Management**: Jira
--   **Frameworks & Libraries**:
-    -   Scikit-learn (ML algorithms, preprocessing)
-    -   TensorFlow (deep learning models)
-    -   Google Colab (cloud-based notebooks)
-    -   PyCharm, VS Code (IDE for development & debugging)
-    -   Flask API (backend API integration)
-    -   Windows OS / MacOS (for high-performance computing)
-    -   LaTeX / MS Word / Notion (documentation)
-    -   MLflow (model comparisons and performance tracking)
-    -   SHAP (for model explainability)
+### 💻 Backend
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask_API-000000?style=for-the-badge&logo=flask&logoColor=white)
+
+### 🎨 Frontend
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
+![CSS](https://img.shields.io/badge/CSS-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+
+### 🤖 Machine Learning & Computer Vision
+![Scikit-learn](https://img.shields.io/badge/Scikit--learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)
+![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)
+
+### 📊 Explainability & Experiment Tracking
+![SHAP](https://img.shields.io/badge/SHAP-Model%20Explainability-blue?style=for-the-badge)
+![MLflow](https://img.shields.io/badge/MLflow-Experiment%20Tracking-0194E2?style=for-the-badge)
+
+### 🗄 Data & Storage
+![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
+
+### 🛠 Development Tools
+![VSCode](https://img.shields.io/badge/VS_Code-007ACC?style=for-the-badge&logo=visual%20studio%20code&logoColor=white)
+![PyCharm](https://img.shields.io/badge/PyCharm-000000?style=for-the-badge&logo=pycharm&logoColor=white)
+![Google Colab](https://img.shields.io/badge/Google_Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white)
+![Git](https://img.shields.io/badge/Git-FF5733?style=for-the-badge&logo=git&logoColor=white)
+![GitHub](https://img.shields.io/badge/GitHub-121011?style=for-the-badge&logo=github&logoColor=white)
+
+### 📋 Project Management
+![Jira](https://img.shields.io/badge/Jira-0052CC?style=for-the-badge&logo=jira&logoColor=white)
+
+### 📝 Documentation
+![LaTeX](https://img.shields.io/badge/LaTeX-008080?style=for-the-badge&logo=latex&logoColor=white)
+![Microsoft Word](https://img.shields.io/badge/MS_Word-2B579A?style=for-the-badge&logo=microsoftword&logoColor=white)
+![Notion](https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white)
+
+### 💽 Operating Systems
+![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)
+
 
 ## Project Management Methodology
 
@@ -85,20 +110,20 @@ The project follows Agile methodology with the Scrum framework, which is managed
 ## Folder Structure
 
 -   [solar-pv-fault-detection](./)
-    -   [dashboard](./dashboard) - Main streamlit dashboard application
-        -   [core](./dashboard/core) - Core files
-        -   [handlers](./dashboard/handlers) - Main component handlers
-        -   [models](./dashboard/models) - Business related classes
+    -   [src](./src) - Source code of the entire application
+        -   [core](./src/core) - Core files
+        -   [handlers](./src/handlers) - Main component handlers
+        -   [models](./src/models) - Business related classes
     -   [datasets](./datasets) - Electrical & image datasets
     -   [diagrams](./diagrams) - UML diagrams used for designing
     -   [docs](./docs) - Documents aligned with the project
     -   [manuals](./manuals) - Manuals used in simulating PV data
     -   [models](./models) - Pre-trained ML/DL models
-    -   [src](./src) - Source code
-        -   [detection](./src/fault-detection) - Fault detection feature
-        -   [localization](./src/fault-localization) - Fault localization feature
-        -   [severity](./src/fault-severity) - Fault severity analysis feature
-        -   [rectification](./src/fault-rectification) - Rectification recommendation feature
+    -   [notebooks](./notebooks) - Source code
+        -   [detection](./notebooks/fault-detection) - Fault detection notebooks
+        -   [localization](./notebooks/fault-localization) - Fault localization notebooks
+        -   [severity](./notebooks/fault-severity) - Fault severity analysis notebooks
+        -   [rectification](./notebooks/fault-rectification) - Rectification recommendation notebooks
     -   [tests](./tests) - Component tests
     -   [.Rhistory](./.Rhistory) - Rhistory
     -   [README.md](./README.md) - Project documentation
@@ -154,10 +179,10 @@ pip install -r requirements.txt
 
 ### ▶️ Running the Backend API (Flask)
 
-Start the Flask API first from the project root:
+Start the Flask API first from the project root in one terminal:
 
 ```bash
-python -m dashboard.api
+python -m src.api
 ```
 
 ### ▶️ Running the Streamlit Dashboard
