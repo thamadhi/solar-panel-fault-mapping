@@ -12,10 +12,16 @@ def preprocessor():
 def test_preprocess_returns_dataframe(preprocessor):
 
     # Make some data values
-    data = [{
-        "vdc1": 10, "vdc2": 20, "idc1": 2, "idc2": 4,
-        "irradiance": 800, "temperature": 30
-    }]
+    data = [
+        {
+            "vdc1": 10,
+            "vdc2": 20,
+            "idc1": 2,
+            "idc2": 4,
+            "irradiance": 800,
+            "temperature": 30,
+        }
+    ]
 
     # Preprocess it
     out = preprocessor.preprocess(data)
@@ -26,27 +32,40 @@ def test_preprocess_returns_dataframe(preprocessor):
 
 
 def test_columns_and_order(preprocessor):
-    data = [{
-        "vdc1": 1, "vdc2": 2, "idc1": 3, "idc2": 4,
-        "irradiance": 5, "temperature": 6
-    }]
+    data = [
+        {"vdc1": 1, "vdc2": 2, "idc1": 3, "idc2": 4, "irradiance": 5, "temperature": 6}
+    ]
 
     # Check if columns are the same
     out = preprocessor.preprocess(data)
 
     expected_cols = [
-        "vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature",
-        "power_string1", "power_string2", "total_power",
-        "voltage_ratio", "current_ratio"
+        "vdc1",
+        "vdc2",
+        "idc1",
+        "idc2",
+        "irradiance",
+        "temperature",
+        "power_string1",
+        "power_string2",
+        "total_power",
+        "voltage_ratio",
+        "current_ratio",
     ]
     assert list(out.columns) == expected_cols
 
 
 def test_feature_engineering_values(preprocessor):
-    data = [{
-        "vdc1": 10, "vdc2": 20, "idc1": 2, "idc2": 4,
-        "irradiance": 800, "temperature": 30
-    }]
+    data = [
+        {
+            "vdc1": 10,
+            "vdc2": 20,
+            "idc1": 2,
+            "idc2": 4,
+            "irradiance": 800,
+            "temperature": 30,
+        }
+    ]
 
     out = preprocessor.preprocess(data).iloc[0]
 
@@ -83,11 +102,16 @@ def test_missing_keys_use_defaults(preprocessor):
 
 
 def test_safe_divide_does_not_crash(preprocessor):
-    data = [{
-        "vdc1": 10, "vdc2": 0,
-        "idc1": 2, "idc2": 0,
-        "irradiance": 100, "temperature": 25
-    }]
+    data = [
+        {
+            "vdc1": 10,
+            "vdc2": 0,
+            "idc1": 2,
+            "idc2": 0,
+            "irradiance": 100,
+            "temperature": 25,
+        }
+    ]
 
     out = preprocessor.preprocess(data).iloc[0]
 
@@ -98,8 +122,22 @@ def test_safe_divide_does_not_crash(preprocessor):
 
 def test_multiple_rows(preprocessor):
     data = [
-        {"vdc1": 1, "vdc2": 2, "idc1": 3, "idc2": 4, "irradiance": 500, "temperature": 20},
-        {"vdc1": 5, "vdc2": 6, "idc1": 7, "idc2": 8, "irradiance": 600, "temperature": 30},
+        {
+            "vdc1": 1,
+            "vdc2": 2,
+            "idc1": 3,
+            "idc2": 4,
+            "irradiance": 500,
+            "temperature": 20,
+        },
+        {
+            "vdc1": 5,
+            "vdc2": 6,
+            "idc1": 7,
+            "idc2": 8,
+            "irradiance": 600,
+            "temperature": 30,
+        },
     ]
 
     out = preprocessor.preprocess(data)

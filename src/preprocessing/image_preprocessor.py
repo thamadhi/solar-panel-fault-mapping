@@ -24,7 +24,6 @@ class ImagePreprocessor(Preprocessor):
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
         self.__IMAGE_SIZE = (224, 224)
 
-
     def preprocess(self, data: str) -> Optional[np.ndarray]:
         """
         Preprocess a thermal image for hot spot classification.

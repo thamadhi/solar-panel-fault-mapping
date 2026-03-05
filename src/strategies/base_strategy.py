@@ -8,6 +8,7 @@ class FaultDetectionStrategy(ABC):
 
     Demonstrates the Strategy design pattern.
     """
+
     @abstractmethod
     def detect(self, data: Any) -> Dict[str, Any]:
         """

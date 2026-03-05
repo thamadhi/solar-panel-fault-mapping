@@ -23,7 +23,9 @@ def render_auth_screen(key_prefix: str = "auth"):
         st.subheader("Login")
 
         username = st.text_input("Username", key=f"{key_prefix}_login_user")
-        password = st.text_input("Password", type="password", key=f"{key_prefix}_login_pass")
+        password = st.text_input(
+            "Password", type="password", key=f"{key_prefix}_login_pass"
+        )
 
         if st.button("Login", key=f"{key_prefix}_login_btn", type="primary"):
             try:
@@ -35,7 +37,7 @@ def render_auth_screen(key_prefix: str = "auth"):
                         id=u["id"],
                         type=u["type"],
                         username=u["username"],
-                        email=u["email"]
+                        email=u["email"],
                     )
 
                     st.session_state.api_token = res["token"]
@@ -62,48 +64,31 @@ def render_auth_screen(key_prefix: str = "auth"):
         user_type = st.selectbox(
             "User Type",
             ["Admin", "Solar PV Operator", "Technician"],
-            key=f"{key_prefix}_reg_type"
+            key=f"{key_prefix}_reg_type",
         )
 
         # Registration form fields
-        new_username = st.text_input(
-            "Username",
-            key=f"{key_prefix}_reg_user"
-        )
+        new_username = st.text_input("Username", key=f"{key_prefix}_reg_user")
 
-        new_email = st.text_input(
-            "Email",
-            key=f"{key_prefix}_reg_email"
-        )
+        new_email = st.text_input("Email", key=f"{key_prefix}_reg_email")
 
         new_password = st.text_input(
-            "Password",
-            type="password",
-            key=f"{key_prefix}_reg_pass"
+            "Password", type="password", key=f"{key_prefix}_reg_pass"
         )
 
         confirm_password = st.text_input(
-            "Confirm Password",
-            type="password",
-            key=f"{key_prefix}_reg_pass2"
+            "Confirm Password", type="password", key=f"{key_prefix}_reg_pass2"
         )
 
         # Register button
-        if st.button(
-            "Register",
-            key=f"{key_prefix}_register_btn",
-            type="primary"
-        ):
+        if st.button("Register", key=f"{key_prefix}_register_btn", type="primary"):
             # Check password match
             if new_password != confirm_password:
                 st.error("Passwords do not match.")
             else:
                 # Call registration service
                 ok, msg = register_user(
-                    user_type,
-                    new_username,
-                    new_email,
-                    new_password
+                    user_type, new_username, new_email, new_password
                 )
 
                 if ok:
@@ -116,9 +101,6 @@ def render_auth_screen(key_prefix: str = "auth"):
                     st.error(msg)
 
         # Button to return to login screen
-        if st.button(
-            "Back to login",
-            key=f"{key_prefix}_go_login"
-        ):
+        if st.button("Back to login", key=f"{key_prefix}_go_login"):
             st.session_state.auth_view = "login"
             st.rerun()

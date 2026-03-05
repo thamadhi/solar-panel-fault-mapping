@@ -32,14 +32,13 @@ def login(username: str, password: str) -> User | None:
 
     # Build the correct User object from database details
     return User(
-        id=row["id"],
-        type=row["type"],
-        username=row["username"],
-        email=row["email"]
+        id=row["id"], type=row["type"], username=row["username"], email=row["email"]
     )
 
 
-def register_user(user_type: str, username: str, email: str, password: str) -> tuple[bool, str]:
+def register_user(
+    user_type: str, username: str, email: str, password: str
+) -> tuple[bool, str]:
     """
     Registers a new user into the system.
 
@@ -74,5 +73,10 @@ def register_user(user_type: str, username: str, email: str, password: str) -> t
     if email_exists(email):
         return False, "Email already exists."
 
-    create_user(user_type=user_type, username=username.strip(), email=email.strip(), password=password)
+    create_user(
+        user_type=user_type,
+        username=username.strip(),
+        email=email.strip(),
+        password=password,
+    )
     return True, "User registered successfully."

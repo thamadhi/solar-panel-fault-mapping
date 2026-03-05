@@ -25,13 +25,12 @@ class ElectricalRF(FaultDetectionStrategy):
         """
 
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
-        
+
         # Use provided path or default
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Random Forest Model not found at: {model_path}")
-        
-        self.__model = joblib.load(model_path)
 
+        self.__model = joblib.load(model_path)
 
     @override
     def detect(self, X: pd.DataFrame) -> Dict[str, Any]:
@@ -46,25 +45,25 @@ class ElectricalRF(FaultDetectionStrategy):
         """
         if self.__model is None:
             return {
-                'fault_type': 'Normal Operation',
-                'confidence': 0.0,
-                'error': 'Model not loaded'
+                "fault_type": "Normal Operation",
+                "confidence": 0.0,
+                "error": "Model not loaded",
             }
-        
+
         if X is None or len(X) == 0:
-            return {
-                'fault_type': 'Normal Operation',
-                'confidence': 0.0
-            }
+            return {"fault_type": "Normal Operation", "confidence": 0.0}
 
         try:
             X_np = X.to_numpy()
-            y_pred = self.__model.predict(X_np)    # Labels
+            y_pred = self.__model.predict(X_np)  # Labels
             y_proba = self.__model.predict_proba(X_np)  # Probabilities
         except Exception as e:
             self.__logger.error(f"Random Forest prediction error: {e}")
-            return {"fault_type": "Normal Operation", "confidence": 0.0, "error": str(e)}
-
+            return {
+                "fault_type": "Normal Operation",
+                "confidence": 0.0,
+                "error": str(e),
+            }
 
         # Process predictions
         results = []
@@ -74,21 +73,22 @@ class ElectricalRF(FaultDetectionStrategy):
             confidence = float(p[class_idx])
             fault_type = str(y_pred[i])
 
-            results.append({
-                'string_id': i,
-                'fault_type': fault_type,
-                'confidence': confidence,
-                'all_predictions': p.tolist()
-            })
+            results.append(
+                {
+                    "string_id": i,
+                    "fault_type": fault_type,
+                    "confidence": confidence,
+                    "all_predictions": p.tolist(),
+                }
+            )
 
         # Return overall prediction (highest confidence)
-        overall = max(results, key=lambda x: x['confidence'])
+        overall = max(results, key=lambda x: x["confidence"])
         return {
-            'fault_type': overall['fault_type'],
-            'confidence': overall['confidence'],
-            'detailed_predictions': results
+            "fault_type": overall["fault_type"],
+            "confidence": overall["confidence"],
+            "detailed_predictions": results,
         }
-
 
     @property
     def model(self):

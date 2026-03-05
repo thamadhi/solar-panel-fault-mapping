@@ -1,7 +1,6 @@
 import os
 import requests
 
-
 # Base URL for the backend API server.
 API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:5000")
 
@@ -33,11 +32,12 @@ def api_login(username: str, password: str) -> dict:
     Raises:
         HTTPError: If authentication fails.
     """
-    r = requests.post(f"{API_BASE_URL}/auth/login",
-                      json={"username": username,
-                            "password": password},
-                            timeout=30)
-    r.raise_for_status()    # Raise eror for non-200 responses.
+    r = requests.post(
+        f"{API_BASE_URL}/auth/login",
+        json={"username": username, "password": password},
+        timeout=30,
+    )
+    r.raise_for_status()  # Raise eror for non-200 responses.
     return r.json()
 
 
@@ -55,10 +55,9 @@ def predict_electrical(records, token: str) -> dict:
     Raises:
         HTTPError: If request fails.
     """
-    r = requests.post(f"{API_BASE_URL}/predict",
-                      json=records,
-                      headers=_headers(token),
-                      timeout=120)
+    r = requests.post(
+        f"{API_BASE_URL}/predict", json=records, headers=_headers(token), timeout=120
+    )
     r.raise_for_status()
     return r.json()
 
@@ -80,14 +79,18 @@ def predict_image(uploaded_file, token: str) -> dict:
 
     # Prepare multipart/form-data payload
     files = {
-        "image": (uploaded_file.name,
-                  uploaded_file.getvalue(),
-                  uploaded_file.type or "image/jpeg")
+        "image": (
+            uploaded_file.name,
+            uploaded_file.getvalue(),
+            uploaded_file.type or "image/jpeg",
+        )
     }
-    r = requests.post(f"{API_BASE_URL}/predict-image",
-                      files=files,
-                      headers=_headers(token),
-                      timeout=180)
+    r = requests.post(
+        f"{API_BASE_URL}/predict-image",
+        files=files,
+        headers=_headers(token),
+        timeout=180,
+    )
     r.raise_for_status()
     return r.json()
 
@@ -108,9 +111,11 @@ def explain_electrical(records, row_idx: int, token: str) -> dict:
         HTTPError: If request fails.
     """
     payload = {"records": records, "row_idx": int(row_idx)}
-    r = requests.post(f"{API_BASE_URL}/explain/electrical",
-                      json=payload,
-                      headers=_headers(token),
-                      timeout=180)
+    r = requests.post(
+        f"{API_BASE_URL}/explain/electrical",
+        json=payload,
+        headers=_headers(token),
+        timeout=180,
+    )
     r.raise_for_status()
     return r.json()
