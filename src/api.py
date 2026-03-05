@@ -93,7 +93,7 @@ def require_auth(fn):
 @require_auth
 def predict():
     """
-    Predict electrical fauls using structured input data.
+    Predict electrical faults using structured input data.
 
     Expects:
         JSON body containing the electrical readings (list or dict).
