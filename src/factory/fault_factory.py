@@ -13,7 +13,7 @@ class FaultFactory:
 
         This method maps a human-readable fault name to the corresponding
         Fault subclass and initializes it with the provided confidence level.
-        
+
         Args:
             fault_name (str): Name of the fault
             confidence (float): Confidence level of the detected fault (0.0-1.0)
@@ -24,11 +24,11 @@ class FaultFactory:
         """
 
         mapping = {
-            'Open Circuit': OpenCircuit,
-            'Short-Circuit': ShortCircuit,
-            'Shadowing': Shadowing,
-            'Hotspot': Hotspot,
-            'Normal Operation': Fault
+            "Open Circuit": OpenCircuit,
+            "Short-Circuit": ShortCircuit,
+            "Shadowing": Shadowing,
+            "Hotspot": Hotspot,
+            "Normal Operation": Fault,
         }
 
         cls = mapping.get(fault_name, Fault)
@@ -36,5 +36,5 @@ class FaultFactory:
         # For normal operation a default type (base Fault)
         if cls is Fault:
             return cls(fault_id, fault_name)
-        
+
         return cls(fault_id)

@@ -13,8 +13,8 @@ def create_token(user_id: int, username: str, role: str) -> str:
 
     This function creates a signed JWT containing basic user identity
     information and an expiration time. The token can later be used to
-    authenticate requests.    
-    
+    authenticate requests.
+
     Args:
         user_id (int): Unique identifier of the user.
         username (str): Username of the authenticated user.
@@ -25,11 +25,11 @@ def create_token(user_id: int, username: str, role: str) -> str:
     """
 
     payload = {
-        "sub": str(user_id),    # Subject (user identifier)
+        "sub": str(user_id),  # Subject (user identifier)
         "username": username,
         "role": role,
-        "iat": int(time.time()),    # Issued at time
-        "exp": int(time.time()) + JWT_EXP_SECONDS   # Expiration time
+        "iat": int(time.time()),  # Issued at time
+        "exp": int(time.time()) + JWT_EXP_SECONDS,  # Expiration time
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGO)
 
@@ -50,7 +50,7 @@ def verify_token(token: str) -> dict:
 
     Raises:
         jwt.ExpirationSignatureError: if the token has expired.
-        jwt.InvalidTokenError: If the token is invalid.    
+        jwt.InvalidTokenError: If the token is invalid.
     """
 
     return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGO])

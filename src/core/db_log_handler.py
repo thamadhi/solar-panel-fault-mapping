@@ -12,7 +12,6 @@ class DBLogHandler(logging.Handler):
         super().__init__()
         self.__db_path = db_path
 
-
     def emit(self, record: logging.LogRecord) -> None:
         try:
             # Formatted message (includes timestamp)
@@ -35,7 +34,7 @@ class DBLogHandler(logging.Handler):
                 func_name=record.funcName,
                 line_no=record.lineno,
                 exception=exc,
-                db_path=self.__db_path
+                db_path=self.__db_path,
             )
 
         except Exception:

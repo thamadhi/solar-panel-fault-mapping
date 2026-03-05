@@ -5,9 +5,10 @@ from handlers.fault_Severity_handler import FaultSeverityHandler
 from fault_rectification_handler import FaultRectificationHandler
 from report_handler import ReportHandler
 
+
 class UserOptionHandler:
     def __init__(self):
-       
+
         self.__DetectionResult = AnalysisResult()
         self.__LocalisationResult = AnalysisResult()
         self.__SeverityResult = AnalysisResult()
