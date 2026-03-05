@@ -5,7 +5,7 @@ from core.analysis_result import AnalysisResult
 class FaultSeverityHandler(AbstractComponentFlowHandler):
     def __init__(self):
         super().__init__()
-        self.faultSeverity: str = "" 
+        self.faultSeverity: str = ""
 
     def _preProcessData(self):
         print("Pre-processing")

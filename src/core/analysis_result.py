@@ -7,16 +7,16 @@ class AnalysisResult:
     """
 
     def __init__(
-            self,
-            result: str,
-            reading_confidence: float = 0.0,
-            image_confidence: float = 0.0,
-            result_images = None,
-            result_readings = None
+        self,
+        result: str,
+        reading_confidence: float = 0.0,
+        image_confidence: float = 0.0,
+        result_images=None,
+        result_readings=None,
     ) -> None:
         """
         Initialize an AnalysisResult instance
-        
+
         result : str
             Human-readable result description
         reading_confidence : float
@@ -49,21 +49,21 @@ class AnalysisResult:
         Returns the readings confidence
         """
         return self.__reading_confidence
-    
+
     @property
     def image_confidence(self) -> float:
         """
         Returns the hotspot(s) image confidence
         """
         return self.__image_confidence
-    
+
     @property
     def result_images(self) -> List:
         """
         Returns the results images
         """
         return self.__result_images
-    
+
     @property
     def result_readings(self) -> List:
         """

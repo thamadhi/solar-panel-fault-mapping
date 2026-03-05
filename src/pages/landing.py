@@ -48,8 +48,7 @@ def show_landing_page() -> None:
 
     with left_col:
         st.markdown(
-            "### ☀️ <span class='brand-text'>PVInsight</span>",
-            unsafe_allow_html=True
+            "### ☀️ <span class='brand-text'>PVInsight</span>", unsafe_allow_html=True
         )
 
     with right_col:
@@ -63,9 +62,7 @@ def show_landing_page() -> None:
 
     # Hero section
     hero_col_left, hero_col_right = st.columns(
-        [6, 4],
-        gap="large",
-        vertical_alignment="center"
+        [6, 4], gap="large", vertical_alignment="center"
     )
 
     # Left column for the description and title
@@ -77,7 +74,7 @@ def show_landing_page() -> None:
                 <span style='color:#FBBF24;'>Detection.</span>
             </h1>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
         st.markdown(
@@ -87,7 +84,7 @@ def show_landing_page() -> None:
                 Professional-grade AI for solar PV industry.
             </p>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
         st.write("##")
@@ -96,7 +93,7 @@ def show_landing_page() -> None:
         if st.button("Launch Dashboard", type="primary", key="landing_launch_btn"):
             st.session_state.show_auth = True
             st.session_state.auth_view = "register"
-            st.session_state.scroll_to = "auth"     # For scrolling
+            st.session_state.scroll_to = "auth"  # For scrolling
             st.rerun()
 
     # Right column with the image
@@ -109,7 +106,7 @@ def show_landing_page() -> None:
                 <img src="data:image/jpg;base64,{img_b64}" alt="Solar Array">
             </div>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
     st.write("##")
@@ -123,22 +120,22 @@ def show_landing_page() -> None:
         {
             "icon": "🔍",
             "title": "Fault Detection",
-            "desc": "Detect electrical and thermal anomalies using AI-driven classification models."
+            "desc": "Detect electrical and thermal anomalies using AI-driven classification models.",
         },
         {
             "icon": "📍",
             "title": "Fault Localisation",
-            "desc": "Pinpoint exact string or panel locations affected by detected faults."
+            "desc": "Pinpoint exact string or panel locations affected by detected faults.",
         },
         {
             "icon": "⚡",
             "title": "Severity Analysis",
-            "desc": "Estimate power loss impact and assess operational risk levels."
+            "desc": "Estimate power loss impact and assess operational risk levels.",
         },
         {
             "icon": "🛠️",
             "title": "Rectification Guidance",
-            "desc": "Generate actionable maintenance steps to restore optimal performance."
+            "desc": "Generate actionable maintenance steps to restore optimal performance.",
         },
     ]
 
@@ -152,7 +149,7 @@ def show_landing_page() -> None:
                     <p>{feature['desc']}</p>
                 </div>
                 """,
-                unsafe_allow_html=True
+                unsafe_allow_html=True,
             )
 
     st.write("##")
@@ -164,7 +161,8 @@ def show_landing_page() -> None:
         <div style='text-align: center; color: #6B7280; font-size: 14px;'>
             Built for Professional Solar Teams.
         </div>
-        """, unsafe_allow_html=True
+        """,
+        unsafe_allow_html=True,
     )
 
     if st.session_state.get("show_auth"):
