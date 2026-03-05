@@ -34,7 +34,7 @@ def test_verify_password_failure_wrong_password():
 
 
 def test_hash_with_given_salt_is_deterministic():
-    
+
     # Fixed 16-byte salt
     salt = b"\x00" * 16
 

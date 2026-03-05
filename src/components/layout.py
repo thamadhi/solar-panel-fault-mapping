@@ -1,9 +1,10 @@
 import streamlit as st
 
+
 def render_css(css_file) -> None:
     """
     Renders CSS into the page.
-    
+
     Args:
         css_file: The file being rendered/loaded.
     """
@@ -25,5 +26,5 @@ def render_page_config() -> None:
     st.set_page_config(
         page_title="Solar PV Fault Detection",
         page_icon="☀️",
-        layout="wide"   # Better data display
+        layout="wide",  # Better data display
     )

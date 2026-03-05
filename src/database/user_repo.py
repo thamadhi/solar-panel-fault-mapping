@@ -21,7 +21,7 @@ def create_user(user_type: str, username: str, email: str, password: str) -> int
     # Insert new user with hashed password
     cur.execute(
         "INSERT INTO Users(type, username, email, password_hash) VALUES (?, ?, ?, ?)",
-        (user_type, username, email, hash_password(password))
+        (user_type, username, email, hash_password(password)),
     )
     conn.commit()
     user_id = cur.lastrowid

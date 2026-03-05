@@ -6,7 +6,7 @@ from src.context.detection_context import DetectionContext
 class DummyStrategy:
     def detect(self, data):
         return {"result": "ok", "input": data}
-    
+
 
 def test_perform_detection_calls_strategy():
     strategy = DummyStrategy()
