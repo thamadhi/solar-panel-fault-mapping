@@ -26,7 +26,8 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     """
 
     def __init__(self,
-                 electrical_model_path: str, image_model_path: str) -> None:
+                 electrical_model_path: Optional[str] = None, 
+                 image_model_path: Optional[str] = None) -> None:
         """
         Initializes a FaultDetectionHandler with the required models.
 
@@ -40,14 +41,14 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
         super().__init__()
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
-        self.__electrical_strategy = ElectricalRF(electrical_model_path)
-        self.__image_strategy = ImageHotspotStrategy(image_model_path)
+        self.__electrical_strategy = ElectricalRF(electrical_model_path) if electrical_model_path else None
+        self.__image_strategy = ImageHotspotStrategy(image_model_path)  if image_model_path else None
         self.__fault_type: Optional[Fault] = None
         self.__processed_electrical_data = None     # Pandas dataframe
         self.__processed_image_path = None          # Numpy path (1,H,W,C)
-        self.__detection_context = DetectionContext(self.__electrical_strategy)
+        self.__detection_context = DetectionContext(self.__set_default_strategy())
         self.__electrical_preprocessor = ElectricalPreprocesor()
-        self.__image_preprocessor = ImagePreprocessor()
+        self.__image_preprocessor = ImagePreprocessor() if image_model_path else None
         self.__result: Optional[AnalysisResult] = None
         self.__feature_names = ['vdc1', 'vdc2', 'idc1', 'idc2',
                                 'irradiance', 'temperature',
@@ -85,7 +86,8 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
                 self.__logger.info(f"Electrical features shape: {self.__processed_electrical_data.shape}")
 
             # Thermal
-            if image_data is not None and isinstance(image_data, str) and image_data.strip():
+            if self.__image_preprocessor is not None and image_data is not None and \
+            isinstance(image_data, str) and image_data.strip():
                 self.__processed_image_path = self.__image_preprocessor.preprocess(image_data)
                 if self.__processed_image_path is None:
                     self.__logger.error("Image processing failed.")
@@ -120,7 +122,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
         
         # Apply image model if image data exists
-        if self.__processed_image_path is not None:
+        if self.__processed_image_path is not None and self.__image_strategy is not None:
             self.__detection_context.set_strategy(self.__image_strategy)
             result = self.__detection_context.perform_detection(self.__processed_image_path)
         
@@ -197,7 +199,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
 
     @property
     def electrical_model(self):
-        return self.__electrical_strategy.model
+        return self.__electrical_strategy.model if self.__electrical_strategy else None
 
 
     @property
@@ -209,6 +211,13 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             List[str]: The feature names inside a list.
         """
         return self.__feature_names
+    
+
+    def __set_default_strategy(self):
+        default_strategy = self.__electrical_strategy or self.__image_strategy
+        if default_strategy is None:
+            raise ValueError("Provide at least one model path (electrical or image).")
+        return default_strategy
 
 
     # def add_observer(self, observer: FaultObserver):
