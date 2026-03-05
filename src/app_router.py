@@ -59,6 +59,7 @@ class AppRouter:
 
         return page
 
+
     def route(self, page: str) -> None:
         if page == "Dashboard":
             show_dashboard_page()
@@ -72,6 +73,7 @@ class AppRouter:
         else:
             st.title(f"🧩 {page}")
             st.info("This page is not implemented yet.")
+
 
     def run(self) -> None:
         page = self.render_side_bar()

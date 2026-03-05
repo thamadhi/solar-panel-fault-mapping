@@ -170,6 +170,23 @@ def insert_log(
         exception: str,
         db_path: str = DB_PATH
     ) -> int:
+    """
+    Insert a log record into the Logs table.
+
+    Args:
+        level (str): Log level (e..g, "INFO", "WARNING").
+        logger_name (str): Name of the logger instance.
+        module (str): Module/file where the log is originated.
+        message (str): Log message content.
+        func_name (str): Function name where the log occurred.
+        line_no (str): Line number (as string) where the log occurred.
+        exception (str): Exception details (stack trace or message).
+        db_path (str): Path to the SQLite database file.
+
+    Returns:
+        int: ID of the newly inserted log record.
+    
+    """
 
     conn = get_conn(db_path)
     cur = conn.cursor()
@@ -207,6 +224,21 @@ def fetch_logs(limit: int = 100, db_path: str = DB_PATH) -> List[Dict[str, Any]]
 
 
 def create_user(user_type: str, username: str, email: str, password: str) -> int:
+    """
+    Creates a new user reord in the Users table.
+
+    The password is hashed using `hash_password()` before being stored.
+
+    Args:
+        user_type (str): User role/type (e.g., "Admin")
+        username (str): Unique username.
+        email (str): Unique email address.
+        password (str): Plaintext password (will be hashed before saving).
+
+    Returns:
+        int: The database ID of the newly creaed user.
+    """
+
     conn = get_conn()
     cur = conn.cursor()
     cur.execute(
@@ -219,7 +251,19 @@ def create_user(user_type: str, username: str, email: str, password: str) -> int
     return user_id
 
 
-def get_user_by_username(username: str):
+def get_user_by_username(username: str) -> sqlite3.Row | None:
+    """
+    Retrieves a user record by username.
+
+    Args:
+        username (str): The username to search for.
+
+    Returns:
+        sqlite3.Row | None:
+            - sqlite3.Row (dict-like row) if the user exists.
+            - None if no matching user is found
+    """
+
     conn = get_conn()
     cur = conn.cursor()
     cur.execute(
@@ -230,7 +274,20 @@ def get_user_by_username(username: str):
     return row
 
 
-def create_default_admin():
+def create_default_admin() -> None:
+    """
+    Ensures a default admin account exists.
+
+    If a user with username "admin" does not exist, this function creates one
+    using the default credentials:
+        - username: admin
+        - email: admin@solar.com
+        - password: admin123
+
+    Returns:
+        None
+    """
+
     existing = get_user_by_username("admin")
     if existing is None:
         create_user(
@@ -241,6 +298,15 @@ def create_default_admin():
         )
 
 def fetch_latest_faults(limit: int = 5) -> List[Dict[str, Any]]:
+    """
+    Fetch the most recent fault predictions.
+
+    Args:
+        limit (int): Maximum number of records to return.
+
+    Returns:
+        List[Dict[str, Any]]: A list of recent prediction records.
+    """
 
     conn = get_conn()
     rows = conn.execute(
@@ -256,6 +322,18 @@ def fetch_latest_faults(limit: int = 5) -> List[Dict[str, Any]]:
 
 
 def fetch_fault_trend_daily(days: int = 30) -> List[Dict[str, Any]]:
+    """
+    Fetch daily fault trend counts over the last N days.
+
+    Groups predictions by date (day) and returns the count for each day.
+
+    Args:
+        days (int): Number of days to include (default: 30).
+    
+    Returns:
+        List[Dict[str, Any]]: A list like:
+            [{"day": "YYYY-MM-DD", "count": 12}, ...]
+    """
 
     conn = get_conn()
     rows = conn.execute(

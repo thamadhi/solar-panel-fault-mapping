@@ -2,19 +2,33 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from src.database import fetch_latest, fetch_fault_trend_daily, get_conn
+from typing import List, Tuple, Any
+
 
 class Dashboard:
     def __init__(self):
         pass
 
-    def _query(self, sql: str, params=()):
+
+    def _query(self, sql: str, params=()) -> List[Tuple[Any]]:
+        """
+        
+        
+        """
+
         conn = get_conn()
         try:
             return conn.execute(sql, params).fetchall()
         finally:
             conn.close()
 
-    def show(self):
+
+    def show(self) -> None:
+        """
+        
+        
+        """
+
         st.title("📊 Dashboard")
 
         # Metrics
@@ -50,7 +64,13 @@ class Dashboard:
         with tab4:
             self.render_analytics()
 
-    def render_latest(self):
+
+    def render_latest(self) -> None:
+        """
+        
+        
+        """
+
         latest = fetch_latest(limit=10)
         if not latest:
             st.info("No detections yet.")
@@ -60,7 +80,13 @@ class Dashboard:
         df.columns = ["Time", "Source", "Mode", "Fault Type", "Confidence"]
         st.dataframe(df, use_container_width=True)
 
-    def render_trends_total(self):
+
+    def render_trends_total(self) -> None:
+        """
+        
+        
+        """
+
         days = st.slider("Days", 7, 90, 30, key="trend_days_total")
         trend = fetch_fault_trend_daily(days=days)
 
@@ -73,7 +99,13 @@ class Dashboard:
         fig = px.line(df, x="day", y="count", markers=True)
         st.plotly_chart(fig, use_container_width=True)
 
-    def render_distribution(self, fault_counts):
+
+    def render_distribution(self, fault_counts) -> None:
+        """
+        
+        
+        """
+
         if not fault_counts:
             st.info("No fault distribution data yet.")
             return
@@ -82,7 +114,13 @@ class Dashboard:
         fig = px.bar(df, x="fault_type", y="count")
         st.plotly_chart(fig, use_container_width=True)
 
-    def render_analytics(self):
+
+    def render_analytics(self) -> None:
+        """
+        
+        
+        """
+
         days2 = st.slider("Days", 7, 90, 30, key="trend_days_type")
 
         st.subheader("🧩 Fault Types Over Time")
@@ -93,7 +131,13 @@ class Dashboard:
         st.subheader("⚙️ Mode Comparison (Electrical vs Image)")
         self.render_mode_comparison()
 
-    def render_fault_trend_by_type(self, days=30):
+
+    def render_fault_trend_by_type(self, days=30) -> None:
+        """
+        
+        
+        """
+
         rows = self._query(
             """
             SELECT date(created_at) as day, fault_type, COUNT(*) as count
@@ -114,7 +158,13 @@ class Dashboard:
         fig = px.area(df, x="day", y="count", color="fault_type")
         st.plotly_chart(fig, use_container_width=True)
 
-    def render_mode_comparison(self):
+
+    def render_mode_comparison(self) -> None:
+        """
+        
+        
+        """
+
         rows = self._query(
             "SELECT mode, COUNT(*) as count FROM Predictions GROUP BY mode"
         )
