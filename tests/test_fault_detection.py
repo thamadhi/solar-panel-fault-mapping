@@ -154,7 +154,8 @@ def test_hotspot_mock_model(mock_rf_cls, mock_hotspot_cls, mock_img_prep_cls):
     mock_img_prep.preprocess.return_value = mock_img
     mock_img_prep_cls.return_value = mock_img_prep
 
-    handler = FaultDetectionHandler(electrical_model_path="fake.pkl")
+    handler = FaultDetectionHandler(image_model_path="fake.keras",
+                                    electrical_model_path="fake.pkl")
 
     with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
         result = handler.start_flow(image_data=tmp.name)
@@ -291,7 +292,8 @@ def test_apply_model_selects_highest_confidence(mock_rf_cls, mock_hotspot_cls, m
     ]
     mock_ctx_cls.return_value = mock_ctx
 
-    handler = FaultDetectionHandler(electrical_model_path="fake.pkl")
+    handler = FaultDetectionHandler(electrical_model_path="fake.pkl",
+                                    image_model_path="fake.keras")
 
     # Must pass the len(...) > 0 check
     handler._FaultDetectionHandler__processed_electrical_data = pd.DataFrame([{"x": 1}])
