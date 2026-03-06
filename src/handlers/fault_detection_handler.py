@@ -56,7 +56,6 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         self.__detection_context = DetectionContext(self.__set_default_strategy())
         self.__electrical_preprocessor = ElectricalPreprocesor()
         self.__image_preprocessor = ImagePreprocessor() if image_model_path else None
-        self.__result: Optional[AnalysisResult] = None
         self.__feature_names = [
             "vdc1",
             "vdc2",
@@ -137,6 +136,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         if (
             self.__processed_electrical_data is not None
             and len(self.__processed_electrical_data) > 0
+            and self.__electrical_strategy is not None
         ):
             self.__detection_context.set_strategy(self.__electrical_strategy)
             result = self.__detection_context.perform_detection(
@@ -144,6 +144,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             )
 
             if isinstance(result, dict):
+                result["source"] = "electrical"
                 detection_results.append(result)
             else:
                 self.__logger.error(
@@ -161,17 +162,15 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             )
 
             if isinstance(result, dict):
+                result["source"] = "image"
                 detection_results.append(result)
 
         # Determine most significant fault
-        if detection_results:
+        if len(detection_results) > 0:
             # Get fault with highest confidence
             main_fault = max(detection_results, key=lambda x: x.get("confidence", 0))
-
             self.__last_run_details = main_fault
-
             self.__fault_type = FaultFactory.create_fault(main_fault["fault_type"])
-
             # Notify all registered observers
             # self._notify_observers()
         else:
@@ -188,24 +187,20 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             None
         """
 
-        if not self.__fault_type:
-            self.result = None
+        if self.__fault_type is None:
             return
 
-        is_thermal = (
-            self.__processed_image_path is not None
-            and self.__processed_electrical_data is None
-        )
+        source = self.__last_run_details.get("source")
 
-        if is_thermal:
+        if source == "image":
             self.result = AnalysisResult(
                 result=self.__fault_type.get_fault_type,
                 image_confidence=float(self.__last_run_details.get("confidence", 0.0)),
                 reading_confidence=0.0,
-                result_images=[self.__processed_image_path],  # if you support this
+                result_images=[self.__processed_image_path],
                 result_readings=[],
             )
-        else:
+        else:   # Default to electrical
             self.result = AnalysisResult(
                 result=self.__fault_type.get_fault_type,
                 reading_confidence=float(
