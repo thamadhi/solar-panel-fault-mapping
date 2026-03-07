@@ -1,7 +1,7 @@
 from core.analysis_result import AnalysisResult
 from src.handlers.fault_detection_handler import FaultDetectionHandler
-from fault_localisation_handler import FaultLocalisationHandler
-from handlers.fault_Severity_handler import FaultSeverityHandler
+from src.handlers.fault_localisation_handler import FaultLocalisatiobHandler
+from src.handlers.fault_severity_handler import FaultSeverityHandler
 from fault_rectification_handler import FaultRectificationHandler
 from report_handler import ReportHandler
 
