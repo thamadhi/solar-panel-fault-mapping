@@ -9,9 +9,17 @@ class ElectricalPreprocesor(Preprocessor):
         super().__init__()
         self.__raw_cols = ["vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature"]
         self.__feature_order = [
-            "vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature",
-            "power_string1", "power_string2", "total_power",
-            "voltage_ratio", "current_ratio"
+            "vdc1",
+            "vdc2",
+            "idc1",
+            "idc2",
+            "irradiance",
+            "temperature",
+            "power_string1",
+            "power_string2",
+            "total_power",
+            "voltage_ratio",
+            "current_ratio",
         ]
 
     def preprocess(self, data: List[Dict[str, float]]) -> pd.DataFrame:
@@ -35,8 +43,9 @@ class ElectricalPreprocesor(Preprocessor):
         data = self._perform_feature_engineering(data)
         return data
 
-
-    def _perform_feature_engineering(self, data: List[Dict[str, float]]) -> pd.DataFrame:
+    def _perform_feature_engineering(
+        self, data: List[Dict[str, float]]
+    ) -> pd.DataFrame:
         """
         Extracts features from electrical data for the random forest.
 
@@ -49,16 +58,18 @@ class ElectricalPreprocesor(Preprocessor):
 
         # Get raw features
         rows = []
-        
+
         for row in data:
-            rows.append({
-                "vdc1": float(row.get("vdc1", 0.0)),
-                "vdc2": float(row.get("vdc2", 0.0)),
-                "idc1": float(row.get("idc1", 0.0)),
-                "idc2": float(row.get("idc2", 0.0)),
-                "irradiance": float(row.get("irradiance", 0.0)),
-                "temperature": float(row.get("temperature", 25.0))
-            })
+            rows.append(
+                {
+                    "vdc1": float(row.get("vdc1", 0.0)),
+                    "vdc2": float(row.get("vdc2", 0.0)),
+                    "idc1": float(row.get("idc1", 0.0)),
+                    "idc2": float(row.get("idc2", 0.0)),
+                    "irradiance": float(row.get("irradiance", 0.0)),
+                    "temperature": float(row.get("temperature", 25.0)),
+                }
+            )
 
         X = pd.DataFrame(rows, columns=self.__raw_cols)
 

@@ -70,9 +70,7 @@ def get_helper_language(feat: str) -> str:
     """
 
     # Power/current/total power features indicate output level
-    if feat in (
-        "total_power", "power_string1", "power_string2", "idc1", "idc2"
-    ):
+    if feat in ("total_power", "power_string1", "power_string2", "idc1", "idc2"):
         level = "higher/lower than expected"
 
     # Ratios usually indicate imbalance between strings
@@ -91,10 +89,8 @@ def get_helper_language(feat: str) -> str:
 
 
 def render_bullet_points(
-        contrib_df: pd.DataFrame,
-        pred_label: str,
-        k: int = 4
-    ) -> list[str]:
+    contrib_df: pd.DataFrame, pred_label: str, k: int = 4
+) -> list[str]:
     """
     Generate human-readable bullet points explaining the top SHAP contributors.
 
@@ -125,9 +121,9 @@ def render_bullet_points(
 
     # Build each bullet line
     for _, row in top.iterrows():
-        feat = str(row["feature"])           # raw feature name
-        value = float(row["value"])          # actual feature value
-        impact = float(row["impact"])        # SHAP contribution
+        feat = str(row["feature"])  # raw feature name
+        value = float(row["value"])  # actual feature value
+        impact = float(row["impact"])  # SHAP contribution
 
         # Replace raw feature name with a friendly label if available
         name = friendly_names.get(feat, feat)
@@ -172,7 +168,7 @@ def render_plotly_barchart(contrib_df: pd.DataFrame) -> None:
         x="impact",
         y="feature",
         orientation="h",
-        title="Top feature impacts"
+        title="Top feature impacts",
     )
 
     # Render chart
@@ -253,10 +249,12 @@ def render_pie_chart(result) -> None:
     conf = max(0.0, min(conf, 1.0))
 
     # Convert to dataframe for plotly
-    chart_df = pd.DataFrame([
-        {"fault_type": getattr(result, "result", "Unknown"), "confidence": conf},
-        {"fault_type": "Remaining Probability", "confidence": 1.0 - conf},
-    ])
+    chart_df = pd.DataFrame(
+        [
+            {"fault_type": getattr(result, "result", "Unknown"), "confidence": conf},
+            {"fault_type": "Remaining Probability", "confidence": 1.0 - conf},
+        ]
+    )
 
     # Create donut chart
     fig = px.pie(
@@ -264,14 +262,14 @@ def render_pie_chart(result) -> None:
         values="confidence",
         names="fault_type",
         hole=0.5,
-        title="Prediction Confidence Distribution"
+        title="Prediction Confidence Distribution",
     )
 
     # Layout tweaks
     fig.update_layout(
         showlegend=True,
         margin=dict(t=50, b=0, l=0, r=0),
-        legend=dict(orientation="h", yanchor="bottom", y=-0.2)
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2),
     )
 
     # Render

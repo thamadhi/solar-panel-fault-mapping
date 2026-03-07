@@ -1,6 +1,7 @@
 import hashlib
 import os
 
+
 def hash_password(password: str, salt: bytes | None = None):
     """
     Securely hash a plain text password using PBKDF2-HMAC (SHA-256).
@@ -42,16 +43,11 @@ def verify_password(password: str, stored: str) -> bool:
             database formatted as "<salt_hex>:<hash_hex>".
 
     Returns:
-        bool: True if the password matches the stored hash. False otherwise.    
+        bool: True if the password matches the stored hash. False otherwise.
     """
 
     salt_hex, hash_hex = stored.split(":")
     salt = bytes.fromhex(salt_hex)
-    test = hashlib.pbkdf2_hmac(
-        "sha256",
-        password.encode("utf-8"),
-        salt,
-        120_000
-    )
+    test = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 120_000)
 
     return test.hex() == hash_hex

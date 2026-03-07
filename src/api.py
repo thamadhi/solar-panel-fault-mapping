@@ -28,7 +28,6 @@ from huggingface_hub import hf_hub_download
 import numpy as np
 import shap
 
-
 # Application setup
 LoggerFactory.setup(db_path="data/app.db")
 
@@ -42,19 +41,14 @@ init_db()
 
 # Model configurations
 RANDOM_FOREST_MODEL_PATH = hf_hub_download(
-    repo_id=HF_REPO_ID,
-    filename="tuned_random_forest.pkl"
+    repo_id=HF_REPO_ID, filename="tuned_random_forest.pkl"
 )
 
-DENSENET_MODEL_PATH = hf_hub_download(
-    repo_id=HF_REPO_ID,
-    filename="tuned_model.keras"
-)
+DENSENET_MODEL_PATH = hf_hub_download(repo_id=HF_REPO_ID, filename="tuned_model.keras")
 
 # Load fault detection handler once at startup
 handler = FaultDetectionHandler(
-    electrical_model_path=RANDOM_FOREST_MODEL_PATH,
-    image_model_path=DENSENET_MODEL_PATH
+    electrical_model_path=RANDOM_FOREST_MODEL_PATH, image_model_path=DENSENET_MODEL_PATH
 )
 
 
@@ -69,6 +63,7 @@ def require_auth(fn):
     Attaches:
         request.user -> Decoded token claims.
     """
+
     @wraps(fn)
     def wrapper(*args, **kwargs):
         auth = request.headers.get("Authorization", "")
@@ -93,7 +88,7 @@ def require_auth(fn):
 @require_auth
 def predict():
     """
-    Predict electrical fauls using structured input data.
+    Predict electrical faults using structured input data.
 
     Expects:
         JSON body containing the electrical readings (list or dict).
@@ -116,15 +111,20 @@ def predict():
             mode="electrical",
             fault_type=str(result.result),
             confidence=float(result.reading_confidence),
-            input_json=json.dumps(data)
+            input_json=json.dumps(data),
         )
 
-        return jsonify({
-            "status": "success",
-            "fault_type": result.result,
-            "confidence": float(result.reading_confidence),
-            "result_readings": result.result_readings  # Helpful for UI table
-        }), 200
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "fault_type": result.result,
+                    "confidence": float(result.reading_confidence),
+                    "result_readings": result.result_readings,  # Helpful for UI table
+                }
+            ),
+            200,
+        )
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -166,14 +166,19 @@ def predict_image():
             mode="thermal",
             fault_type=str(result.result),
             confidence=float(result.image_confidence),
-            image_path=image_path
+            image_path=image_path,
         )
 
-        return jsonify({
-            "status": "success",
-            "fault_type": result.result,
-            "confidence": float(result.image_confidence)
-        }), 200
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "fault_type": result.result,
+                    "confidence": float(result.image_confidence),
+                }
+            ),
+            200,
+        )
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -252,20 +257,27 @@ def explain_electrical():
         x_vals = X.iloc[row_idx].to_numpy()
 
         for i in order:
-            contrib_rows.append({
-                "feature": feature_names[i],
-                "value": float(x_vals[i]),
-                "impact": float(sv[i]),
-                "direction": "pushes forward" if sv[i] >= 0 else "pushes away"
-            })
+            contrib_rows.append(
+                {
+                    "feature": feature_names[i],
+                    "value": float(x_vals[i]),
+                    "impact": float(sv[i]),
+                    "direction": "pushes forward" if sv[i] >= 0 else "pushes away",
+                }
+            )
 
-        return jsonify({
-            "status": "success",
-            "row_idx": row_idx,
-            "pred_label": pred_label,
-            "confidence": confidence,
-            "contributors": contrib_rows
-        }), 200
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "row_idx": row_idx,
+                    "pred_label": pred_label,
+                    "confidence": confidence,
+                    "contributors": contrib_rows,
+                }
+            ),
+            200,
+        )
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -300,16 +312,22 @@ def api_login():
 
     token = create_token(user_id=row["id"], username=row["username"], role=row["type"])
 
-    return jsonify({
-        "status": "success",
-        "token": token,
-        "user": {
-            "id": row["id"],
-            "type": row["type"],
-            "username": row["username"],
-            "email": row["email"]
-        }
-    }), 200
+    return (
+        jsonify(
+            {
+                "status": "success",
+                "token": token,
+                "user": {
+                    "id": row["id"],
+                    "type": row["type"],
+                    "username": row["username"],
+                    "email": row["email"],
+                },
+            }
+        ),
+        200,
+    )
+
 
 # Application entry point
 if __name__ == "__main__":
