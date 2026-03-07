@@ -2,6 +2,7 @@ import logging
 from src.database.db import init_db
 from src.core.db_log_handler import DBLogHandler
 
+
 class LoggerFactory:
     """
     A factory class for setting up and retrieving loggers with a centralized
@@ -19,7 +20,7 @@ class LoggerFactory:
         logger = LoggerFactory.get_logger(__name__)
     """
 
-    _configured = False # Keeps track whether logging system has been set up
+    _configured = False  # Keeps track whether logging system has been set up
 
     @classmethod
     def setup(cls, db_path: str = "data/app.db", level: int = logging.INFO) -> None:
@@ -29,10 +30,10 @@ class LoggerFactory:
         Args:
             cls: Refers to the class (LoggerFactory).
         """
-        
+
         if not cls._configured:
             return
-        
+
         init_db(db_path)
 
         # Configure root so all modules inherit this handler
@@ -52,11 +53,10 @@ class LoggerFactory:
 
         cls._configured = True
 
-
     @staticmethod
     def get_logger(name: str = "solar-pv") -> logging.Logger:
         """Returns a pre-configured logger.
-        
+
         Args:
             name (str): The name of the logger.
 

@@ -13,14 +13,18 @@ import pytest
 def mocked_handler():
     """
     Create a FaultDetectionHandler without loading real model files.
-    Patches ElectricalRF + ImageHotspotStrategy. 
+    Patches ElectricalRF + ImageHotspotStrategy.
     do heavy work.
     """
 
     # Replace real class with a Magic Mock
-    with patch("src.handlers.fault_detection_handler.ElectricalRF") as mock_rf_cls, \
-         patch("src.handlers.fault_detection_handler.ImageHotspotStrategy") as mock_hotspot_cls, \
-         patch("src.handlers.fault_detection_handler.ElectricalPreprocesor") as mock_elec_prep_cls:
+    with patch(
+        "src.handlers.fault_detection_handler.ElectricalRF"
+    ) as mock_rf_cls, patch(
+        "src.handlers.fault_detection_handler.ImageHotspotStrategy"
+    ) as mock_hotspot_cls, patch(
+        "src.handlers.fault_detection_handler.ElectricalPreprocesor"
+    ) as mock_elec_prep_cls:
 
         mock_rf_cls.return_value = MagicMock()
 
@@ -30,12 +34,23 @@ def mocked_handler():
 
         # Mock preprocessor instance
         mock_prep_instance = MagicMock()
-        mock_prep_instance.preprocess.return_value = pd.DataFrame([{
-            "vdc1": 10, "vdc2": 20, "idc1": 2, "idc2": 4,
-            "irradiance": 800, "temperature": 30,
-            "power_string1": 0.0, "power_string2": 0.0, "total_power": 0.0,
-            "voltage_ratio": 0.0, "current_ratio": 0.0
-        }])
+        mock_prep_instance.preprocess.return_value = pd.DataFrame(
+            [
+                {
+                    "vdc1": 10,
+                    "vdc2": 20,
+                    "idc1": 2,
+                    "idc2": 4,
+                    "irradiance": 800,
+                    "temperature": 30,
+                    "power_string1": 0.0,
+                    "power_string2": 0.0,
+                    "total_power": 0.0,
+                    "voltage_ratio": 0.0,
+                    "current_ratio": 0.0,
+                }
+            ]
+        )
         mock_elec_prep_cls.return_value = mock_prep_instance
 
         handler = FaultDetectionHandler(electrical_model_path="fake.pkl")
@@ -59,7 +74,9 @@ def test_pre_process_data(mocked_handler):
 
     handler.pre_process_data(string_data=payload, image_data=None)
 
-    processed = getattr(handler, "_FaultDetectionHandler__processed_electrical_data", None)
+    processed = getattr(
+        handler, "_FaultDetectionHandler__processed_electrical_data", None
+    )
     assert isinstance(processed, pd.DataFrame)
 
     # Base features exist
@@ -69,7 +86,7 @@ def test_pre_process_data(mocked_handler):
 
 def test_apply_model(mocked_handler):
     """Test that `apply_model` runs detection and selects a fault type."""
-    
+
     handler = mocked_handler
 
     # Pretend we already have processed electrical data
@@ -80,7 +97,7 @@ def test_apply_model(mocked_handler):
     handler._FaultDetectionHandler__detection_context = MagicMock()
     handler._FaultDetectionHandler__detection_context.perform_detection.return_value = {
         "fault_type": "Open Circuit",
-        "confidence": 0.91
+        "confidence": 0.91,
     }
 
     # Patch the static/class method
@@ -112,9 +129,7 @@ def test_present_results(mocked_handler):
     mock_fault.get_fault_type = "Short-Circuit"
 
     handler._FaultDetectionHandler__fault_type = mock_fault
-    handler._FaultDetectionHandler__last_run_details = {
-        "confidence": 0.77
-    }
+    handler._FaultDetectionHandler__last_run_details = {"confidence": 0.77}
 
     handler.present_results()
 
@@ -130,9 +145,7 @@ def test_present_results_no_fault(mocked_handler):
     handler = mocked_handler
 
     handler._FaultDetectionHandler__fault_type = None
-    handler._FaultDetectionHandler__last_run_details = {
-        "confidence": 0.93
-    }
+    handler._FaultDetectionHandler__last_run_details = {"confidence": 0.93}
 
     handler.present_results()
     assert handler.result is None
@@ -154,7 +167,9 @@ def test_hotspot_mock_model(mock_rf_cls, mock_hotspot_cls, mock_img_prep_cls):
     mock_img_prep.preprocess.return_value = mock_img
     mock_img_prep_cls.return_value = mock_img_prep
 
-    handler = FaultDetectionHandler(electrical_model_path="fake.pkl")
+    handler = FaultDetectionHandler(
+        image_model_path="fake.keras", electrical_model_path="fake.pkl"
+    )
 
     with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
         result = handler.start_flow(image_data=tmp.name)
@@ -173,7 +188,7 @@ def test_logger_setup_runs_once():
     """
 
     LoggerFactory.setup()
-    LoggerFactory.setup()   # Must not duplicate
+    LoggerFactory.setup()  # Must not duplicate
 
     logger = LoggerFactory.get_logger(__name__)
     assert isinstance(logger, logging.Logger)
@@ -242,35 +257,31 @@ def test_apply_model_mock_rf(mock_factory, mock_ctx_cls, mock_rf_cls):
     # Simulate detection returning a prediction
     mock_ctx.perform_detection.return_value = {
         "fault_type": "Short-Circuit",
-        "confidence": 0.88
+        "confidence": 0.88,
     }
     mock_ctx_cls.return_value = mock_ctx
 
     mock_fault = MagicMock()
     mock_factory.create_fault.return_value = mock_fault
 
-    handler = FaultDetectionHandler(
-        electrical_model_path="fake.pkl"
-    )
-    handler._FaultDetectionHandler__processed_electrical_data = [
-        {"fake": "row"}
-    ]
+    handler = FaultDetectionHandler(electrical_model_path="fake.pkl")
+    handler._FaultDetectionHandler__processed_electrical_data = [{"fake": "row"}]
 
     handler.apply_model()
 
     mock_factory.create_fault.assert_called_with("Short-Circuit")
 
     # Verify whether internal state updated correctly.
-    assert handler._FaultDetectionHandler__last_run_details[
-        "confidence"
-    ] == 0.88
+    assert handler._FaultDetectionHandler__last_run_details["confidence"] == 0.88
 
 
 @patch("src.handlers.fault_detection_handler.FaultFactory")
 @patch("src.handlers.fault_detection_handler.DetectionContext")
 @patch("src.handlers.fault_detection_handler.ImageHotspotStrategy")
 @patch("src.handlers.fault_detection_handler.ElectricalRF")
-def test_apply_model_selects_highest_confidence(mock_rf_cls, mock_hotspot_cls, mock_ctx_cls, mock_fault_factory):
+def test_apply_model_selects_highest_confidence(
+    mock_rf_cls, mock_hotspot_cls, mock_ctx_cls, mock_fault_factory
+):
     """
     Test `apply_model` picks the fault with the highest confidence.
 
@@ -291,7 +302,9 @@ def test_apply_model_selects_highest_confidence(mock_rf_cls, mock_hotspot_cls, m
     ]
     mock_ctx_cls.return_value = mock_ctx
 
-    handler = FaultDetectionHandler(electrical_model_path="fake.pkl")
+    handler = FaultDetectionHandler(
+        electrical_model_path="fake.pkl", image_model_path="fake.keras"
+    )
 
     # Must pass the len(...) > 0 check
     handler._FaultDetectionHandler__processed_electrical_data = pd.DataFrame([{"x": 1}])
@@ -321,7 +334,7 @@ def test_present_results_sets_analysis_result():
     handler._FaultDetectionHandler__fault_type = mock_fault
     handler._FaultDetectionHandler__last_run_details = {
         "confidence": 0.8,
-        "detailed_predictions": ["Open Circuit"]
+        "detailed_predictions": ["Open Circuit"],
     }
 
     handler.present_results()
@@ -339,10 +352,10 @@ def test_start_flow_calls_pipeline_in_order(mocked_handler):
 
     handler = mocked_handler
 
-    with patch.object(handler, "pre_process_data") as pre, \
-    patch.object(handler, "apply_model") as apply, \
-    patch.object(handler, "present_results") as present:
-        
+    with patch.object(handler, "pre_process_data") as pre, patch.object(
+        handler, "apply_model"
+    ) as apply, patch.object(handler, "present_results") as present:
+
         handler.start_flow(string_data={"x": 1})
 
         pre.assert_called_once()
@@ -365,7 +378,7 @@ def test_pre_process_data_non_numeric_values():
         "idc1": 1.2,
         "idc2": 1.1,
         "irradiance": 800,
-        "temperature": 35
+        "temperature": 35,
     }
 
     try:
@@ -387,11 +400,9 @@ def test_present_results_fault_type_none_no_uncrash(mock_hotspot_cls, mock_rf_cl
     """
 
     mock_rf_cls.return_value = MagicMock()
-    mock_hotspot_cls.return_value =  MagicMock()
+    mock_hotspot_cls.return_value = MagicMock()
 
-    handler = FaultDetectionHandler(
-        electrical_model_path="fake.pkl"
-    )
+    handler = FaultDetectionHandler(electrical_model_path="fake.pkl")
 
     # Simulate no fault
     handler._FaultDetectionHandler__fault_type = None
@@ -407,9 +418,12 @@ def test_pre_process_data_zero_denominator_safe(mocked_handler):
     handler = mocked_handler
 
     payload = {
-        "vdc1": 10, "vdc2": 0,
-        "idc1": 2, "idc2": 0,
-        "irradiance": 800, "temperature": 30
+        "vdc1": 10,
+        "vdc2": 0,
+        "idc1": 2,
+        "idc2": 0,
+        "irradiance": 800,
+        "temperature": 30,
     }
 
     try:
@@ -422,7 +436,7 @@ def test_pre_process_data_zero_denominator_safe(mocked_handler):
 
 def test_pre_process_data_missing_keys(mocked_handler):
     handler = mocked_handler
-    payload= {"vdc1": 10}   # Missing lots of features
+    payload = {"vdc1": 10}  # Missing lots of features
 
     handler.pre_process_data(string_data=payload, image_data=None)
 

@@ -15,7 +15,6 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
         self.__model = self._load_model(model_path)
 
-
     @override
     def detect(self, image_tensor) -> Dict[str, Any]:
         """
@@ -34,13 +33,19 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
         try:
             # Check if model is loaded
             if self.__model is None:
-                return {'fault_type': 'Normal Operation', 'confidence': 0.0,
-                        'error': 'Model failed to load'}
+                return {
+                    "fault_type": "Normal Operation",
+                    "confidence": 0.0,
+                    "error": "Model failed to load",
+                }
 
             if image_tensor is None:
-                return {'fault_type': 'Normal Operation', 'confidence': 0.0,
-                        'error': 'Image load failed'}
-            
+                return {
+                    "fault_type": "Normal Operation",
+                    "confidence": 0.0,
+                    "error": "Image load failed",
+                }
+
             # Get predictions
             predictions = self.__model.predict(image_tensor, verbose=0)[0]
 
@@ -50,17 +55,17 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
 
             # Determine fault types based on confidence
             if hotspot_confidence > 0.5:
-                fault_type = 'Hotspot'
+                fault_type = "Hotspot"
                 confidence = hotspot_confidence
             else:
-                fault_type = 'Normal Operation'
+                fault_type = "Normal Operation"
                 confidence = clean_confidence
 
             result = {
-                'fault_type': fault_type,
-                'confidence': confidence,
-                'hotspot_confidence': hotspot_confidence,
-                'clean_confidence': clean_confidence
+                "fault_type": fault_type,
+                "confidence": confidence,
+                "hotspot_confidence": hotspot_confidence,
+                "clean_confidence": clean_confidence,
             }
 
             self.__logger.info(f"Image prediction: {fault_type} ({confidence:.1f})")
@@ -69,11 +74,10 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
         except Exception as e:
             self.__logger.error(f"Image detection error: {e}")
             return {
-                    'fault_type': 'Normal Operation',
-                    'confidence': 0.0,
-                    'error': str(e)
+                "fault_type": "Normal Operation",
+                "confidence": 0.0,
+                "error": str(e),
             }
-
 
     def _load_model(self, model_path: str) -> Optional[keras.Model]:
         """

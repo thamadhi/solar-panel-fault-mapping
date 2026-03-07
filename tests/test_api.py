@@ -17,7 +17,7 @@ def client(monkeypatch):
     monkeypatch.setattr(
         api,
         "verify_token",
-        lambda token: {"user_id": 1, "username": "test", "role": "Admin"}
+        lambda token: {"user_id": 1, "username": "test", "role": "Admin"},
     )
 
     api.app.testing = True
@@ -27,21 +27,23 @@ def client(monkeypatch):
 @patch("src.api.handler")
 def test_api_predict_success(mocked_handler, client, auth_headers):
     mocked_handler.start_flow.return_value = MagicMock(
-        result="Open Circuit",
-        reading_confidence=0.91,
-        result_readings=[]
+        result="Open Circuit", reading_confidence=0.91, result_readings=[]
     )
 
     payload = {
-        "vdc1": 1, "vdc2": 2, "idc1": 1, "idc2": 1,
-        "irradiance": 800, "temperature": 30
+        "vdc1": 1,
+        "vdc2": 2,
+        "idc1": 1,
+        "idc2": 1,
+        "irradiance": 800,
+        "temperature": 30,
     }
 
     resp = client.post(
         "/predict",
         data=json.dumps(payload),
         content_type="application/json",
-        headers=auth_headers
+        headers=auth_headers,
     )
 
     assert resp.status_code == 200
@@ -71,8 +73,7 @@ def test_api_predict_missing_json(client, auth_headers):
 @patch("src.api.handler")
 def test_api_predict_image_success(mocked_handler, client, auth_headers):
     mocked_handler.start_flow.return_value = MagicMock(
-        result="Hotspot",
-        image_confidence=0.87
+        result="Hotspot", image_confidence=0.87
     )
 
     dummy_img = (io.BytesIO(b"fake image bytes"), "x.jpg")
@@ -80,7 +81,7 @@ def test_api_predict_image_success(mocked_handler, client, auth_headers):
         "/predict-image",
         data={"image": dummy_img},
         content_type="multipart/form-data",
-        headers=auth_headers
+        headers=auth_headers,
     )
 
     assert resp.status_code == 200
@@ -96,7 +97,7 @@ def test_api_predict_missing_image_file(mocked_handler, client, auth_headers):
         "/predict-image",
         data={},
         content_type="multipart/form-data",
-        headers=auth_headers
+        headers=auth_headers,
     )
     assert resp.status_code == 400
 
@@ -104,7 +105,9 @@ def test_api_predict_missing_image_file(mocked_handler, client, auth_headers):
 @patch("src.api.os.remove")
 @patch("src.api.os.path.exists", return_value=True)
 @patch("src.api.handler")
-def test_api_predict_image_handler_exception(mocked_handler, mock_exists, mock_remove, client, auth_headers):
+def test_api_predict_image_handler_exception(
+    mocked_handler, mock_exists, mock_remove, client, auth_headers
+):
     mocked_handler.start_flow.side_effect = RuntimeError("boom")
 
     dummy_img = (io.BytesIO(b"fake image bytes"), "x.jpg")
@@ -112,7 +115,7 @@ def test_api_predict_image_handler_exception(mocked_handler, mock_exists, mock_r
         "/predict-image",
         data={"image": dummy_img},
         content_type="multipart/form-data",
-        headers=auth_headers
+        headers=auth_headers,
     )
 
     assert resp.status_code == 500
@@ -129,14 +132,17 @@ def test_api_predict_image_empty_filename(mocked_handler, client, auth_headers):
         "/predict-image",
         data={"image": dummy_img},
         content_type="multipart/form-data",
-        headers=auth_headers
+        headers=auth_headers,
     )
     assert resp.status_code == 400
+
 
 @patch("src.api.os.remove")
 @patch("src.api.os.path.exists", return_value=True)
 @patch("src.api.handler")
-def test_api_predict_image_handler_exception_cleans_up(mocked_handler, mock_exists, mock_remove, client, auth_headers):
+def test_api_predict_image_handler_exception_cleans_up(
+    mocked_handler, mock_exists, mock_remove, client, auth_headers
+):
     mocked_handler.start_flow.side_effect = RuntimeError("boom")
 
     dummy_img = (io.BytesIO(b"fake image bytes"), "x.jpg")
@@ -144,7 +150,7 @@ def test_api_predict_image_handler_exception_cleans_up(mocked_handler, mock_exis
         "/predict-image",
         data={"image": dummy_img},
         content_type="multipart/form-data",
-        headers=auth_headers
+        headers=auth_headers,
     )
 
     assert resp.status_code == 500

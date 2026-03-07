@@ -70,7 +70,7 @@ def test_fetch_latest_respects_limit(initialized_db):
             mode="image",
             fault_type=f"F{i}",
             confidence=0.5,
-            db_path=initialized_db
+            db_path=initialized_db,
         )
 
     rows = db.fetch_latest(limit=2, db_path=initialized_db)
@@ -110,10 +110,7 @@ def test_create_user_and_get_user_by_username(monkeypatch, initialized_db):
     email = f"alice_{suffix}@example.com"
 
     user_id = db.create_user(
-        user_type="Admin",
-        username=username,
-        email=email,
-        password="secret123"
+        user_type="Admin", username=username, email=email, password="secret123"
     )
     assert user_id > 0
 

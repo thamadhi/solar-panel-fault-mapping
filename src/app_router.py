@@ -19,7 +19,7 @@ class AppRouter:
         with st.sidebar:
             st.markdown(
                 f'<img src="data:image/gif;base64,{data_url}" alt="gif">',
-                unsafe_allow_html=True
+                unsafe_allow_html=True,
             )
 
             if user is None:
@@ -32,7 +32,7 @@ class AppRouter:
                     ["Login"],  # Dashboard??????
                     index=0,
                     format_func=lambda x: f"📍 {x}",
-                    key="nav_page"
+                    key="nav_page",
                 )
                 return page
 
@@ -42,11 +42,18 @@ class AppRouter:
 
             page = st.radio(
                 "Go to",
-                ["Dashboard", "Fault Detection", "Localisation", "Severity",
-                "Rectification", "Reports", "History"],
+                [
+                    "Dashboard",
+                    "Fault Detection",
+                    "Localisation",
+                    "Severity",
+                    "Rectification",
+                    "Reports",
+                    "History",
+                ],
                 index=0,
                 format_func=lambda x: f"📍 {x}",
-                key="nav_page"
+                key="nav_page",
             )
 
             st.divider()
