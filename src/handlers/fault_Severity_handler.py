@@ -3,17 +3,18 @@ from typing import Any, Dict, List, Optional
 from typing_extensions import override
 
 # Local/project imports
-from dashboard.handlers.abstract_component_flow_handler import AbstractComponentFlowHandler
-from dashboard.core.analysis_result import AnalysisResult
+from src.handlers.abstract_component_flow_handler import AbstractComponentFlowHandler
+from src.core.analysis_result import AnalysisResult
 # FIXED: Pointing to the correct class name from electrical_Severity__rf_strategy.py
-from dashboard.strategies.electrical_Severity__rf_strategy import SeverityStrategy 
-from dashboard.strategies.image_Severity_hotspot_strategy import ImageHotspotStrategy
-from dashboard.core.fault import Fault
-from dashboard.context.detection_context import DetectionContext
-from dashboard.factory.fault_factory import FaultFactory
-from dashboard.core.logger import LoggerFactory
-from dashboard.preprocessing.electrical_Severity_preprocessor import ElectricalPreprocesor
-from dashboard.preprocessing.image_preprocessor import ImagePreprocessor
+from src.strategies.electrical_Severity__rf_strategy import SeverityStrategy 
+from src.strategies.image_Severity_hotspot_strategy import ImageHotspotStrategy
+from src.core.fault import Fault
+from src.context.detection_context import DetectionContext
+from src.factory.fault_factory import FaultFactory
+from src.core.logger import LoggerFactory
+from src.preprocessing.electrical_Severity_preprocessor import ElectricalPreprocesor
+from src.preprocessing.image_preprocessor import ImagePreprocessor
+
 
 class FaultSeverityHandler(AbstractComponentFlowHandler):
     """
