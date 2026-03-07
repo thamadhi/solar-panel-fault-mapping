@@ -13,8 +13,7 @@ from src.factory.fault_factory import FaultFactory
 from src.core.logger import LoggerFactory
 from src.preprocessing.electrical_preprocessor import ElectricalPreprocesor
 from src.preprocessing.image_preprocessor import ImagePreprocessor
-
-# from .fault_observer import FaultObserver
+from src.observers.fault_observer import FaultObserver
 
 
 class FaultDetectionHandler(AbstractComponentFlowHandler):
@@ -70,6 +69,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             "current_ratio",
         ]
         self.__last_run_details = {}  # Stores model outputs for each run
+        self.__observers: List[FaultObserver] = []
 
     # Implement overridden methods
     @override
@@ -162,8 +162,9 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             main_fault = max(detection_results, key=lambda x: x.get("confidence", 0))
             self.__last_run_details = main_fault
             self.__fault_type = FaultFactory.create_fault(main_fault["fault_type"])
+
             # Notify all registered observers
-            # self._notify_observers()
+            self._notify_observers()
         else:
             self.__logger.warning("No data available for fault detection.")
 
@@ -191,7 +192,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
                 result_images=[self.__processed_image_path],
                 result_readings=[],
             )
-        else:   # Default to electrical
+        elif source == "electrical":   # Default to electrical
             self.result = AnalysisResult(
                 result=self.__fault_type.get_fault_type,
                 reading_confidence=float(
@@ -201,6 +202,9 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
                 result_readings=self.__last_run_details.get("detailed_predictions", []),
                 result_images=[],
             )
+        else:
+            self.result = None
+            self.__logger.warning(f"Unknown detection source: {source}")
 
     def build_electrical_features(self, records: List[Dict[str, float]]):
         return self.__electrical_preprocessor.preprocess(records)
@@ -241,3 +245,13 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     # def _notify_observers(self):
     #     for obs in self.__observers:
     #         obs.update(self.__fault_type)
+
+    def add_observer(self, observer: FaultObserver) -> None:
+        self.__observers.append(observer)
+
+    def remove_observer(self, observer: FaultObserver) -> None:
+        self.__observers.remove(observer)
+
+    def _notify_observers(self) -> None:
+        for obs in self.__observers:
+            obs.update(self.__fault_type, self.__last_run_details)

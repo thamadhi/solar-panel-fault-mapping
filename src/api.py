@@ -14,16 +14,15 @@ and the machine learning models.
 
 from flask import Flask, request, jsonify
 from src.core.logger import LoggerFactory
-from src.handlers.fault_detection_handler import FaultDetectionHandler
 from src.database.db import init_db, insert_prediction, get_user_by_username
 from src.authentication.jwt_utils import create_token, verify_token
 from src.authentication.security import verify_password
+from src.services.detection_service import build_handler
 import os
 import tempfile
 import json
 from functools import wraps
 from src.authentication.jwt_utils import verify_token
-from huggingface_hub import hf_hub_download
 
 import numpy as np
 import shap
@@ -31,26 +30,14 @@ import shap
 # Application setup
 LoggerFactory.setup(db_path="data/app.db")
 
-HF_REPO_ID = "seyeddd/solar-pv-fault-detection-models"
-
 # Setup flask instance
 app = Flask(__name__)
 
 # Initialize database
 init_db()
 
-# Model configurations
-RANDOM_FOREST_MODEL_PATH = hf_hub_download(
-    repo_id=HF_REPO_ID, filename="tuned_random_forest.pkl"
-)
-
-DENSENET_MODEL_PATH = hf_hub_download(repo_id=HF_REPO_ID, filename="tuned_model.keras")
-
-# Load fault detection handler once at startup
-handler = FaultDetectionHandler(
-    electrical_model_path=RANDOM_FOREST_MODEL_PATH, image_model_path=DENSENET_MODEL_PATH
-)
-
+# Load handler once at startup
+handler = build_handler()
 
 def require_auth(fn):
     """
