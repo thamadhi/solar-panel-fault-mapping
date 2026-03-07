@@ -1,12 +1,15 @@
 from src.core.analysis_result import AnalysisResult
 
+
 class ReportHandler:
-    def __init__(self, 
-                 DetectionResult: AnalysisResult, 
-                 LocalisationResult: AnalysisResult, 
-                 SeverityResult: AnalysisResult, 
-                 RectificationResult: AnalysisResult):
-        
+    def __init__(
+        self,
+        DetectionResult: AnalysisResult,
+        LocalisationResult: AnalysisResult,
+        SeverityResult: AnalysisResult,
+        RectificationResult: AnalysisResult,
+    ):
+
         self.__DetectionResult = DetectionResult
         self.__LocalisationResult = LocalisationResult
         self.__SeverityResult = SeverityResult

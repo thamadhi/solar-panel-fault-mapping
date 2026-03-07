@@ -2,6 +2,7 @@ class PVSystem:
     """
     Represents the solar PV system
     """
+
     def __init__(self, __id: int, system_type: str, no_of_modules: int, modules: list):
         self.__ID = __id
         self.__type = system_type
@@ -15,7 +16,7 @@ class PVSystem:
             The ID of the PV system
         """
         return self.__ID
-    
+
     @property
     def get_system_type(self) -> str:
         """
@@ -23,7 +24,7 @@ class PVSystem:
             The system types
         """
         return self.__type
-    
+
     @property
     def get_no_of_modules(self) -> int:
         """

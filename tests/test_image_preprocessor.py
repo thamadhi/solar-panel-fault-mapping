@@ -22,7 +22,7 @@ def test_preprocess_valid_image_returns_correct_tensor(preprocessor, tmp_path):
 
     path = tmp_path / "test.jpg"
     ok = cv2.imwrite(str(path), img)
-    assert ok is True       # Ensure file was written
+    assert ok is True  # Ensure file was written
 
     out = preprocessor.preprocess(str(path))
 

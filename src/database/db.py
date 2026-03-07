@@ -87,14 +87,14 @@ def init_db(db_path: str = DB_PATH) -> None:
 
 
 def insert_prediction(
-        source: str,
-        mode: str,
-        fault_type: str,
-        confidence: float,
-        image_path: Optional[str] = None,
-        input_json: Optional[str] = None,
-        db_path: str = DB_PATH
-    ) -> int:
+    source: str,
+    mode: str,
+    fault_type: str,
+    confidence: float,
+    image_path: Optional[str] = None,
+    input_json: Optional[str] = None,
+    db_path: str = DB_PATH,
+) -> int:
     """
     Inserts a new fault record into the database.
 
@@ -120,12 +120,22 @@ def insert_prediction(
 
     created_at = datetime.utcnow().isoformat()
 
-    cur.execute("""
+    cur.execute(
+        """
         INSERT INTO Predictions (created_at, source, mode, fault_type,
         confidence, image_path, input_json)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (created_at, source, mode, fault_type, float(confidence),
-          image_path, input_json))
+    """,
+        (
+            created_at,
+            source,
+            mode,
+            fault_type,
+            float(confidence),
+            image_path,
+            input_json,
+        ),
+    )
 
     conn.commit()
     row_id = cur.lastrowid
@@ -149,38 +159,70 @@ def fetch_latest(limit: int = 50, db_path: str = DB_PATH) -> List[Dict[str, Any]
 
     conn = get_conn(db_path)
     cur = conn.cursor()
-    cur.execute("""
+    cur.execute(
+        """
         SELECT id, created_at, source, mode, fault_type, confidence, image_path
         FROM Predictions
         ORDER BY id DESC
         LIMIT ?
-    """, (limit,))
+    """,
+        (limit,),
+    )
     rows = cur.fetchall()
     conn.close()
     return [dict(row) for row in rows]
 
 
 def insert_log(
-        level: str,
-        logger_name: str,
-        module: str,
-        message: str,
-        func_name: str,
-        line_no: str,
-        exception: str,
-        db_path: str = DB_PATH
-    ) -> int:
+    level: str,
+    logger_name: str,
+    module: str,
+    message: str,
+    func_name: str,
+    line_no: str,
+    exception: str,
+    db_path: str = DB_PATH,
+) -> int:
+    """
+    Insert a log record into the Logs table.
+
+    Args:
+        level (str): Log level (e..g, "INFO", "WARNING").
+        logger_name (str): Name of the logger instance.
+        module (str): Module/file where the log is originated.
+        message (str): Log message content.
+        func_name (str): Function name where the log occurred.
+        line_no (str): Line number (as string) where the log occurred.
+        exception (str): Exception details (stack trace or message).
+        db_path (str): Path to the SQLite database file.
+
+    Returns:
+        int: ID of the newly inserted log record.
+
+    """
 
     conn = get_conn(db_path)
     cur = conn.cursor()
 
     created_at = datetime.utcnow().isoformat()
 
-    cur.execute("""
+    cur.execute(
+        """
         INSERT INTO Logs
         (created_at, level, logger_name, module, func_name, line_no, message, exception)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (created_at, level, logger_name, module, func_name, line_no, message, exception))
+    """,
+        (
+            created_at,
+            level,
+            logger_name,
+            module,
+            func_name,
+            line_no,
+            message,
+            exception,
+        ),
+    )
 
     conn.commit()
     row_id = cur.lastrowid
@@ -195,23 +237,41 @@ def fetch_logs(limit: int = 100, db_path: str = DB_PATH) -> List[Dict[str, Any]]
 
     conn = get_conn(db_path)
     cur = conn.cursor()
-    cur.execute("""
+    cur.execute(
+        """
         SELECT id, created_at, level, logger_name, module, func_name, line_no, message, exception
         FROM Logs
         ORDER BY id DESC
         LIMIT ?
-    """, (limit,))
+    """,
+        (limit,),
+    )
     rows = cur.fetchall()
     conn.close()
     return [dict(row) for row in rows]
 
 
 def create_user(user_type: str, username: str, email: str, password: str) -> int:
+    """
+    Creates a new user reord in the Users table.
+
+    The password is hashed using `hash_password()` before being stored.
+
+    Args:
+        user_type (str): User role/type (e.g., "Admin")
+        username (str): Unique username.
+        email (str): Unique email address.
+        password (str): Plaintext password (will be hashed before saving).
+
+    Returns:
+        int: The database ID of the newly creaed user.
+    """
+
     conn = get_conn()
     cur = conn.cursor()
     cur.execute(
         "INSERT INTO Users(type, username, email, password_hash) VALUES (?, ?, ?, ?)",
-        (user_type, username, email, hash_password(password))
+        (user_type, username, email, hash_password(password)),
     )
     conn.commit()
     user_id = cur.lastrowid
@@ -219,28 +279,61 @@ def create_user(user_type: str, username: str, email: str, password: str) -> int
     return user_id
 
 
-def get_user_by_username(username: str):
+def get_user_by_username(username: str) -> sqlite3.Row | None:
+    """
+    Retrieves a user record by username.
+
+    Args:
+        username (str): The username to search for.
+
+    Returns:
+        sqlite3.Row | None:
+            - sqlite3.Row (dict-like row) if the user exists.
+            - None if no matching user is found
+    """
+
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute(
-        "SELECT * FROM Users WHERE username = ?", (username,)
-    )
+    cur.execute("SELECT * FROM Users WHERE username = ?", (username,))
     row = cur.fetchone()
     conn.close()
     return row
 
 
-def create_default_admin():
+def create_default_admin() -> None:
+    """
+    Ensures a default admin account exists.
+
+    If a user with username "admin" does not exist, this function creates one
+    using the default credentials:
+        - username: admin
+        - email: admin@solar.com
+        - password: admin123
+
+    Returns:
+        None
+    """
+
     existing = get_user_by_username("admin")
     if existing is None:
         create_user(
             user_type="Admin",
             username="admin",
             email="admin@solar.com",
-            password="admin123"
+            password="admin123",
         )
 
+
 def fetch_latest_faults(limit: int = 5) -> List[Dict[str, Any]]:
+    """
+    Fetch the most recent fault predictions.
+
+    Args:
+        limit (int): Maximum number of records to return.
+
+    Returns:
+        List[Dict[str, Any]]: A list of recent prediction records.
+    """
 
     conn = get_conn()
     rows = conn.execute(
@@ -249,13 +342,26 @@ def fetch_latest_faults(limit: int = 5) -> List[Dict[str, Any]]:
         FROM Predictions
         ORDER BY datetime(created_at) DESC
         LIMIT ?
-        """, (limit,)
+        """,
+        (limit,),
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
 
 def fetch_fault_trend_daily(days: int = 30) -> List[Dict[str, Any]]:
+    """
+    Fetch daily fault trend counts over the last N days.
+
+    Groups predictions by date (day) and returns the count for each day.
+
+    Args:
+        days (int): Number of days to include (default: 30).
+
+    Returns:
+        List[Dict[str, Any]]: A list like:
+            [{"day": "YYYY-MM-DD", "count": 12}, ...]
+    """
 
     conn = get_conn()
     rows = conn.execute(
@@ -265,7 +371,8 @@ def fetch_fault_trend_daily(days: int = 30) -> List[Dict[str, Any]]:
         WHERE date(created_at) >= date('now', ?)
         GROUP BY date(created_at)
         ORDER BY day ASC
-        """, (f"-{days} days",)
+        """,
+        (f"-{days} days",),
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
