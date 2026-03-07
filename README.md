@@ -182,7 +182,7 @@ pip install -r requirements.txt
 Start the Flask API first from the project root in one terminal:
 
 ```bash
-python -m src.api
+make run
 ```
 
 ### ▶️ Running the Streamlit Dashboard
@@ -190,5 +190,5 @@ python -m src.api
 Open a new terminal, activate the same .venv, then run:
 
 ```bash
-streamlit run app.py
+make app
 ```
