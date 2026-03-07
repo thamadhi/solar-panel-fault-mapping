@@ -11,10 +11,6 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
     Detects hotspots from thermal images only
     """
 
-    def __init__(self, model_path: str) -> None:
-        self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
-        self.__model = self._load_model(model_path)
-
     @override
     def detect(self, image_tensor) -> Dict[str, Any]:
         """
@@ -32,7 +28,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
 
         try:
             # Check if model is loaded
-            if self.__model is None:
+            if self._model is None:
                 return {
                     "fault_type": "Normal Operation",
                     "confidence": 0.0,
@@ -47,7 +43,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                 }
 
             # Get predictions
-            predictions = self.__model.predict(image_tensor, verbose=0)[0]
+            predictions = self._model.predict(image_tensor, verbose=0)[0]
 
             # Binary classification
             hotspot_confidence = float(predictions[0])
@@ -68,20 +64,21 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                 "clean_confidence": clean_confidence,
             }
 
-            self.__logger.info(f"Image prediction: {fault_type} ({confidence:.1f})")
+            self._logger.info(f"Image prediction: {fault_type} ({confidence:.1f})")
             return result
 
         except Exception as e:
-            self.__logger.error(f"Image detection error: {e}")
+            self._logger.error(f"Image detection error: {e}")
             return {
                 "fault_type": "Normal Operation",
                 "confidence": 0.0,
                 "error": str(e),
             }
 
-    def _load_model(self, model_path: str) -> Optional[keras.Model]:
+    @override
+    def load_model(self, model_path: str) -> Optional[keras.Model]:
         """
-        Load the tuned DenseNet model
+        Load the tuned DenseNet model.
 
         Args:
             model_path (str): The path of the image model being loaded.
@@ -97,5 +94,5 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
             else:
                 return None
         except Exception as e:
-            self.__logger.error(f"Error loading DenseNet model: {e}")
+            self._logger.error(f"Error loading DenseNet model: {e}")
             return None
