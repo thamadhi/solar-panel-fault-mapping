@@ -106,8 +106,6 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             if (
                 self.__image_preprocessor is not None
                 and image_data is not None
-                and isinstance(image_data, str)
-                and image_data.strip()
             ):
                 self.__processed_image_path = self.__image_preprocessor.preprocess(
                     image_data
@@ -143,13 +141,8 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
                 self.__processed_electrical_data
             )
 
-            if isinstance(result, dict):
-                result["source"] = "electrical"
-                detection_results.append(result)
-            else:
-                self.__logger.error(
-                    f"Unexpected electrical result type: {type(result)} -> {result}"
-                )
+            result["source"] = "electrical"
+            detection_results.append(result)
 
         # Apply image model if image data exists
         if (
@@ -160,10 +153,8 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             result = self.__detection_context.perform_detection(
                 self.__processed_image_path
             )
-
-            if isinstance(result, dict):
-                result["source"] = "image"
-                detection_results.append(result)
+            result["source"] = "image"
+            detection_results.append(result)
 
         # Determine most significant fault
         if len(detection_results) > 0:
