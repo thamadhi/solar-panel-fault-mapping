@@ -5,7 +5,7 @@ from core.analysis_result import AnalysisResult
 class FaultRectificationHandler(AbstractComponentFlowHandler):
     def __init__(self):
         super().__init__()
- 
+
         self.faultReccomendation: str = ""
 
     def _preProcessData(self):

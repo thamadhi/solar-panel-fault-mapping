@@ -1,1 +1,8 @@
-from .db import get_conn, fetch_latest, fetch_fault_trend_daily, insert_prediction, init_db, insert_log
+from .db import (
+    get_conn,
+    fetch_latest,
+    fetch_fault_trend_daily,
+    insert_prediction,
+    init_db,
+    insert_log,
+)

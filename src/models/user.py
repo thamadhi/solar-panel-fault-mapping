@@ -15,7 +15,6 @@ class User:
         self.__username = username
         self.__email = email
 
-
     @property
     def id(self) -> int:
         """
@@ -23,7 +22,6 @@ class User:
             int: Unique user identifier.
         """
         return self.__id
-
 
     @property
     def type(self) -> str:
@@ -33,7 +31,6 @@ class User:
         """
         return self.__type
 
-
     @property
     def username(self) -> str:
         """
@@ -41,7 +38,6 @@ class User:
             str: Username of the user.
         """
         return self.__username
-
 
     @property
     def email(self) -> str:

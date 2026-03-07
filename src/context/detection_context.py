@@ -6,10 +6,11 @@ class DetectionContext:
     """
     Detection context defines the reference to the strategy
     """
+
     def __init__(self, strategy: FaultDetectionStrategy) -> None:
         """
         Initializes the strategy for fault detection.
-        
+
         Args:
             strategy (FaultDetectionStrategy):
 
@@ -18,11 +19,10 @@ class DetectionContext:
         """
         self.__strategy = strategy
 
-
     def set_strategy(self, strategy: FaultDetectionStrategy) -> None:
         """
         Allows replacing the strategy object at runtime.
-        
+
         Args:
             strategy: FaultDetectionStrategy
 
@@ -31,11 +31,10 @@ class DetectionContext:
         """
         self.__strategy = strategy
 
-
     def perform_detection(self, data: Any) -> Dict[str, Any]:
         """
         Method called by the context for fault detection.
-        
+
         Args:
             data (Any):
 

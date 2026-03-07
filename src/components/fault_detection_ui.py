@@ -2,7 +2,10 @@ import streamlit as st
 import pandas as pd
 
 from src.api_client import predict_electrical, predict_image, explain_electrical
-from src.components.explainability import render_explainability_from_api, render_pie_chart
+from src.components.explainability import (
+    render_explainability_from_api,
+    render_pie_chart,
+)
 from src.components.tables import selectable_table
 
 
@@ -58,7 +61,12 @@ def render_csv_mode(tab1):
                 return
 
             # Trigger detection when user clicks analyze
-            if st.button("Analyze CSV Data", key="btn_csv", type="primary", use_container_width=True):
+            if st.button(
+                "Analyze CSV Data",
+                key="btn_csv",
+                type="primary",
+                use_container_width=True,
+            ):
                 # Use Streamlit status for better user feedback
                 with st.status("Calling API for fault detection...") as status:
                     # Convert each row to a dict record
@@ -76,15 +84,19 @@ def render_csv_mode(tab1):
                         st.session_state.last_records = records
 
                         # Update status UI
-                        status.update(label="Analysis Complete!", state="complete", expanded=False)
+                        status.update(
+                            label="Analysis Complete!", state="complete", expanded=False
+                        )
 
                         # Save lightweight session history (UI only)
-                        st.session_state.history.append({
-                            "mode": "csv",
-                            "fault_type": api_res.get("fault_type"),
-                            "confidence": float(api_res.get("confidence", 0.0)),
-                            "rows": len(df)
-                        })
+                        st.session_state.history.append(
+                            {
+                                "mode": "csv",
+                                "fault_type": api_res.get("fault_type"),
+                                "confidence": float(api_res.get("confidence", 0.0)),
+                                "rows": len(df),
+                            }
+                        )
 
                     except Exception as e:
                         # Clear result if API fails
@@ -118,7 +130,6 @@ def render_csv_summary_cards(api_res, df, raw_cols):
         raw_cols (list[str]): Required columns list
     """
 
-
     # Base metrics displayed at the top of the page
     c1, c2, c3 = st.columns(3)
     c1.metric("System Status", api_res.get("fault_type", "Unknown"))
@@ -126,7 +137,6 @@ def render_csv_summary_cards(api_res, df, raw_cols):
     c3.metric("Records Analyzed", len(df))
 
     st.markdown("---")
-
 
     # Per-String Analysis Table
     st.subheader("Individual String Analysis")
@@ -219,19 +229,26 @@ def render_image_mode(tab3):
 
         with img_col:
             with st.container(border=True):
-                image_file = st.file_uploader("Upload Thermal Image", type=["jpg", "png", "jpeg"])
+                image_file = st.file_uploader(
+                    "Upload Thermal Image", type=["jpg", "png", "jpeg"]
+                )
 
                 # Display the uploaded image if present
                 if image_file:
                     st.image(
                         image_file.getvalue(),
                         caption="Uploaded Thermal Capture",
-                        use_container_width=True
+                        use_container_width=True,
                     )
 
         with det_col:
             if image_file:
-                if st.button("Scan for Hotspots", key="scan_thermal", type="primary", use_container_width=True):
+                if st.button(
+                    "Scan for Hotspots",
+                    key="scan_thermal",
+                    type="primary",
+                    use_container_width=True,
+                ):
                     with st.spinner("Calling API..."):
                         try:
 
@@ -248,11 +265,13 @@ def render_image_mode(tab3):
                             st.session_state.last_thermal_api_result = api_res
 
                             # Add UI-only history log
-                            st.session_state.history.append({
-                                "mode": "thermal",
-                                "fault_type": api_res.get("fault_type"),
-                                "confidence": float(api_res.get("confidence", 0.0))
-                            })
+                            st.session_state.history.append(
+                                {
+                                    "mode": "thermal",
+                                    "fault_type": api_res.get("fault_type"),
+                                    "confidence": float(api_res.get("confidence", 0.0)),
+                                }
+                            )
 
                         except Exception as e:
                             st.error(f"Thermal API error: {e}")
@@ -289,10 +308,7 @@ def render_tabs():
     st.markdown("Provide system data below to identify performance anomalies.")
 
     # Removed Manual Diagnostic tab
-    tab1, tab3 = st.tabs([
-        "📄 CSV Batch Analysis",
-        "🖼️ Thermal Vision"
-    ])
+    tab1, tab3 = st.tabs(["📄 CSV Batch Analysis", "🖼️ Thermal Vision"])
 
     return tab1, tab3
 
