@@ -7,10 +7,29 @@ from src.pages.history import show_history_page
 
 class AppRouter:
     def _gif_to_base64(self, path: str) -> str:
+        """
+        Converts a gif image to a Base64 encoded string to embed into HTML
+        inside the streamlit interface.
+
+        
+        Args:
+            path (str): Path to the GIF image file.
+
+        Returns:
+            str: Base64 encoded representation of the GIF.
+        """
         with open(path, "rb") as f:
             return base64.b64encode(f.read()).decode("utf-8")
 
     def render_side_bar(self) -> str:
+        """
+        Creates the sidebar navigation panel and controls what pages are
+        visible depending on whether a user is logged in.
+
+        Returns:
+            str: The selected page name from the sidebar navigation.
+        
+        """
         data_url = self._gif_to_base64("assets/cloudyRain.gif")
 
         # Safe read
