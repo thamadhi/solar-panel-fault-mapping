@@ -3,7 +3,7 @@ from abstract_component_flow_handler import AbstractComponentFlowHandler
 from core.analysis_result import AnalysisResult
 
 
-class FaultLocalisatiobHandler(AbstractComponentFlowHandler):
+class FaultLocalisationHandler(AbstractComponentFlowHandler):
     def __init__(self):
         super().__init__()
 

@@ -3,7 +3,6 @@ from typing import Dict, Any, Optional
 from typing_extensions import override
 from tensorflow import keras
 from src.strategies.base_strategy import FaultDetectionStrategy
-from src.core.logger import LoggerFactory
 
 
 class ImageHotspotStrategy(FaultDetectionStrategy):

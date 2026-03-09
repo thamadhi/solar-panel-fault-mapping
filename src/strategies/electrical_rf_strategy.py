@@ -4,7 +4,6 @@ import pandas as pd
 from typing import Dict, Any
 from typing_extensions import override
 from src.strategies.base_strategy import FaultDetectionStrategy
-from src.core.logger import LoggerFactory
 import joblib
 
 
