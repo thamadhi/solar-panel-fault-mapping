@@ -13,7 +13,6 @@ from src.factory.fault_factory import FaultFactory
 from src.core.logger import LoggerFactory
 from src.preprocessing.electrical_preprocessor import ElectricalPreprocesor
 from src.preprocessing.image_preprocessor import ImagePreprocessor
-from src.observers.fault_observer import FaultObserver
 
 
 class FaultDetectionHandler(AbstractComponentFlowHandler):
@@ -69,9 +68,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             "current_ratio",
         ]
         self.__last_run_details = {}  # Stores model outputs for each run
-        self.__observers: List[FaultObserver] = []
 
-    # Implement overridden methods
     @override
     def pre_process_data(self, image_data: Any = None, string_data: Any = None) -> None:
         """
@@ -120,7 +117,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     @override
     def apply_model(self) -> None:
         """
-        Used to apply the required model for detection
+        Used to apply the required model for detection.
 
         Returns:
             None
@@ -162,9 +159,6 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             main_fault = max(detection_results, key=lambda x: x.get("confidence", 0))
             self.__last_run_details = main_fault
             self.__fault_type = FaultFactory.create_fault(main_fault["fault_type"])
-
-            # Notify all registered observers
-            self._notify_observers()
         else:
             self.__logger.warning("No data available for fault detection.")
 
@@ -238,20 +232,3 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         if default_strategy is None:
             raise ValueError("Provide at least one model path (electrical or image).")
         return default_strategy
-
-    # def add_observer(self, observer: FaultObserver):
-    #     self.__observers.append(observer)
-
-    # def _notify_observers(self):
-    #     for obs in self.__observers:
-    #         obs.update(self.__fault_type)
-
-    def add_observer(self, observer: FaultObserver) -> None:
-        self.__observers.append(observer)
-
-    def remove_observer(self, observer: FaultObserver) -> None:
-        self.__observers.remove(observer)
-
-    def _notify_observers(self) -> None:
-        for obs in self.__observers:
-            obs.update(self.__fault_type, self.__last_run_details)
