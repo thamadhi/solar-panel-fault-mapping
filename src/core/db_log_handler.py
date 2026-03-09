@@ -23,7 +23,6 @@ class DBLogHandler(logging.Handler):
                 if self.formatter:
                     exc = self.formatter.formatException(record.exc_info)
                 else:
-                    # Fallback
                     exc = logging.Formatter().formatException(record.exc_info)
 
             insert_log(
