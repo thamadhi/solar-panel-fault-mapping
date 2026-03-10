@@ -1,4 +1,4 @@
-from dashboard.preprocessing.preprocessor import Preprocessor
+from src.preprocessing.preprocessor import Preprocessor
 import pandas as pd
 from typing import List, Dict
 
