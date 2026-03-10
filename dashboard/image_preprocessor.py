@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 from typing import Optional, Any
-from dashboard.preprocessing.preprocessor import Preprocessor
-from dashboard.core.logger import LoggerFactory
+from src.preprocessing.preprocessor import Preprocessor
+from src.core.logger import LoggerFactory
 
 
 class ImagePreprocessor(Preprocessor):
@@ -63,3 +63,4 @@ class ImagePreprocessor(Preprocessor):
         img_batch = np.expand_dims(img_3ch, axis=0)
 
         return img_batch
+
