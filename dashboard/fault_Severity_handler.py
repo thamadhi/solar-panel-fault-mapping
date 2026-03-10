@@ -7,16 +7,16 @@ from typing_extensions import override
 
 # Local/project imports
 # This works because it tells Python exactly where to go from the project root
-from dashboard.handlers.abstract_component_flow_handler import AbstractComponentFlowHandler
-from dashboard.core.analysis_result import AnalysisResult
-from dashboard.strategies.electrical_Severity_rf_strategy import ElectricalXGBoost # Updated to XGBoost
-from dashboard.strategies.image_hotspot_strategy import ImageHotspotStrategy  
-from dashboard.core.fault import Fault
-from dashboard.context.detection_context import DetectionContext
-from dashboard.factory.fault_factory import FaultFactory
-from dashboard.core.logger import LoggerFactory
-from dashboard.preprocessing.electrical_Severity_preprocessor import ElectricalPreprocesor 
-from dashboard.preprocessing.image_preprocessor import ImagePreprocessor 
+from src.handlers.abstract_component_flow_handler import AbstractComponentFlowHandler
+from src.core.analysis_result import AnalysisResult
+from src.strategies.electrical_Severity_rf_strategy import ElectricalXGBoost # Updated to XGBoost
+from src.strategies.image_hotspot_strategy import ImageHotspotStrategy  
+from src.core.fault import Fault
+from src.context.detection_context import DetectionContext
+from src.factory.fault_factory import FaultFactory
+from src.core.logger import LoggerFactory
+from src.preprocessing.electrical_Severity_preprocessor import ElectricalPreprocesor 
+from src.preprocessing.image_preprocessor import ImagePreprocessor 
 
 class FaultSeverityHandler(AbstractComponentFlowHandler):
     """
@@ -171,3 +171,4 @@ class FaultSeverityHandler(AbstractComponentFlowHandler):
     @result.setter
     def result(self, value: AnalysisResult):
         self.__result = value
+
