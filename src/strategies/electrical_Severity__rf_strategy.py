@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 from typing import Dict, Any, List
 import joblib
-from dashboard.strategies.base_strategy import FaultDetectionStrategy
-from dashboard.core.logger import LoggerFactory
+from src.strategies.base_strategy import FaultDetectionStrategy
+from src.core.logger import LoggerFactory
 
 class SeverityStrategy(FaultDetectionStrategy):
     """

@@ -1,5 +1,5 @@
 import streamlit as st
-
+from src.services.detection_service import build_handler
 
 def init_state():
     # Session state
@@ -16,3 +16,7 @@ def init_state():
 
     if "api_token" not in st.session_state:
         st.session_state.api_token = None
+
+    # Cache for session lifetime
+    if "handler" not in st.session_state:
+        st.session_state.handler = build_handler()

@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from typing import Optional, Any
+from typing import Optional
 from src.preprocessing.preprocessor import Preprocessor
 from src.core.logger import LoggerFactory
 

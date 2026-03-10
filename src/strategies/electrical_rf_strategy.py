@@ -4,7 +4,6 @@ import pandas as pd
 from typing import Dict, Any
 from typing_extensions import override
 from src.strategies.base_strategy import FaultDetectionStrategy
-from src.core.logger import LoggerFactory
 import joblib
 
 
@@ -12,25 +11,6 @@ class ElectricalRF(FaultDetectionStrategy):
     """
     Builds the Random Forest for electrical fault detection
     """
-
-    def __init__(self, model_path: str) -> None:
-        """
-        Initializes the Random Forest model for electrical fault detection.
-
-        Args:
-            model_path (str): Path of the random forest model.
-
-        Returns:
-            None
-        """
-
-        self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
-
-        # Use provided path or default
-        if not os.path.exists(model_path):
-            raise FileNotFoundError(f"Random Forest Model not found at: {model_path}")
-
-        self.__model = joblib.load(model_path)
 
     @override
     def detect(self, X: pd.DataFrame) -> Dict[str, Any]:
@@ -43,7 +23,7 @@ class ElectricalRF(FaultDetectionStrategy):
         Returns:
             Dictionary with prediction results.
         """
-        if self.__model is None:
+        if self._model is None:
             return {
                 "fault_type": "Normal Operation",
                 "confidence": 0.0,
@@ -55,10 +35,10 @@ class ElectricalRF(FaultDetectionStrategy):
 
         try:
             X_np = X.to_numpy()
-            y_pred = self.__model.predict(X_np)  # Labels
-            y_proba = self.__model.predict_proba(X_np)  # Probabilities
+            y_pred = self._model.predict(X_np)  # Labels
+            y_proba = self._model.predict_proba(X_np)  # Probabilities
         except Exception as e:
-            self.__logger.error(f"Random Forest prediction error: {e}")
+            self._logger.error(f"Random Forest prediction error: {e}")
             return {
                 "fault_type": "Normal Operation",
                 "confidence": 0.0,
@@ -90,6 +70,18 @@ class ElectricalRF(FaultDetectionStrategy):
             "detailed_predictions": results,
         }
 
+    @override
+    def load_model(self, model_path):
+        try:
+            if os.path.exists(model_path):
+                return joblib.load(model_path)
+            else:
+                self._logger.error(f"Random Forest model not found at: {model_path}")
+                return None
+        except Exception as e:
+            self._logger.error(f"Error loading Random Forest model: {e}")
+            return None
+
     @property
     def model(self):
-        return self.__model
+        return self._model

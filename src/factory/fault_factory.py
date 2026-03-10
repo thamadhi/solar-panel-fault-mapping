@@ -33,8 +33,8 @@ class FaultFactory:
 
         cls = mapping.get(fault_name, Fault)
 
-        # For normal operation a default type (base Fault)
-        if cls is Fault:
-            return cls(fault_id, fault_name)
+        # For normal operation
+        if cls is not None:
+            return cls(fault_id)
 
-        return cls(fault_id)
+        return cls(fault_id, fault_name)
