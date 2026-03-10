@@ -4,7 +4,7 @@ from src.core.analysis_result import AnalysisResult
 from typing import Any, final, Optional
 
 
-class AbstractComponentFlowHandler(ABC):
+class Handler(ABC):
     """
     Abstract base class implementing the Template Method pattern.
 
@@ -41,8 +41,8 @@ class AbstractComponentFlowHandler(ABC):
         Prepare data before analysis.
 
         Args:
-            image_data (Any):
-            string_data (Any):
+            image_data (Any): The image being preprocessed.
+            string_data (Any):  The tabular string data being preprocessed.
 
         Returns:
             None
@@ -52,7 +52,7 @@ class AbstractComponentFlowHandler(ABC):
     @abstractmethod
     def apply_model(self) -> Any:
         """
-        Apply model logic
+        Applies the model to make the required predictions.
 
         Returns:
             Any:
@@ -62,7 +62,7 @@ class AbstractComponentFlowHandler(ABC):
     @abstractmethod
     def present_results(self) -> None:
         """
-        Present analysis results
+        Presents the final results for a component.
 
         Returns:
             None

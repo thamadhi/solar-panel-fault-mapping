@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 from typing_extensions import override
 
 # Local/project imports
-from src.handlers.abstract_component_flow_handler import AbstractComponentFlowHandler
+from src.handlers.abstract_component_flow_handler import Handler
 from src.core.analysis_result import AnalysisResult
 # FIXED: Pointing to the correct class name from electrical_Severity__rf_strategy.py
 from src.strategies.electrical_Severity__rf_strategy import SeverityStrategy 
@@ -16,7 +16,7 @@ from src.preprocessing.electrical_Severity_preprocessor import ElectricalPreproc
 from src.preprocessing.image_preprocessor import ImagePreprocessor
 
 
-class FaultSeverityHandler(AbstractComponentFlowHandler):
+class FaultSeverityHandler(Handler):
     """
     Handles the assessment of fault severity using electrical data and 
     thermal image hotspot detection.

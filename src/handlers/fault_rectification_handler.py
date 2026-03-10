@@ -1,8 +1,8 @@
-from abstract_component_flow_handler import AbstractComponentFlowHandler
+from abstract_component_flow_handler import Handler
 from core.analysis_result import AnalysisResult
 
 
-class FaultRectificationHandler(AbstractComponentFlowHandler):
+class FaultRectificationHandler(Handler):
     def __init__(self):
         super().__init__()
 
