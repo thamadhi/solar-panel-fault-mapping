@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 from typing_extensions import override
 
 # Local/project imports
-from src.handlers.abstract_component_flow_handler import AbstractComponentFlowHandler
+from src.handlers.handler import Handler
 from src.core.analysis_result import AnalysisResult
 from src.strategies.electrical_rf_strategy import ElectricalRF
 from src.strategies.image_hotspot_strategy import ImageHotspotStrategy
@@ -14,10 +14,8 @@ from src.core.logger import LoggerFactory
 from src.preprocessing.electrical_preprocessor import ElectricalPreprocesor
 from src.preprocessing.image_preprocessor import ImagePreprocessor
 
-# from .fault_observer import FaultObserver
 
-
-class FaultDetectionHandler(AbstractComponentFlowHandler):
+class FaultDetectionHandler(Handler):
     """
     To detect faults based on electrical data/images.
 
@@ -71,7 +69,6 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         ]
         self.__last_run_details = {}  # Stores model outputs for each run
 
-    # Implement overridden methods
     @override
     def pre_process_data(self, image_data: Any = None, string_data: Any = None) -> None:
         """
@@ -120,7 +117,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
     @override
     def apply_model(self) -> None:
         """
-        Used to apply the required model for detection
+        Used to apply the required model for detection.
 
         Returns:
             None
@@ -162,8 +159,6 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
             main_fault = max(detection_results, key=lambda x: x.get("confidence", 0))
             self.__last_run_details = main_fault
             self.__fault_type = FaultFactory.create_fault(main_fault["fault_type"])
-            # Notify all registered observers
-            # self._notify_observers()
         else:
             self.__logger.warning("No data available for fault detection.")
 
@@ -191,7 +186,7 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
                 result_images=[self.__processed_image_path],
                 result_readings=[],
             )
-        else:   # Default to electrical
+        elif source == "electrical":   # Default to electrical
             self.result = AnalysisResult(
                 result=self.__fault_type.get_fault_type,
                 reading_confidence=float(
@@ -201,6 +196,9 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
                 result_readings=self.__last_run_details.get("detailed_predictions", []),
                 result_images=[],
             )
+        else:
+            self.result = None
+            self.__logger.warning(f"Unknown detection source: {source}")
 
     def build_electrical_features(self, records: List[Dict[str, float]]):
         return self.__electrical_preprocessor.preprocess(records)
@@ -234,10 +232,3 @@ class FaultDetectionHandler(AbstractComponentFlowHandler):
         if default_strategy is None:
             raise ValueError("Provide at least one model path (electrical or image).")
         return default_strategy
-
-    # def add_observer(self, observer: FaultObserver):
-    #     self.__observers.append(observer)
-
-    # def _notify_observers(self):
-    #     for obs in self.__observers:
-    #         obs.update(self.__fault_type)

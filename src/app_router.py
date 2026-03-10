@@ -6,11 +6,35 @@ from src.pages.history import show_history_page
 
 
 class AppRouter:
+    """
+    AppRouter is responsible for handling navigation and routing
+    between different pages of the Streamlit application
+    """
+
     def _gif_to_base64(self, path: str) -> str:
+        """
+        Converts a gif image to a Base64 encoded string to embed into HTML
+        inside the streamlit interface.
+
+        
+        Args:
+            path (str): Path to the GIF image file.
+
+        Returns:
+            str: Base64 encoded representation of the GIF.
+        """
         with open(path, "rb") as f:
             return base64.b64encode(f.read()).decode("utf-8")
 
     def render_side_bar(self) -> str:
+        """
+        Creates the sidebar navigation panel and controls what pages are
+        visible depending on whether a user is logged in.
+
+        Returns:
+            str: The selected page name from the sidebar navigation.
+        
+        """
         data_url = self._gif_to_base64("assets/cloudyRain.gif")
 
         # Safe read
@@ -67,6 +91,13 @@ class AppRouter:
         return page
 
     def route(self, page: str) -> None:
+        """
+        Route the user to the selected page.
+
+        Args:
+            page (str): The selected age name.
+        """
+
         if page == "Dashboard":
             show_dashboard_page()
 
@@ -81,5 +112,14 @@ class AppRouter:
             st.info("This page is not implemented yet.")
 
     def run(self) -> None:
+        """
+        Main entry point of the router.
+
+        This method:
+        1. Renders the sidebar
+        2. Retrieves the selected page
+        3. Routes the application to the corresponding page
+        """
+
         page = self.render_side_bar()
         self.route(page)
