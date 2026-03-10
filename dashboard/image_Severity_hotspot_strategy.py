@@ -4,8 +4,8 @@ import numpy as np
 from typing import Dict, Any, Optional
 from typing_extensions import override
 from ultralytics import YOLO
-from dashboard.strategies.base_strategy import FaultDetectionStrategy
-from dashboard.core.logger import LoggerFactory
+from src.strategies.base_strategy import FaultDetectionStrategy
+from src.core.logger import LoggerFactory
 
 
 class ImageHotspotStrategy(FaultDetectionStrategy):
@@ -109,3 +109,4 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
         except Exception as e:
             self.__logger.error(f"Failed to load YOLO: {e}")
             return None
+
