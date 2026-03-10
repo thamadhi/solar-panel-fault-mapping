@@ -4,7 +4,7 @@ import pandas as pd
 import joblib
 from typing import Dict, Any
 from typing_extensions import override
-from dashboard.strategies.base_strategy import FaultDetectionStrategy
+from src.strategies.base_strategy import FaultDetectionStrategy
 from dashboard.core.logger import LoggerFactory
 
 class ElectricalXGBoost(FaultDetectionStrategy):
@@ -102,3 +102,4 @@ class ElectricalXGBoost(FaultDetectionStrategy):
     @property
     def feature_order(self):
         return self.__feature_order
+
