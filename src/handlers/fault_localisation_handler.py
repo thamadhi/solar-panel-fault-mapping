@@ -1,9 +1,9 @@
 from typing import List
-from abstract_component_flow_handler import AbstractComponentFlowHandler
+from abstract_component_flow_handler import Handler
 from core.analysis_result import AnalysisResult
 
 
-class FaultLocalisationHandler(AbstractComponentFlowHandler):
+class FaultLocalisationHandler(Handler):
     def __init__(self):
         super().__init__()
 

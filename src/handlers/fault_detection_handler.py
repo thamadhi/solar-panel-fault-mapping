@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 from typing_extensions import override
 
 # Local/project imports
-from src.handlers.abstract_component_flow_handler import AbstractComponentFlowHandler
+from src.handlers.handler import Handler
 from src.core.analysis_result import AnalysisResult
 from src.strategies.electrical_rf_strategy import ElectricalRF
 from src.strategies.image_hotspot_strategy import ImageHotspotStrategy
@@ -15,7 +15,7 @@ from src.preprocessing.electrical_preprocessor import ElectricalPreprocesor
 from src.preprocessing.image_preprocessor import ImagePreprocessor
 
 
-class FaultDetectionHandler(AbstractComponentFlowHandler):
+class FaultDetectionHandler(Handler):
     """
     To detect faults based on electrical data/images.
 
