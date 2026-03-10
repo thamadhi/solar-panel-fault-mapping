@@ -1,4 +1,4 @@
-from dashboard.preprocessing.preprocessor import Preprocessor
+from src.preprocessing.preprocessor import Preprocessor
 import pandas as pd
 import numpy as np
 from typing import List, Dict
@@ -48,3 +48,4 @@ class ElectricalPreprocesor(Preprocessor):
         # 3. FINAL OUTPUT
         # Return only the features required by the model in the correct order
         return df[self.__feature_order].astype(float)
+
