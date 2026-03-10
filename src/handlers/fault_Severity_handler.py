@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 from typing_extensions import override
 
 # Local/project imports
-from src.handlers.abstract_component_flow_handler import Handler
+from src.handlers.handler import Handler
 from src.core.analysis_result import AnalysisResult
 # FIXED: Pointing to the correct class name from electrical_Severity__rf_strategy.py
 from src.strategies.electrical_Severity__rf_strategy import SeverityStrategy 
