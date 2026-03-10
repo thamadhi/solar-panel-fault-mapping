@@ -7,6 +7,11 @@ from src.components.explainability import (
     render_pie_chart,
 )
 from src.components.tables import selectable_table
+import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+import streamlit as st
+from typing import List, Dict, Any
 
 
 def render_csv_mode(tab1):
@@ -163,6 +168,10 @@ def render_csv_summary_cards(api_res, df, raw_cols):
 
     # Store selection in session state (persists across reruns)
     st.session_state.selected_row_idx = int(selected_idx)
+
+    records = st.session_state.get("last_records", [])
+    # render_string_comparison(records)
+    # render_radar_chart(records)
 
     st.markdown("---")
 
@@ -339,3 +348,78 @@ def render_session_state() -> None:
     # Stores raw records used in the API call (needed for explainability)
     if "last_records" not in st.session_state:
         st.session_state.last_records = None
+
+
+BG      = "#0a0c10"
+SURFACE = "#111318"
+BORDER  = "#1e2128"
+ACCENT  = "#f0a500"   # Amber - string 1 / primary
+ACCENT2 = "#3b82f6"   # blue - string 2 / secondary
+GOOD    = "#10b981"   # green  — healthy baseline
+DANGER  = "#ef4444"   # red    — out-of-range indicator
+TEXT    = "#e2e8f0"
+MUTED   = "#64748b"
+
+_BASE_LAYOUT = dict(
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(family="'JetBrains Mono', monospace", color=TEXT, size=11),
+    margin=dict(l=20, r=20, t=40, b=20),
+    legend=dict(
+        bgcolor="rgba(0,0,0,0)",
+        font=dict(color=MUTED, size=11),
+        orientation="h",
+        yanchor="bottom",
+        y=-0.15,
+        xanchor="center",
+        x=0.5,
+    ),
+)
+
+# Healthy operating baselines (normalised to 0–1 scale per feature)
+_BASELINES: Dict[str, float] = {
+    "vdc1":        1.0,
+    "vdc2":        1.0,
+    "idc1":        1.0,
+    "idc2":        1.0,
+    "irradiance":  1.0,
+    "temperature": 0.7,   # healthy temp is moderate, not max
+}
+
+_RATED: Dict[str, float] = {
+    "vdc1":        600.0,
+    "vdc2":        600.0,
+    "idc1":        10.0,
+    "idc2":        10.0,
+    "irradiance":  1000.0,
+    "temperature": 75.0,
+}
+
+_LABELS: Dict[str, str] = {
+    "vdc1":        "V String 1",
+    "vdc2":        "V String 2",
+    "idc1":        "I String 1",
+    "idc2":        "I String 2",
+    "irradiance":  "Irradiance",
+    "temperature": "Temperature",
+}
+
+
+def _section(title: str) -> None:
+    st.markdown(
+        f'<p style="font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;'
+        f'color:{MUTED};border-bottom:1px solid {BORDER};padding-bottom:0.4rem;'
+        f'margin:1.5rem 0 1rem;">{title}</p>',
+        unsafe_allow_html=True,
+    )
+
+
+def _chart_wrap(fig, key: str) -> None:
+    """Render a plotly figure inside a styled container."""
+    st.markdown(
+        f'<div style="background:{SURFACE};border:1px solid {BORDER};'
+        f'border-radius:4px;padding:1rem;">',
+        unsafe_allow_html=True,
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False}, key=key)
+    st.markdown("</div>", unsafe_allow_html=True)

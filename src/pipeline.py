@@ -14,7 +14,6 @@ class Pipeline:
         self.severity_handler = None
         self.rectification_handler = None
 
-
     def start_pipeline(self, ctx: PipelineContext):
         detection_result = self.detection_handler.start_flow(
             image_data=ctx.image_data,
