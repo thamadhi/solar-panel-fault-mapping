@@ -1,5 +1,5 @@
 from typing import List
-from abstract_component_flow_handler import Handler
+from src.handlers.handler import Handler
 from core.analysis_result import AnalysisResult
 
 
