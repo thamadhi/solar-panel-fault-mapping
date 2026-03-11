@@ -82,6 +82,17 @@ def init_db(db_path: str = DB_PATH) -> None:
         )
     """)
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS PVSystems (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            system_type TEXT,
+            num_strings INTEGER NOT NULL,
+            modules_per_string INTEGER NOT NULL,
+            FOREIGN KEY(user_id) REFERENCES Users(id)
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -376,3 +387,74 @@ def fetch_fault_trend_daily(days: int = 30) -> List[Dict[str, Any]]:
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+def save_pv_system(
+    user_id: int,
+    system_type: str,
+    num_strings: int,
+    modules_per_string: int,
+) -> tuple[bool, str]:
+    """
+    Insert or update a PV system for a user.
+    """
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+
+        cur.execute("SELECT id FROM PVSystems WHERE user_id = ?", (user_id,))
+        row = cur.fetchone()
+
+        if row:
+            cur.execute(
+                """
+                UPDATE PVSystems
+                SET system_type = ?, num_strings = ?, modules_per_string = ?
+                WHERE user_id = ?
+                """,
+                (system_type, num_strings, modules_per_string, user_id),
+            )
+        else:
+            cur.execute(
+                """
+                INSERT INTO PVSystems (user_id, system_type, num_strings, modules_per_string)
+                VALUES (?, ?, ?, ?)
+                """,
+                (user_id, system_type, num_strings, modules_per_string),
+            )
+
+        conn.commit()
+        conn.close()
+        return True, "PV system saved successfully."
+
+    except Exception as e:
+        return False, f"Failed to save PV system: {e}"
+
+def get_pv_system_by_user_id(user_id: int) -> Optional[dict[str, Any]]:
+    """
+    Return the PV system for a given user, if available.
+    """
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT id, user_id, system_type, num_strings, modules_per_string
+        FROM PVSystems
+        WHERE user_id = ?
+        """,
+        (user_id,),
+    )
+
+    row = cur.fetchone()
+    conn.close()
+
+    if row is None:
+        return None
+
+    return {
+        "id": row["id"],
+        "user_id": row["user_id"],
+        "system_type": row["system_type"],
+        "num_strings": row["num_strings"],
+        "modules_per_string": row["modules_per_string"],
+    }
