@@ -87,7 +87,7 @@ def init_db(db_path: str = DB_PATH) -> None:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL UNIQUE,
             system_type TEXT,
-            num_strings INTEGER NOT NULL,
+            num_strings INTEGER DEFAULT 2,
             modules_per_string INTEGER NOT NULL,
             FOREIGN KEY(user_id) REFERENCES Users(id)
         )
@@ -391,7 +391,6 @@ def fetch_fault_trend_daily(days: int = 30) -> List[Dict[str, Any]]:
 def save_pv_system(
     user_id: int,
     system_type: str,
-    num_strings: int,
     modules_per_string: int,
 ) -> tuple[bool, str]:
     """
@@ -408,18 +407,18 @@ def save_pv_system(
             cur.execute(
                 """
                 UPDATE PVSystems
-                SET system_type = ?, num_strings = ?, modules_per_string = ?
+                SET system_type = ?, num_strings = 2, modules_per_string = ?
                 WHERE user_id = ?
                 """,
-                (system_type, num_strings, modules_per_string, user_id),
+                (system_type, modules_per_string, user_id),
             )
         else:
             cur.execute(
                 """
                 INSERT INTO PVSystems (user_id, system_type, num_strings, modules_per_string)
-                VALUES (?, ?, ?, ?)
+                VALUES (?, ?, 2, ?)
                 """,
-                (user_id, system_type, num_strings, modules_per_string),
+                (user_id, system_type, modules_per_string),
             )
 
         conn.commit()
