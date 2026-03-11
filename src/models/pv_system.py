@@ -1,4 +1,7 @@
 class Module:
+    """
+    Represents a PV Module whichs is part of a PVString.
+    """
     def __init__(self, module_id: int):
         self.__module_id = module_id
 
@@ -7,6 +10,9 @@ class Module:
 
 
 class PVString:
+    """
+    Represents a PV string within the system.
+    """
     def __init__(self, string_id: int, num_modules: int):
         self.__string_id = string_id
         self.__modules = [Module(i+1) for i in range(num_modules)]
@@ -25,7 +31,7 @@ class PVString:
 
 class PVSystem:
     """
-    Represents the solar PV system
+    Represents the solar PV system.
     """
 
     def __init__(self, system_id: int, system_type: str, modules_per_string: int):
