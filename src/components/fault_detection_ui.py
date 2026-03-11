@@ -37,7 +37,7 @@ def render_csv_mode(tab1):
     with tab1:
         st.subheader("Batch Process String Data")
 
-        # Keep the upload + action button inside a bordered container for neat UI
+        # Keep the upload + action button inside a bordered container
         with st.container(border=True):
             csv_file = st.file_uploader("Drop your system logs here", type=["csv"])
 
@@ -120,7 +120,7 @@ def render_csv_mode(tab1):
         render_csv_summary_cards(api_res, df, raw_cols)
 
 
-def render_csv_summary_cards(api_res, df, raw_cols):
+def render_csv_summary_cards(api_res, df):
     """
     Render the summary section for CSV analysis.
 
@@ -239,6 +239,8 @@ def render_image_mode(tab3):
         with img_col:
             with st.container(border=True):
                 image_file = st.file_uploader(
+
+                    # Allow any type of image
                     "Upload Thermal Image", type=["jpg", "png", "jpeg"]
                 )
 
@@ -258,7 +260,7 @@ def render_image_mode(tab3):
                     type="primary",
                     use_container_width=True,
                 ):
-                    with st.spinner("Calling API..."):
+                    with st.spinner("Performing Detection..."):
                         try:
 
                             token = st.session_state.get("api_token")

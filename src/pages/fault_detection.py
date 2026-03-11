@@ -8,6 +8,12 @@ from src.services.pv_system_service import load_pv_system
 
 
 def show_fault_detection_page() -> None:
+    """
+    Displays the main fault detection page to the user
+
+    Returns:
+        None
+    """
     st.markdown("---")
 
     user = st.session_state.get("user")
@@ -27,6 +33,7 @@ def show_fault_detection_page() -> None:
             "PV system not configured. You can still run fault detection, "
             "but system layout mapping will not be available."
         )
+    st.caption("Electrical detection uses measurements from two PV strings.")
 
     tab1, tab3 = render_tabs()
 
