@@ -1,35 +1,25 @@
-# =========================
 # Python
-# =========================
 __pycache__/
 *.py[cod]
 *.class
 *.so
 
-# =========================
 # Virtual Environments
-# =========================
 .venv/
 venv/
 env/
 ENV/
 .env
 
-# =========================
 # Jupyter
-# =========================
 .ipynb_checkpoints/
 
-# =========================
 # Logs & Temporary Files
-# =========================
 *.log
 *.tmp
 *.swp
 
-# =========================
 # Testing / Coverage
-# =========================
 .coverage
 .coverage.*
 htmlcov/
@@ -37,43 +27,31 @@ htmlcov/
 .tox/
 .nox/
 
-# =========================
 # IDEs
-# =========================
 .vscode/
 .idea/
 .ropeproject/
 
-# =========================
 # MLflow
-# =========================
 mlruns/
 mlflow.db
 
-# =========================
 # CatBoost
-# =========================
 catboost_info/
 
-# =========================
 # Model Artifacts
-# =========================
 *.pkl
 *.joblib
 *.h5
 *.keras
 *.onnx
 
-# =========================
 # Build / Distribution
-# =========================
 build/
 dist/
 *.egg-info/
 
-# =========================
 # OS Files
-# =========================
 .DS_Store
 Thumbs.db
 
@@ -81,19 +59,11 @@ notebooks/fault-detection/DL-comparisons/dl_mlflow_outputs/
 
 .db
 data/
-# === Large model files ===
-dashboard/models/best_neural_network.keras
-dashboard/models/ann_scaler.pkl
 
-# === Datasets ===
-datasets/dataset_amb.mat
-datasets/dataset_elec.mat
-datasets/fault_detection.csv
-
-# === MLflow artifacts ===
+# MLflow artifacts
 notebooks/fault-detection/model-comparisons/mlflow.db
 notebooks/fault-detection/model-comparisons/mlruns/
 notebooks/fault-detection/model-comparisons/metrics_summary.csv
 
-# === Notebooks checkpoints ===
+# Notebooks checkpoints
 .ipynb_checkpoints/
