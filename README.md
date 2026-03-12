@@ -49,10 +49,9 @@ The core features of the system are summarized as follows:
 | Solar Panel Images | [Kaggle: Solar Panel Dataset](https://www.kaggle.com/datasets/pkdarabi/solarpanel) |
 | Solar Panels Defect Detector Repo | [GitHub: P-Darabi](https://github.com/P-Darabi/SolarPanelsDefectDetector?tab=readme-ov-file) |
 | Solar Augmented Dataset | [Kaggle: Solar Augmented Dataset](https://www.kaggle.com/datasets/gitenavnath/solar-augmented-dataset) |
-| Solar PV Clean Hotspot Images (Combined) | [HuggingFace Dataset](https://huggingface.co/datasets/seyeddd/solar_pv_single_hotspot_clean_images) |
 | Electrical PV Fault Dataset | [GitHub: Clayton H Costa](https://github.com/clayton-h-costa/pv_fault_dataset) |
 
-### Updated / Refined Dataset
+### Combined / Updated Image Dataset
 
 | Dataset | Link |
 |---------|------|
