@@ -1,4 +1,4 @@
-# Python
+# Python Bytecode & Cache
 __pycache__/
 *.py[cod]
 *.class
@@ -11,7 +11,7 @@ env/
 ENV/
 .env
 
-# Jupyter
+# Jupyter Notebook
 .ipynb_checkpoints/
 
 # Logs & Temporary Files
@@ -19,7 +19,7 @@ ENV/
 *.tmp
 *.swp
 
-# Testing / Coverage
+# Testing & Coverage
 .coverage
 .coverage.*
 htmlcov/
@@ -27,11 +27,12 @@ htmlcov/
 .tox/
 .nox/
 
-# IDEs
+# IDE / Editor
 .vscode/
 .idea/
 .ropeproject/
 
+# ML / Data Science Tools
 # MLflow
 mlruns/
 mlflow.db
@@ -51,19 +52,19 @@ build/
 dist/
 *.egg-info/
 
-# OS Files
+# OS & System Files
 .DS_Store
 Thumbs.db
 
+# Project-specific folders
 notebooks/fault-detection/DL-comparisons/dl_mlflow_outputs/
-
-.db
-data/
-
-# MLflow artifacts
 notebooks/fault-detection/model-comparisons/mlflow.db
 notebooks/fault-detection/model-comparisons/mlruns/
 notebooks/fault-detection/model-comparisons/metrics_summary.csv
 
-# Notebooks checkpoints
+# Database / Data files
+*.db
+data/
+
+# Jupyter Notebook checkpoints
 .ipynb_checkpoints/
