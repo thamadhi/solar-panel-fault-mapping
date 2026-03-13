@@ -1,8 +1,8 @@
 from src.handlers.fault_detection_handler import FaultDetectionHandler
 from huggingface_hub import hf_hub_download
 
-
 HF_REPO_ID = "seyeddd/solar-pv-fault-detection-models"
+
 
 def build_handler() -> FaultDetectionHandler:
     """

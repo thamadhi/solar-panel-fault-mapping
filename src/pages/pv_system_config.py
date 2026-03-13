@@ -21,9 +21,11 @@ def render_pv_system_config() -> None:
     system_type = st.selectbox(
         "System Type",
         ["Solar Farm", "Grid-Tied", "Off-Grid", "Hybrid"],
-        index=["Solar Farm", "Grid-Tied", "Off-Grid", "Hybrid"].index(default_system_type)
-        if default_system_type in ["Solar Farm", "Grid-Tied", "Off-Grid", "Hybrid"]
-        else 0,
+        index=(
+            ["Solar Farm", "Grid-Tied", "Off-Grid", "Hybrid"].index(default_system_type)
+            if default_system_type in ["Solar Farm", "Grid-Tied", "Off-Grid", "Hybrid"]
+            else 0
+        ),
     )
 
     # Get modules per string

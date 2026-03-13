@@ -1,6 +1,7 @@
 import streamlit as st
 from src.services.detection_service import build_handler
 
+
 def init_state():
     # Session state
     if "user" not in st.session_state:

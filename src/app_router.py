@@ -17,7 +17,7 @@ class AppRouter:
         Converts a gif image to a Base64 encoded string to embed into HTML
         inside the streamlit interface.
 
-        
+
         Args:
             path (str): Path to the GIF image file.
 
@@ -34,7 +34,7 @@ class AppRouter:
 
         Returns:
             str: The selected page name from the sidebar navigation.
-        
+
         """
         data_url = self._gif_to_base64("assets/cloudyRain.gif")
 
@@ -75,7 +75,7 @@ class AppRouter:
                     "Rectification",
                     "Reports",
                     "History",
-                    "PV System Config"
+                    "PV System Config",
                 ],
                 index=0,
                 format_func=lambda x: f"📍 {x}",
