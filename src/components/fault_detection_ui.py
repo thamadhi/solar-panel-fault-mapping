@@ -294,7 +294,7 @@ def render_image_mode(tab3):
                     st.success(f"Detection Complete: **{res.get('fault_type')}**")
                     st.metric("Confidence", f"{float(res.get('confidence', 0.0)):.1%}")
 
-                    # Adapt API dict into an object-like shape for your pie chart function
+                    # Adapt API dict into an object-like shape for the pie chart function
                     class _Obj:
                         pass
 
@@ -383,7 +383,7 @@ def render_radar_chart(
     """
     features = list(BASELINES.keys())
     labels   = [LABELS[f] for f in features]
-    labels_closed = labels + [labels[0]]  # close the polygon
+    labels_closed = labels + [labels[0]]  # Close the polygon
 
     if not records:
         st.info("No records available for radar chart.")
