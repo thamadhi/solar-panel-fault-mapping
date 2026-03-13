@@ -32,4 +32,8 @@ class FaultFactory:
         }
         cls = mapping.get(fault_name, Fault)
 
-        return cls(fault_name)
+        # Only fault_name to base class
+        if cls is Fault:
+            return cls(fault_name)
+        else:
+            return cls()   # Subclasses already know their type
