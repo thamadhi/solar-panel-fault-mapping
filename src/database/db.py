@@ -388,6 +388,7 @@ def fetch_fault_trend_daily(days: int = 30) -> List[Dict[str, Any]]:
     conn.close()
     return [dict(r) for r in rows]
 
+
 def save_pv_system(
     user_id: int,
     system_type: str,
@@ -427,6 +428,7 @@ def save_pv_system(
 
     except Exception as e:
         return False, f"Failed to save PV system: {e}"
+
 
 def get_pv_system_by_user_id(user_id: int) -> Optional[dict[str, Any]]:
     """
