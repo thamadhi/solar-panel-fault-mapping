@@ -36,4 +36,4 @@ class FaultFactory:
         if cls is Fault:
             return cls(fault_name)
         else:
-            return cls()   # Subclasses already know their type
+            return cls()  # Subclasses already know their type

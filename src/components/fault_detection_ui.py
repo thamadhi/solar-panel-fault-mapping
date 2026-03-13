@@ -239,9 +239,9 @@ def render_image_mode(tab3):
         with img_col:
             with st.container(border=True):
                 image_file = st.file_uploader(
-
                     # Allow any type of image
-                    "Upload Thermal Image", type=["jpg", "png", "jpeg"]
+                    "Upload Thermal Image",
+                    type=["jpg", "png", "jpeg"],
                 )
 
                 # Display the uploaded image if present
@@ -355,7 +355,7 @@ def render_session_state() -> None:
 def _section(title: str) -> None:
     st.markdown(
         f'<p style="font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;'
-        f'color:{MUTED};border-bottom:1px solid {BORDER};padding-bottom:0.4rem;'
+        f"color:{MUTED};border-bottom:1px solid {BORDER};padding-bottom:0.4rem;"
         f'margin:1.5rem 0 1rem;">{title}</p>',
         unsafe_allow_html=True,
     )
@@ -368,7 +368,9 @@ def _chart_wrap(fig, key: str) -> None:
         f'border-radius:4px;padding:1rem;">',
         unsafe_allow_html=True,
     )
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False}, key=key)
+    st.plotly_chart(
+        fig, use_container_width=True, config={"displayModeBar": False}, key=key
+    )
     st.markdown("</div>", unsafe_allow_html=True)
 
 
@@ -382,7 +384,7 @@ def render_radar_chart(
     This dynamically updates based on the row selected in the Individual String Analysis table.
     """
     features = list(BASELINES.keys())
-    labels   = [LABELS[f] for f in features]
+    labels = [LABELS[f] for f in features]
     labels_closed = labels + [labels[0]]  # Close the polygon
 
     if not records:
@@ -403,52 +405,60 @@ def render_radar_chart(
     normalised = [float(np.clip(selected_row[f] / RATED[f], 0, 1.5)) for f in features]
     normalised_closed = normalised + [normalised[0]]
 
-    baseline        = [BASELINES[f] for f in features]
+    baseline = [BASELINES[f] for f in features]
     baseline_closed = baseline + [baseline[0]]
 
     fig = go.Figure()
 
     # Healthy baseline polygon
-    fig.add_trace(go.Scatterpolar(
-        r=baseline_closed,
-        theta=labels_closed,
-        fill="toself",
-        fillcolor=f"rgba(16,185,129,0.08)",
-        line=dict(color=GOOD, width=1.5, dash="dot"),
-        name="Healthy Baseline",
-    ))
+    fig.add_trace(
+        go.Scatterpolar(
+            r=baseline_closed,
+            theta=labels_closed,
+            fill="toself",
+            fillcolor=f"rgba(16,185,129,0.08)",
+            line=dict(color=GOOD, width=1.5, dash="dot"),
+            name="Healthy Baseline",
+        )
+    )
 
     # Selected record polygon
-    fig.add_trace(go.Scatterpolar(
-        r=normalised_closed,
-        theta=labels_closed,
-        fill="toself",
-        fillcolor=f"rgba(240,165,0,0.15)",
-        line=dict(color=ACCENT, width=2),
-        marker=dict(color=ACCENT, size=6),
-        name=f"String #{selected_idx} Readings",
-    ))
+    fig.add_trace(
+        go.Scatterpolar(
+            r=normalised_closed,
+            theta=labels_closed,
+            fill="toself",
+            fillcolor=f"rgba(240,165,0,0.15)",
+            line=dict(color=ACCENT, width=2),
+            marker=dict(color=ACCENT, size=6),
+            name=f"String #{selected_idx} Readings",
+        )
+    )
 
     layout = dict(BASE_LAYOUT)
-    layout.update(dict(
-        title=dict(text=title, font=dict(size=13, color=MUTED), x=0.5, xanchor="center"),
-        polar=dict(
-            bgcolor="rgba(0,0,0,0)",
-            radialaxis=dict(
-                visible=True,
-                range=[0, 1.5],
-                tickfont=dict(color=MUTED, size=9),
-                gridcolor=BORDER,
-                linecolor=BORDER,
-                tickvals=[0.25, 0.5, 0.75, 1.0, 1.25],
+    layout.update(
+        dict(
+            title=dict(
+                text=title, font=dict(size=13, color=MUTED), x=0.5, xanchor="center"
             ),
-            angularaxis=dict(
-                tickfont=dict(color=TEXT, size=11),
-                gridcolor=BORDER,
-                linecolor=BORDER,
+            polar=dict(
+                bgcolor="rgba(0,0,0,0)",
+                radialaxis=dict(
+                    visible=True,
+                    range=[0, 1.5],
+                    tickfont=dict(color=MUTED, size=9),
+                    gridcolor=BORDER,
+                    linecolor=BORDER,
+                    tickvals=[0.25, 0.5, 0.75, 1.0, 1.25],
+                ),
+                angularaxis=dict(
+                    tickfont=dict(color=TEXT, size=11),
+                    gridcolor=BORDER,
+                    linecolor=BORDER,
+                ),
             ),
-        ),
-    ))
+        )
+    )
     fig.update_layout(**layout)
 
     _section("Sensor Health Radar")
