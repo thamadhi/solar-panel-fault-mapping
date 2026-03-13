@@ -114,6 +114,8 @@ def predict():
         )
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()  # prints full error to console
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
@@ -267,6 +269,8 @@ def explain_electrical():
         )
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()  # prints full error to console
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
