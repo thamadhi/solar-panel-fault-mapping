@@ -35,7 +35,7 @@ class DBLogHandler(logging.Handler):
         Args:
             record (logging.LogRecord):
                 The log record containing event details such as level,
-                message, file name, function name, and line number.   
+                message, file name, function name, and line number.
 
         Returns:
             None

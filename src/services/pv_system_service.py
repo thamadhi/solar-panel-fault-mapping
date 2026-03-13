@@ -3,9 +3,7 @@ from src.models.pv_system import PVSystem
 
 
 def create_or_update_pv_system(
-        user_id: int,
-        system_type: str,
-        modules_per_string: int
+    user_id: int, system_type: str, modules_per_string: int
 ) -> tuple[bool, str]:
     """
     Validate and persist a user's PV system configuration.
@@ -22,13 +20,12 @@ def create_or_update_pv_system(
     """
     if modules_per_string <= 0:
         return False, "Modules per string must be greater than zero."
-    
+
     save_pv_system(
-        user_id=user_id,
-        system_type=system_type,
-        modules_per_string=modules_per_string
+        user_id=user_id, system_type=system_type, modules_per_string=modules_per_string
     )
     return True, "PV system saved successfully."
+
 
 def load_pv_system(user_id: int) -> PVSystem | None:
     """

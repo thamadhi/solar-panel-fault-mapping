@@ -7,8 +7,7 @@ class ElectricalPreprocesor(Preprocessor):
 
     def __init__(self):
         super().__init__()
-        self.__raw_cols = ["vdc1", "vdc2", "idc1",
-                           "idc2", "irradiance", "temperature"]
+        self.__raw_cols = ["vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature"]
         self.__feature_order = [
             "vdc1",
             "vdc2",
