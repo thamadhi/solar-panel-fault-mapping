@@ -29,8 +29,8 @@ class Hotspot(Fault):
     Represents a hotspot fault
     """
 
-    def __init__(self) -> None:
-        super().__init__("Hotspot")
+    def __init__(self, fault_type="Hotspot") -> None:
+        super().__init__(fault_type)
         self.__image_data = []
 
     def add_image(self, img) -> None:
@@ -51,8 +51,8 @@ class ShortCircuit(Fault):
     Represents a short circuit fault
     """
 
-    def __init__(self) -> None:
-        super().__init__("Short Circuit")
+    def __init__(self, fault_type="Short Circuit") -> None:
+        super().__init__(fault_type)
         self.__string_data = []  # Store electrical readings
 
     def add_reading(self, reading: str) -> None:
@@ -67,8 +67,8 @@ class OpenCircuit(Fault):
     Represents an open circuit fault
     """
 
-    def __init__(self) -> None:
-        super().__init__("Open Circuit")
+    def __init__(self, fault_type="Open Circuit") -> None:
+        super().__init__(fault_type)
         self.__string_data = []
 
     def add_reading(self, reading: str):
@@ -83,8 +83,8 @@ class Shadowing(Fault):
     Represents a shadowing fault
     """
 
-    def __init__(self) -> None:
-        super().__init__("Shadowing")
+    def __init__(self, fault_type="Shadowing") -> None:
+        super().__init__(fault_type)
         self.__string_data = []
 
     def add_reading(self, reading: str) -> None:
