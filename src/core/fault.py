@@ -7,7 +7,7 @@ class Fault(ABC):
     properties and behaviours for different types of faults
     """
 
-    def __init__(self, __id: int, __fault_type: str) -> None:
+    def __init__(self, fault_type: str) -> None:
         """
         Initializes a fault
 
@@ -16,13 +16,7 @@ class Fault(ABC):
         __fault_type : str
             Fault category name
         """
-        self.__id = __id
-        self.__fault_type = __fault_type
-
-    @property
-    def get_id(self) -> int:
-        """Returns the id for a fault"""
-        return self.__id
+        self.__fault_type = fault_type
 
     @property
     def get_fault_type(self) -> str:
@@ -35,8 +29,8 @@ class Hotspot(Fault):
     Represents a hotspot fault
     """
 
-    def __init__(self, __id: int) -> None:
-        super().__init__(__id, "Hotspot")
+    def __init__(self) -> None:
+        super().__init__("Hotspot")
         self.__image_data = []
 
     def add_image(self, img) -> None:
@@ -57,8 +51,8 @@ class ShortCircuit(Fault):
     Represents a short circuit fault
     """
 
-    def __init__(self, __id: int) -> None:
-        super().__init__(__id, "Short Circuit")
+    def __init__(self) -> None:
+        super().__init__("Short Circuit")
         self.__string_data = []  # Store electrical readings
 
     def add_reading(self, reading: str) -> None:
@@ -73,8 +67,8 @@ class OpenCircuit(Fault):
     Represents an open circuit fault
     """
 
-    def __init__(self, __id: int) -> None:
-        super().__init__(__id, "Open Circuit")
+    def __init__(self) -> None:
+        super().__init__("Open Circuit")
         self.__string_data = []
 
     def add_reading(self, reading: str):
@@ -89,8 +83,8 @@ class Shadowing(Fault):
     Represents a shadowing fault
     """
 
-    def __init__(self, __id: int) -> None:
-        super().__init__(__id, "Shadowing")
+    def __init__(self) -> None:
+        super().__init__("Shadowing")
         self.__string_data = []
 
     def add_reading(self, reading: str) -> None:
