@@ -48,4 +48,3 @@ class ElectricalPreprocesor(Preprocessor):
         # 3. FINAL OUTPUT
         # Return only the features required by the model in the correct order
         return df[self.__feature_order].astype(float)
-

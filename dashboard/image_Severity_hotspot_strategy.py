@@ -16,7 +16,24 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
 
     def __init__(self, model_path: str) -> None:
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
-        self.__model = self._load_model(model_path)
+        self.__model = None
+        # Implementation of abstract requirement
+        self.load_model(model_path)
+
+    @override
+    def load_model(self, model_path: str) -> None:
+        """
+        Implementation of the abstract method from FaultDetectionStrategy.
+        Loads the YOLO weights from the specified path.
+        """
+        try:
+            if os.path.exists(model_path):
+                self.__model = YOLO(model_path)
+                self.__logger.info(f"YOLO Model loaded successfully from {model_path}")
+            else:
+                self.__logger.error(f"Weights not found at: {model_path}")
+        except Exception as e:
+            self.__logger.error(f"Failed to load YOLO: {e}")
 
     @override
     def detect(self, image_tensor) -> Dict[str, Any]:
@@ -63,7 +80,7 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                     })
                 
                 elif cls_id == 1:  # Solar Panel
-                    # Apply your 5% padding logic
+                    # Apply 5% padding logic
                     pad_w = (x2 - x1) * 0.05
                     pad_h = (y2 - y1) * 0.05
                     
@@ -77,13 +94,12 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                         'confidence': conf
                     })
 
-            # Treat both as equally important in the summary
+            # Summary result
             result = {
                 'has_hotspots': len(hotspots) > 0,
                 'has_panels': len(panels) > 0,
                 'hotspot_count': len(hotspots),
                 'panel_count': len(panels),
-                # Average confidence for each class to show 'importance'
                 'avg_hotspot_conf': np.mean([h['confidence'] for h in hotspots]) if hotspots else 0.0,
                 'avg_panel_conf': np.mean([p['confidence'] for p in panels]) if panels else 0.0,
                 'detections': {
@@ -98,15 +114,3 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
         except Exception as e:
             self.__logger.error(f"Detection error: {e}")
             return {'status': 'Error', 'error': str(e)}
-
-    def _load_model(self, model_path: str) -> Optional[YOLO]:
-        """Loads the YOLO weights from the specified path."""
-        try:
-            if os.path.exists(model_path):
-                return YOLO(model_path)
-            self.__logger.error(f"Weights not found at: {model_path}")
-            return None
-        except Exception as e:
-            self.__logger.error(f"Failed to load YOLO: {e}")
-            return None
-
