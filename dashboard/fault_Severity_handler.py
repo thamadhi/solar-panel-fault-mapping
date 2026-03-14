@@ -85,7 +85,7 @@ class FaultSeverityHandler(Handler):
             if "error" not in el_result:
                 detection_results.append({
                     'type': 'electrical',
-                    'level': f"Level {el_result.get('severity', 0):.2f}",
+                    'level':round(el_result.get('severity', 0),2),
                     'confidence': el_result.get('confidence', 0.0)
                 })
 
@@ -123,7 +123,7 @@ class FaultSeverityHandler(Handler):
         is_image = self.__last_run_details.get('type') == 'image'
 
         self.result = AnalysisResult(
-            result=f"Severity: {self.__severity_level}",
+            result=self.__severity_level,
             image_confidence=float(self.__last_run_details.get("confidence", 0.0)) if is_image else 0.0,
             reading_confidence=float(self.__last_run_details.get("confidence", 0.0)) if not is_image else 0.0,
             # If image, we pass the path; if electrical, we could pass the feature values
