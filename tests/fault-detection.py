@@ -1,1 +1,0 @@
-# Fault detection testing
