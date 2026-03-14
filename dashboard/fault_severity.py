@@ -2,118 +2,105 @@ import sys
 import os
 import streamlit as st
 import pandas as pd
-
-# --- 1. DYNAMIC PATH CONFIGURATION ---
-# This ensures Python can find the 'src' package regardless of how the script is launched
-current_dir = os.path.dirname(os.path.abspath(__file__))
-if current_dir not in sys.path:
-    sys.path.insert(0, current_dir)
-
-# --- 2. ROBUST IMPORTS ---
-# We import from 'src' as the 'dashboard' directory has been renamed
-try:
-    from src.handlers.fault_Severity_handler import FaultSeverityHandler
-    IMPORT_SUCCESS = True
-except Exception as e:
-    st.error(f"Critical System Error: Could not load AI modules. {e}")
-    st.info("Check that an '__init__.py' file exists inside your 'src' and 'src/handlers' folders.")
-    IMPORT_SUCCESS = False
+import plotly.express as px
+from src.handlers.fault_Severity_handler import FaultSeverityHandler
+from src.components.Severityexplainability import SeverityExplainer
 
 def show_fault_severity_page():
-    """
-    Renders the Fault Severity Analysis UI.
-    """
+    # --- UI STYLING: High Contrast for Dark Mode ---
+    st.markdown("""
+        <style>
+        /* Grey Table with Black Text for maximum readability */
+        [data-testid="stTable"] {
+            background-color: #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        [data-testid="stTable"] td, [data-testid="stTable"] th {
+            color: #000000 !important;
+            font-weight: 500;
+            border-bottom: 1px solid #bcbcbc !important;
+        }
+        .diagnosis-card {
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 5px solid #4a4a4a;
+            margin-bottom: 10px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
     st.header("🔍 Technical Fault Breakdown")
-    st.write("Provide the thermal image and electrical telemetry for a comprehensive AI cross-check.")
-
-    if not IMPORT_SUCCESS:
-        st.stop()
-
-    # --- 3. AI HANDLER INITIALIZATION ---
-    # We initialize with paths relative to the project root
+    
+    # AI Initialization
     try:
-# Inside show_fault_severity_page()
         handler = FaultSeverityHandler(
-            # Ensure these paths point to where your .pkl and .pt files actually sit
             electrical_model_path="src/models/solar_xgboost_severity_v1.pkl", 
             image_model_path="src/models/hotspot_yolo.pt" 
         )
+        explainer = SeverityExplainer("src/models/solar_xgboost_severity_v1.pkl")
     except Exception as e:
-        st.error(f"Failed to initialize AI Handler: {e}")
-        return
+        st.error(f"System Load Error: {e}"); return
 
-    # --- 4. DATA INPUT SECTION ---
-    up_col1, up_col2 = st.columns(2)
+    # Data Input
+    elec_file = st.file_uploader("Upload Sensor CSV", type=["csv"])
 
-    with up_col1:
-        st.markdown("### 📸 Visual Input")
-        img_file = st.file_uploader("Upload Thermal Image", type=["jpg", "jpeg", "png"], key="severity_img")
+    if st.button("Run AI Analysis", type="primary") and elec_file:
+        with st.spinner("Decoding AI logic..."):
+            raw_sample = pd.read_csv(elec_file).iloc[0].to_dict()
+            analysis_res = handler.start_flow(string_data=[raw_sample])
 
-    with up_col2:
-        st.markdown("### ⚡ Telemetry Input")
-        elec_file = st.file_uploader("Upload Sensor CSV", type=["csv"], key="severity_csv")
+            if analysis_res:
+                # 1. SUMMARY METRICS
+                score = float(analysis_res.result)
+                m1, m2, m3 = st.columns(3)
+                m1.metric("Severity Score", f"{score:.2f}")
+                m2.metric("Confidence", f"{analysis_res.reading_confidence:.2f}%")
+                if float(analysis_res.result) <= 0.3:
+                    status="Low"
+                elif float(analysis_res.result) <= 0.6:
+                    status="Medium"
+                elif float(analysis_res.result) <= 0.8:
+                    status="High"
+                elif float(analysis_res.result) > 0.8:
+                    status="Critical"
+                                
+                m3.metric("Status",status)
+        
 
-    # --- 5. ANALYSIS EXECUTION ---
-    if st.button("Run AI Analysis", type="primary"):
-        if not img_file and not elec_file:
-            st.warning("Please upload at least one data source (Image or CSV) to proceed.")
-        else:
-            with st.spinner("Executing SolarGuard AI Pipeline..."):
-                try:
-                    temp_img_path = None
-                    telemetry_data = None
-
-                    # Handle Image: Save buffer to temp file for the ImagePreprocessor
-                    if img_file:
-                        temp_img_path = f"temp_{img_file.name}"
-                        with open(temp_img_path, "wb") as f:
-                            f.write(img_file.getbuffer())
-
-                    # Handle CSV: Convert to List[Dict] for the ElectricalPreprocessor
-                    if elec_file:
-                        df = pd.read_csv(elec_file)
-                        telemetry_data = df.to_dict(orient="records")
-
-                    # Execute the automated flow
-                    analysis_res = handler.start_flow(
-                        string_data=telemetry_data,
-                        image_data=temp_img_path
+                # 2. COMPONENT CONTRIBUTIONS (TEXT SUMMARY)
+                st.markdown("---")
+                st.subheader("🧬 AI Diagnosis")
+                comp_data, feat_df = explainer.get_explanation(raw_sample)
+                
+                for item in comp_data:
+                    color = "#FF4B4B" if item['Direction'] == "increased" else "#00CC96"
+                    st.markdown(
+                        f"**{item['Component']}** <span style='color:{color}'>{item['Direction']}</span> severity by **{item['Impact']:.2f}**", 
+                        unsafe_allow_html=True
                     )
 
-                    # --- 6. RESULTS PRESENTATION ---
-                    if analysis_res:
-                        st.success("Analysis Complete")
+                # 3. FEATURE TABLE (GREY/BLACK STYLE)
+                st.markdown("### 📊 Detailed Sensor Weights")
+                st.write("Below is the specific impact of each sensor after feature engineering:")
+                st.table(feat_df)
 
-                        m1, m2, m3 = st.columns(3)
-                        # Displaying severity result and confidence
-                        m1.metric("Detection Result", str(analysis_res.result))
-                        m2.metric("Confidence", f"{analysis_res.reading_confidence:.2f}%")
+                # 4. VISUAL IMPACT CHART
+                fig = px.bar(
+                    feat_df.sort_values(by="Impact"), 
+                    x="Impact", y="Feature", 
+                    orientation='h',
+                    color="Direction",
+                    color_discrete_map={"increased": "#FF4B4B", "reduced": "#00CC96"},
+                    template="plotly_dark",
+                    title="Visual Feature Contribution"
+                )
+                fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+                st.plotly_chart(fig, use_container_width=True)
 
-                        # Logic to determine status based on confidence thresholds
-                        status = "Action Required" if analysis_res.reading_confidence > 0.5 else "Monitor"
-                        m3.metric("Status", status)
-
-                        # Detailed breakdown from the AnalysisResult object
-                        if analysis_res.result_readings:
-                            with st.expander("Detailed Fault Analysis"):
-                                st.write(analysis_res.result_readings)
-                    else:
-                        st.error("Pipeline executed but returned no results.")
-
-                except Exception as e:
-                    st.error(f"An error occurred during processing: {e}")
-
-                finally:
-                    # Cleanup temporary files to keep the directory clean
-                    if temp_img_path and os.path.exists(temp_img_path):
-                        os.remove(temp_img_path)
-
-    # --- 7. SECONDARY ACTIONS ---
     st.markdown("---")
-    col_a, col_b = st.columns(2)
-    col_a.button("Log to Maintenance Schedule", use_container_width=True)
-    col_b.button("Download Metadata (.json)", use_container_width=True)
+    st.button("Log to Maintenance Schedule", use_container_width=True)
 
-# --- 8. PAGE EXECUTION ---
 if __name__ == "__main__":
     show_fault_severity_page()
