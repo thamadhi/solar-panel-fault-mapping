@@ -10,7 +10,7 @@ from dashboard.core.logger import LoggerFactory
 
 class ImageHotspotStrategy(FaultDetectionStrategy):
     """
-    Balanced strategy for detecting both Hotspots (Class 0) 
+    Balanced strategy for detecting both Hotspots (Class 0)
     and Solar Panels (Class 1) using YOLOv8.
     """
 
@@ -31,23 +31,19 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
         """
         try:
             if self.__model is None:
-                return {'status': 'Error', 'message': 'Model not loaded'}
+                return {"status": "Error", "message": "Model not loaded"}
 
             if image_tensor is None:
-                return {'status': 'Error', 'message': 'Invalid image input'}
+                return {"status": "Error", "message": "Invalid image input"}
 
             # Run YOLO prediction
             results = self.__model.predict(
-                source=image_tensor,
-                conf=0.02,
-                iou=0.2,
-                imgsz=640,
-                verbose=False
+                source=image_tensor, conf=0.02, iou=0.2, imgsz=640, verbose=False
             )
 
             # Get image dimensions for padding boundaries
             h_img, w_img = image_tensor.shape[:2]
-            
+
             hotspots = []
             panels = []
 
@@ -57,47 +53,49 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                 x1, y1, x2, y2 = box.xyxy[0].tolist()
 
                 if cls_id == 0:  # Hotspot
-                    hotspots.append({
-                        'box': [int(x1), int(y1), int(x2), int(y2)],
-                        'confidence': conf
-                    })
-                
+                    hotspots.append(
+                        {
+                            "box": [int(x1), int(y1), int(x2), int(y2)],
+                            "confidence": conf,
+                        }
+                    )
+
                 elif cls_id == 1:  # Solar Panel
                     # Apply your 5% padding logic
                     pad_w = (x2 - x1) * 0.05
                     pad_h = (y2 - y1) * 0.05
-                    
+
                     nx1 = max(0, int(x1 - pad_w))
                     ny1 = max(0, int(y1 - pad_h))
                     nx2 = min(w_img, int(x2 + pad_w))
                     ny2 = min(h_img, int(y2 + pad_h))
-                    
-                    panels.append({
-                        'box': [nx1, ny1, nx2, ny2],
-                        'confidence': conf
-                    })
+
+                    panels.append({"box": [nx1, ny1, nx2, ny2], "confidence": conf})
 
             # Treat both as equally important in the summary
             result = {
-                'has_hotspots': len(hotspots) > 0,
-                'has_panels': len(panels) > 0,
-                'hotspot_count': len(hotspots),
-                'panel_count': len(panels),
+                "has_hotspots": len(hotspots) > 0,
+                "has_panels": len(panels) > 0,
+                "hotspot_count": len(hotspots),
+                "panel_count": len(panels),
                 # Average confidence for each class to show 'importance'
-                'avg_hotspot_conf': np.mean([h['confidence'] for h in hotspots]) if hotspots else 0.0,
-                'avg_panel_conf': np.mean([p['confidence'] for p in panels]) if panels else 0.0,
-                'detections': {
-                    'hotspots': hotspots,
-                    'solar_panels': panels
-                }
+                "avg_hotspot_conf": (
+                    np.mean([h["confidence"] for h in hotspots]) if hotspots else 0.0
+                ),
+                "avg_panel_conf": (
+                    np.mean([p["confidence"] for p in panels]) if panels else 0.0
+                ),
+                "detections": {"hotspots": hotspots, "solar_panels": panels},
             }
 
-            self.__logger.info(f"Analysis: {len(panels)} Panels | {len(hotspots)} Hotspots")
+            self.__logger.info(
+                f"Analysis: {len(panels)} Panels | {len(hotspots)} Hotspots"
+            )
             return result
 
         except Exception as e:
             self.__logger.error(f"Detection error: {e}")
-            return {'status': 'Error', 'error': str(e)}
+            return {"status": "Error", "error": str(e)}
 
     def _load_model(self, model_path: str) -> Optional[YOLO]:
         """Loads the YOLO weights from the specified path."""

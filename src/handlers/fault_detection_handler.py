@@ -100,10 +100,7 @@ class FaultDetectionHandler(Handler):
                 )
 
             # Thermal
-            if (
-                self.__image_preprocessor is not None
-                and image_data is not None
-            ):
+            if self.__image_preprocessor is not None and image_data is not None:
                 self.__processed_image_path = self.__image_preprocessor.preprocess(
                     image_data
                 )
@@ -186,7 +183,7 @@ class FaultDetectionHandler(Handler):
                 result_images=[self.__processed_image_path],
                 result_readings=[],
             )
-        elif source == "electrical":   # Default to electrical
+        elif source == "electrical":  # Default to electrical
             self.result = AnalysisResult(
                 result=self.__fault_type.get_fault_type,
                 reading_confidence=float(
