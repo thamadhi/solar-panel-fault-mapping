@@ -13,6 +13,7 @@ render_page_config()
 render_css("assets/styles.css")
 render_css("assets/landing.css")
 
+# App router to switch between tabs/pages
 app_router = AppRouter()
 
 # Register or login the user

@@ -39,6 +39,30 @@ The core features of the system are summarized as follows:
 -   **AI-Powered Rectification** with optimized repair recommendations
 -   **Interactive Dashboard** enabling fault classification, confidence analysis, and decision support through an intuitive interface.
 
+
+## 📚 Datasets & Resources
+
+### Public Datasets
+
+| Dataset | Link |
+|---------|------|
+| Solar Panel Images | [Kaggle: Solar Panel Dataset](https://www.kaggle.com/datasets/pkdarabi/solarpanel) |
+| Solar Panels Defect Detector Repo | [GitHub: P-Darabi](https://github.com/P-Darabi/SolarPanelsDefectDetector?tab=readme-ov-file) |
+| Solar Augmented Dataset | [Kaggle: Solar Augmented Dataset](https://www.kaggle.com/datasets/gitenavnath/solar-augmented-dataset) |
+| Electrical PV Fault Dataset | [GitHub: Clayton H Costa](https://github.com/clayton-h-costa/pv_fault_dataset) |
+
+### Combined / Updated Image Dataset
+
+| Dataset | Link |
+|---------|------|
+| Solar PV Single Hotspot Clean Images | [HuggingFace Dataset](https://huggingface.co/datasets/seyeddd/solar_pv_single_hotspot_clean_images) |
+
+### Synthetic Data Generation Resources
+
+- **Paper:** Generating Synthetic Time Series Photovoltaic Data with Real-World Physical Challenges and Noise for Use in Algorithm Test and Validation  
+  Authors: Matthew Muller, Kevin Anderson, Michael Deceglie (National Renewable Energy Laboratory)  
+  [Read PDF](https://docs.nrel.gov/docs/fy23osti/86459.pdf)
+
 ## Components
 
 ### Fault Detection

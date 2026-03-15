@@ -129,8 +129,10 @@ def test_present_results(mocked_handler):
     mock_fault.get_fault_type = "Short-Circuit"
 
     handler._FaultDetectionHandler__fault_type = mock_fault
-    handler._FaultDetectionHandler__last_run_details = {"confidence": 0.77,
-                                                        "source": "electrical"}
+    handler._FaultDetectionHandler__last_run_details = {
+        "confidence": 0.77,
+        "source": "electrical",
+    }
 
     handler.present_results()
 
@@ -336,7 +338,7 @@ def test_present_results_sets_analysis_result():
     handler._FaultDetectionHandler__last_run_details = {
         "confidence": 0.8,
         "detailed_predictions": ["Open Circuit"],
-        "source": "electrical"
+        "source": "electrical",
     }
 
     handler.present_results()
