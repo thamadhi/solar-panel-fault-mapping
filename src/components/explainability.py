@@ -113,7 +113,7 @@ def render_bullet_points(
 
     bullets = []
 
-    # Take top-k contributors (already sorted in API response, but safe anyway)
+    # Take top-k contributors
     top = contrib_df.head(k)
 
     # Friendly name mapping for UI display

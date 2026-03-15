@@ -77,7 +77,7 @@ def predict_image(uploaded_file, token: str) -> dict:
         HTTPError: If request fails.
     """
 
-    # Prepare multipart/form-data payload
+    # Prepare multipart/form-data (convert UploadFile object into multipart)
     files = {
         "image": (
             uploaded_file.name,

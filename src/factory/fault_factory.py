@@ -7,7 +7,7 @@ class FaultFactory:
     """
 
     @staticmethod
-    def create_fault(fault_name: str, fault_id: int = 0) -> Fault:
+    def create_fault(fault_name: str) -> Fault:
         """
         Factory method to create a Fault object based on fault type.
 
@@ -30,11 +30,10 @@ class FaultFactory:
             "Hotspot": Hotspot,
             "Normal Operation": Fault,
         }
-
         cls = mapping.get(fault_name, Fault)
 
-        # For normal operation
-        if cls is not None:
-            return cls(fault_id)
-
-        return cls(fault_id, fault_name)
+        # Only fault_name to base class
+        if cls is Fault:
+            return cls(fault_name)
+        else:
+            return cls()  # Subclasses already know their type

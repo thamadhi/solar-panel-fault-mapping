@@ -16,8 +16,7 @@ class Pipeline:
 
     def start_pipeline(self, ctx: PipelineContext):
         detection_result = self.detection_handler.start_flow(
-            image_data=ctx.image_data,
-            string_data=ctx.string_data
+            image_data=ctx.image_data, string_data=ctx.string_data
         )
 
         ctx.detection_result = detection_result
@@ -26,7 +25,7 @@ class Pipeline:
             ctx.pipeline_status = "stopped"
             ctx.message = "No fault detected. Pipeline terminated."
             return ctx
-        
+
         ctx.fault_type = detection_result.result
 
         localisation_result = self.localisation_handler.start_flow(
