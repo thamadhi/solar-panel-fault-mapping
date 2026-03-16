@@ -218,93 +218,218 @@ def render_csv_summary_cards(api_res, df):
 
 def render_image_mode(tab3):
     """
-    Loads the image mode to the user for hotspot classifications.
+    Render the thermal image analysis tab with batch processing support.
 
     Workflow:
-        1) User uploads thermal image
-        2) Streamlit sends file to Flask API endpoint `/predict-image`
-        3) API runs DenseNet inference + writes DB
-        4) Streamlit renders the result and confidence pie chart
+        1. User uploads one or more thermal images.
+        2. Streamlit iterates over each file and calls POST /predict-image.
+        3. Results are collected and displayed in a summary table.
+        4. A fault distribution chart is rendered across the batch.
 
     Args:
-        tab3: The image tab in the UI.
+        tab3: Streamlit tab container.
     """
 
     with tab3:
         st.subheader("Thermal Analysis")
 
-        # Two-column layout for better balance
-        img_col, det_col = st.columns([1, 1], gap="large")
+        with st.container(border=True):
+            image_files = st.file_uploader(
+                "Upload Thermal Images",
+                type=["jpg", "png", "jpeg"],
+                # Allow multiple files to be selected at once
+                accept_multiple_files=True,
+            )
 
-        with img_col:
-            with st.container(border=True):
-                image_file = st.file_uploader(
-                    # Allow any type of image
-                    "Upload Thermal Image",
-                    type=["jpg", "png", "jpeg"],
-                )
+        if not image_files:
+            st.info("Upload one or more thermal images to activate scanning.")
+            return
 
-                # Display the uploaded image if present
-                if image_file:
+        # Image preview grid thumbnails in rows of 4
+        st.markdown(f"**{len(image_files)} image(s) selected**")
+
+        cols_per_row = 4
+        rows = [
+            image_files[i : i + cols_per_row]
+            for i in range(0, len(image_files), cols_per_row)
+        ]
+
+        for row in rows:
+            cols = st.columns(cols_per_row)
+            for col, img_file in zip(cols, row):
+                with col:
                     st.image(
-                        image_file.getvalue(),
-                        caption="Uploaded Thermal Capture",
+                        img_file.getvalue(),
+                        caption=img_file.name,
                         use_container_width=True,
                     )
 
-        with det_col:
-            if image_file:
-                if st.button(
-                    "Scan for Hotspots",
-                    key="scan_thermal",
-                    type="primary",
-                    use_container_width=True,
-                ):
-                    with st.spinner("Performing Detection..."):
-                        try:
+        st.divider()
 
-                            token = st.session_state.get("api_token")
+        # Scan button — triggers batch inference loop
+        if st.button(
+            f"Scan {len(image_files)} Image(s) for Hotspots",
+            key="scan_thermal_batch",
+            type="primary",
+            use_container_width=True,
+        ):
+            token = st.session_state.get("api_token")
 
-                            if not token:
-                                st.error("Session expired. Please login again.")
-                                st.stop()
+            if not token:
+                st.error("Session expired. Please log in again.")
+                st.stop()
 
-                            # Call Flask API for image prediction
-                            api_res = predict_image(image_file, token=token)
+            results = []
+            errors = []
 
-                            # Store for persistence after reruns
-                            st.session_state.last_thermal_api_result = api_res
+            # Progress bar so the user can track long batches
+            progress = st.progress(0, text="Starting analysis...")
 
-                            # Add UI-only history log
-                            st.session_state.history.append(
-                                {
-                                    "mode": "thermal",
-                                    "fault_type": api_res.get("fault_type"),
-                                    "confidence": float(api_res.get("confidence", 0.0)),
-                                }
-                            )
+            for idx, img_file in enumerate(image_files):
 
-                        except Exception as e:
-                            st.error(f"Thermal API error: {e}")
+                # Increase progress per image
+                progress.progress(
+                    (idx) / len(image_files),
+                    text=f"Analysing {img_file.name} ({idx + 1}/{len(image_files)})...",
+                )
 
-                # If we have a stored result, show it
-                if "last_thermal_api_result" in st.session_state:
-                    res = st.session_state.last_thermal_api_result
+                try:
+                    # Re-seek the file buffer before each API call
+                    # (Streamlit UploadedFile buffers need resetting between reads)
+                    img_file.seek(0)
 
-                    st.success(f"Detection Complete: **{res.get('fault_type')}**")
-                    st.metric("Confidence", f"{float(res.get('confidence', 0.0)):.1%}")
+                    api_res = predict_image(img_file, token=token)
 
-                    # Adapt API dict into an object-like shape for the pie chart function
-                    class _Obj:
-                        pass
+                    results.append(
+                        {
+                            "filename": img_file.name,
+                            "fault_type": api_res.get("fault_type", "Unknown"),
+                            "confidence": float(api_res.get("confidence", 0.0)),
+                        }
+                    )
 
-                    o = _Obj()
-                    o.result = res.get("fault_type")
-                    o.image_confidence = float(res.get("confidence", 0.0))
-                    render_pie_chart(o)
+                except Exception as e:
+                    # Capture per-image errors without stopping the whole batch
+                    errors.append({"filename": img_file.name, "error": str(e)})
 
-            else:
-                st.info("Upload an image to activate thermal scanning.")
+            # Mark progress as complete
+            progress.progress(1.0, text="Analysis complete!")
+
+            # Persist results in session state so they remain in reruns
+            st.session_state.last_thermal_batch_results = results
+            st.session_state.last_thermal_batch_errors = errors
+
+            # Add a single history entry summarising the batch
+            st.session_state.history.append(
+                {
+                    "mode": "thermal_batch",
+                    "count": len(results),
+                    "errors": len(errors),
+                }
+            )
+
+        # Results - only rendered when batch results exist in session state
+        results = st.session_state.get("last_thermal_batch_results")
+        errors = st.session_state.get("last_thermal_batch_errors", [])
+
+        if not results:
+            return
+
+        st.divider()
+
+        # Render the final summary for the uploaded image(s)
+        render_batch_thermal_summary(results, errors)
+
+
+def render_batch_thermal_summary(results: list[dict], errors: list[dict]) -> None:
+    """
+    Render the batch thermal analysis results section.
+
+    Displays:
+        - Top-level metrics (total scanned, faults found, errors)
+        - Per-image results table with colour-coded fault types
+        - Fault distribution pie chart across the batch
+        - Error log if any images failed
+
+    Args:
+        results (list[dict]): Successful prediction results, each containing
+            'filename', 'fault_type', and 'confidence'.
+        errors (list[dict]): Failed predictions, each containing
+            'filename' and 'error'.
+    """
+
+    st.subheader("Batch Results")
+
+    # Top metrics
+    total = len(results) + len(errors)
+    faults = sum(1 for r in results if r["fault_type"] != "Normal Operation")
+    healthy = sum(1 for r in results if r["fault_type"] == "Normal Operation")
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Total Scanned", total)
+    c2.metric("Normal Operation", healthy)
+    c3.metric("Faults Detected", faults)
+    c4.metric("Errors", len(errors))
+
+    st.markdown("---")
+
+    # Results table
+    st.subheader("Per-Image Results")
+
+    res_df = pd.DataFrame(results)
+    res_df["confidence"] = res_df["confidence"].map(lambda x: f"{x:.1%}")
+
+    # Highlight fault rows, healthy in green
+    def _highlight(row):
+        color = "#ef4444" if row["fault_type"] != "Normal Operation" else "#10b981"
+        return [f"background-color: {color}"] * len(row)
+
+    st.dataframe(
+        res_df.style.apply(_highlight, axis=1),
+        use_container_width=True,
+        column_config={
+            "filename": st.column_config.TextColumn("File"),
+            "fault_type": st.column_config.TextColumn("Fault Type"),
+            "confidence": st.column_config.TextColumn("Confidence"),
+        },
+    )
+
+    # Fault distribution pie chart
+    st.markdown("---")
+    st.subheader("Fault Distribution")
+
+    fault_counts = res_df["fault_type"].value_counts().reset_index()
+    fault_counts.columns = ["fault_type", "count"]
+
+    fig = go.Figure(
+        go.Pie(
+            labels=fault_counts["fault_type"],
+            values=fault_counts["count"],
+            hole=0.4,
+            marker=dict(
+                colors=["#10b981", "#ef4444"],
+            ),
+            textinfo="label+percent",
+        )
+    )
+
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        showlegend=True,
+        margin=dict(l=20, r=20, t=20, b=20),
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Error log if some images failed
+    if errors:
+        st.markdown("---")
+        st.subheader("⚠️ Errors")
+        st.caption("The following images could not be processed:")
+
+        for err in errors:
+            st.error(f"**{err['filename']}** — {err['error']}")
 
 
 def render_tabs():
