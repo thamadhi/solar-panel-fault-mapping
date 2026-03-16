@@ -43,7 +43,7 @@ def api_login(username: str, password: str) -> dict:
 
 def predict_electrical(records, token: str) -> dict:
     """
-    Send electrical CSV/JSON records for fault prediction.
+    Send electrical CSV/JSON records to an API for fault prediction.
 
     Args:
         records: Electrical data records.

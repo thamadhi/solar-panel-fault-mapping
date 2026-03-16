@@ -4,6 +4,7 @@ from src.pages.dashboard import show_dashboard_page
 from src.pages.fault_detection import show_fault_detection_page
 from src.pages.history import show_history_page
 from src.pages.pv_system_config import render_pv_system_config
+from src.pages.help import render_help_page
 
 
 class AppRouter:
@@ -76,6 +77,7 @@ class AppRouter:
                     "Reports",
                     "History",
                     "PV System Config",
+                    "Help"
                 ],
                 index=0,
                 format_func=lambda x: f"📍 {x}",
@@ -111,6 +113,9 @@ class AppRouter:
 
         elif page == "PV System Config":
             render_pv_system_config()
+
+        elif page == "Help":
+            render_help_page()
 
         else:
             st.title(f"🧩 {page}")
