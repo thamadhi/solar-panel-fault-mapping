@@ -3,17 +3,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from src.database import fetch_latest, fetch_fault_trend_daily, get_conn
 from typing import List, Tuple, Any
-
-# Colour tokens
-BG      = "#0a0c10"
-SURFACE = "#111318"
-BORDER  = "#1e2128"
-ACCENT  = "#f0a500"
-ACCENT2 = "#3b82f6"
-GOOD    = "#10b981"
-DANGER  = "#ef4444"
-TEXT    = "#e2e8f0"
-MUTED   = "#64748b"
+from src.components.colors import ACCENT, ACCENT2, GOOD, DANGER, BORDER, MUTED, TEXT
 
 CHART_COLORS = [ACCENT, ACCENT2, GOOD, DANGER, "#8b5cf6", "#f43f5e"]
 
