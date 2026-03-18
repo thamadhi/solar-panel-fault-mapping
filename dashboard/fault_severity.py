@@ -1,106 +1,143 @@
-import sys
-import os
 import streamlit as st
 import pandas as pd
+import torch
 import plotly.express as px
+import os
 from src.handlers.fault_Severity_handler import FaultSeverityHandler
 from src.components.Severityexplainability import SeverityExplainer
 
 def show_fault_severity_page():
-    # --- UI STYLING: High Contrast for Dark Mode ---
+    # --- STYLING ---
     st.markdown("""
         <style>
-        /* Grey Table with Black Text for maximum readability */
-        [data-testid="stTable"] {
-            background-color: #e0e0e0;
-            border-radius: 8px;
+        /* Table Styling for better readability */
+        [data-testid="stTable"] { 
+            background-color: #f8f9fa; 
+            border-radius: 10px; 
             overflow: hidden;
         }
-        [data-testid="stTable"] td, [data-testid="stTable"] th {
-            color: #000000 !important;
-            font-weight: 500;
-            border-bottom: 1px solid #bcbcbc !important;
+        [data-testid="stTable"] td, [data-testid="stTable"] th { 
+            color: #1a1a1a !important; 
+            font-family: 'Segoe UI', sans-serif;
         }
-        .diagnosis-card {
-            background-color: #1e1e1e;
-            padding: 15px;
-            border-radius: 10px;
-            border-left: 5px solid #4a4a4a;
-            margin-bottom: 10px;
+        /* Custom Card for CV Results */
+        .diagnosis-card { 
+            background-color: #262730; 
+            padding: 20px; 
+            border-radius: 12px; 
+            border-left: 6px solid #ff4b4b;
+            margin-bottom: 20px;
         }
+        .diagnosis-card h4 { color: #ff4b4b; margin-top: 0; }
         </style>
     """, unsafe_allow_html=True)
 
-    st.header("🔍 Technical Fault Breakdown")
-    
-    # AI Initialization
+    # --- INITIALIZATION ---
+    # Using .json for the XGBoost model to avoid Serialization/Pickle warnings
+    MODEL_PATH = "src/models/solar_xgboost_severity_v1.pkl"
+    WEIGHTS_PATH = "src/models/weights/best.pt"
+
     try:
         handler = FaultSeverityHandler(
-            electrical_model_path="src/models/solar_xgboost_severity_v1.pkl", 
-            image_model_path="src/models/hotspot_yolo.pt" 
+            electrical_model_path=MODEL_PATH, 
+            image_model_path=WEIGHTS_PATH 
         )
-        explainer = SeverityExplainer("src/models/solar_xgboost_severity_v1.pkl")
+        # Only initialize explainer if model exists
+        if os.path.exists(MODEL_PATH):
+            explainer = SeverityExplainer(MODEL_PATH)
+        else:
+            explainer = None
     except Exception as e:
-        st.error(f"System Load Error: {e}"); return
+        st.error(f"Initialization Error: {e}")
+        return
 
-    # Data Input
-    elec_file = st.file_uploader("Upload Sensor CSV", type=["csv"])
+    st.title("🛡️ Fault Severity Analysis")
+    st.info("Analyze fault severity using Electrical Telemetry or Thermal Image processing.")
 
-    if st.button("Run AI Analysis", type="primary") and elec_file:
-        with st.spinner("Decoding AI logic..."):
-            raw_sample = pd.read_csv(elec_file).iloc[0].to_dict()
-            analysis_res = handler.start_flow(string_data=[raw_sample])
+    tab1, tab2 = st.tabs(["📊 Sensor Analysis", "🖼️ Image Model Analysis"])
 
-            if analysis_res:
-                # 1. SUMMARY METRICS
-                score = float(analysis_res.result)
-                m1, m2, m3 = st.columns(3)
-                m1.metric("Severity Score", f"{score:.2f}")
-                m2.metric("Confidence", f"{analysis_res.reading_confidence:.2f}%")
-                if float(analysis_res.result) <= 0.3:
-                    status="Low"
-                elif float(analysis_res.result) <= 0.6:
-                    status="Medium"
-                elif float(analysis_res.result) <= 0.8:
-                    status="High"
-                elif float(analysis_res.result) > 0.8:
-                    status="Critical"
-                                
-                m3.metric("Status",status)
+    # --- TAB 1: SENSORS (XGBOOST) ---
+    with tab1:
+        st.subheader("Electrical Diagnostic")
+        elec_file = st.file_uploader("Upload Sensor CSV", type=["csv"], key="csv_up")
         
+        if elec_file:
+            # Preview the data
+            df_preview = pd.read_csv(elec_file)
+            st.dataframe(df_preview.head(3), use_container_width=True)
 
-                # 2. COMPONENT CONTRIBUTIONS (TEXT SUMMARY)
-                st.markdown("---")
-                st.subheader("🧬 AI Diagnosis")
-                comp_data, feat_df = explainer.get_explanation(raw_sample)
+            if st.button("Run Sensor AI", type="primary"):
+                # Get the first row for analysis
+                raw_sample = df_preview.iloc[0].to_dict()
                 
-                for item in comp_data:
-                    color = "#FF4B4B" if item['Direction'] == "increased" else "#00CC96"
-                    st.markdown(
-                        f"**{item['Component']}** <span style='color:{color}'>{item['Direction']}</span> severity by **{item['Impact']:.2f}**", 
-                        unsafe_allow_html=True
-                    )
+                with st.spinner("Calculating Severity Score..."):
+                    res = handler.start_flow(string_data=[raw_sample])
+                
+                if res:
+                    m1, m2, m3 = st.columns(3)
+                    severity_score = float(res.result)
+                    m1.metric("Severity Score", f"{severity_score:.2f}")
+                    m2.metric("AI Confidence", f"{res.reading_confidence*100:.1f}%")
+                    
+                    status_color = "Normal"
+                    if severity_score > 0.7: status_color = "Critical"
+                    elif severity_score > 0.4: status_color = "Warning"
+                    m3.metric("Status", status_color)
 
-                # 3. FEATURE TABLE (GREY/BLACK STYLE)
-                st.markdown("### 📊 Detailed Sensor Weights")
-                st.write("Below is the specific impact of each sensor after feature engineering:")
-                st.table(feat_df)
+                    # --- EXPLAINABILITY SECTION ---
+                    if explainer:
+                        st.divider()
+                        st.subheader("💡 Decision Explanation")
+                        with st.expander("See Feature Impact Factors"):
+                            _, feat_df = explainer.get_explanation(raw_sample)
+                            st.table(feat_df)
+                else:
+                    st.error("Analysis failed to return results.")
 
-                # 4. VISUAL IMPACT CHART
-                fig = px.bar(
-                    feat_df.sort_values(by="Impact"), 
-                    x="Impact", y="Feature", 
-                    orientation='h',
-                    color="Direction",
-                    color_discrete_map={"increased": "#FF4B4B", "reduced": "#00CC96"},
-                    template="plotly_dark",
-                    title="Visual Feature Contribution"
-                )
-                fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-                st.plotly_chart(fig, use_container_width=True)
+    # --- TAB 2: IMAGE (YOLOv8) ---
+    with tab2:
+        st.subheader("Thermal Hotspot Detection")
+        img_file = st.file_uploader("Upload Thermal Image", type=["jpg", "png", "jpeg"], key="img_up")
+        
+        if img_file:
+            # Display uploaded image preview
+            st.image(img_file, width=300, caption="Uploaded Image")
 
-    st.markdown("---")
-    st.button("Log to Maintenance Schedule", use_container_width=True)
+            if st.button("Run Image AI", type="primary"):
+                # 1. Save buffer to temporary file for the Strategy to read
+                temp_path = "temp_analysis_input.jpg"
+                with open(temp_path, "wb") as f:
+                    f.write(img_file.getbuffer())
+                
+                with st.spinner("Processing image on GPU..." if torch.cuda.is_available() else "Processing on CPU..."):
+                    analysis_res = handler.start_flow(image_data=temp_path)
+                
+                if analysis_res and analysis_res.result_images:
+                    res = analysis_res.result_images 
+                    
+                    # Metrics Row
+                    c1, c2, c3 = st.columns(3)
+                    c1.metric("Panels Detected", res.get("numPanels", 0))
+                    c2.metric("Hotspots Found", res.get("numHotspot", 0))
+                    c3.metric("Impact Ratio", f"{res.get('panelHotspotRatio', 0.0)*100:.1f}%")
+
+                    # Diagnosis Card
+                    st.markdown(f"""
+                    <div class="diagnosis-card">
+                        <h4>AI Analysis Result</h4>
+                        <p>Classification: <b>{res.get('severity_level', 'Unknown')} Severity</b></p>
+                        <p>Model Confidence: <b>{res.get('confidence', 0.0)*100:.1f}%</b></p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Processed Image Result
+                    st.image(res.get("image"), caption="Annotated Detections (Red: Hotspot | Green: Panel)", use_container_width=True)
+                    
+                    # Cleanup
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
+                else:
+                    st.error("No hotspots detected or processing failed.")
 
 if __name__ == "__main__":
     show_fault_severity_page()
