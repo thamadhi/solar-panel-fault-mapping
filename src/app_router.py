@@ -77,7 +77,7 @@ class AppRouter:
                     "Reports",
                     "History",
                     "PV System Config",
-                    "Help"
+                    "Help",
                 ],
                 index=0,
                 format_func=lambda x: f"📍 {x}",
