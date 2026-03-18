@@ -8,13 +8,14 @@ def render_help_page() -> None:
     """
 
     st.title("📖 Help & Documentation")
-    st.markdown("Everything you need to get up and running with the Solar PV Fault Detection system.")
+    st.markdown(
+        "Everything you need to get up and running with the Solar PV Fault Detection system."
+    )
 
     st.divider()
 
     with st.expander("🚀 Getting Started", expanded=True):  # Occupy the space
-        st.markdown(
-            """
+        st.markdown("""
             Welcome! This system helps you detect faults in your solar PV installation
             using electrical sensor data or thermal images.
 
@@ -44,20 +45,16 @@ def render_help_page() -> None:
             - The system will display a **fault type** and a **confidence score**.
             - In CSV mode, click a row in the results table to get an **AI explanation**
               of why that string was flagged.
-            """
-        )
-
+            """)
 
     with st.expander("📄 Using CSV Batch Analysis"):
-        st.markdown(
-            """
+        st.markdown("""
             This mode processes multiple solar strings at once from a single CSV file.
 
             **Required Columns**
 
             Your CSV must contain these columns (column names are case-sensitive):
-            """
-        )
+            """)
 
         col_data = {
             "Column": ["vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature"],
@@ -73,8 +70,7 @@ def render_help_page() -> None:
 
         st.table(pd.DataFrame(col_data))
 
-        st.markdown(
-            """
+        st.markdown("""
             **Steps**
             1. Click **Browse files** and upload your `.csv`.
             2. Expand **Preview Uploaded Data** to verify the file loaded correctly.
@@ -84,12 +80,10 @@ def render_help_page() -> None:
 
             > 💡 The AI explanation shows which sensor readings had the biggest influence
             > on the fault prediction, helping you prioritise where to inspect first.
-            """
-        )
+            """)
 
     with st.expander("🖼️ Using Thermal Vision"):
-        st.markdown(
-            """
+        st.markdown("""
             This mode analyses a thermal camera image of your panels to detect hotspots.
 
             **Supported formats:** `.jpg`, `.jpeg`, `.png`
@@ -106,8 +100,7 @@ def render_help_page() -> None:
             - `Hotspot` — Detected a single heating/hotspot on one cell.
 
             > 💡 For best results, capture images under consistent irradiance.
-            """
-        )
+            """)
 
     with st.expander("❓ Frequently Asked Questions"):
         faqs = [
