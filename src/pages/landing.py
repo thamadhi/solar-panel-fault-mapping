@@ -94,8 +94,7 @@ def show_landing_page() -> None:
                 <span style='color: #10b981;'>Solar Assets.</span>
             </h1>
             <p style='font-size: 1.3rem; color: #94a3b8; margin: 30px 0;'>
-                Harness the power of PVInsight to detect, localise, and 
-                rectify PV faults with unprecedented accuracy. 
+PVInsight helps you detect, locate, and fix solar panel faults quickly and accurately.
             </p>
         """, unsafe_allow_html=True)
         
@@ -121,10 +120,10 @@ def show_landing_page() -> None:
     # Features
     f_cols = st.columns(4)
     features = [
-        {"icon": "🛡️", "title": "Fault Detection", "desc": "Real-time anomaly identification."},
-        {"icon": "🗺️", "title": "Localisation", "desc": "Spatial mapping of DC field issues."},
-        {"icon": "📈", "title": "Severity", "desc": "Automated energy-loss forecasting."},
-        {"icon": "⚙️", "title": "Rectification", "desc": "AI-suggested maintenance workflows."}
+        {"icon": "🛡️", "title": "Fault Detection", "desc": "Instantly spot problems in your solar system."},
+        {"icon": "🗺️", "title": "Localisation", "desc": "See exactly where the issue is on your panels."},
+        {"icon": "📈", "title": "Severity", "desc": "Understand how serious the problem is and its impact."},
+        {"icon": "⚙️", "title": "Rectification", "desc": "Get simple suggestions to fix the issue quickly."}
     ]
 
     for col, feat in zip(f_cols, features):
