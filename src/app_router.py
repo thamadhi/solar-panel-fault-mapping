@@ -3,6 +3,7 @@ import streamlit as st
 from src.pages.dashboard import show_dashboard_page
 from src.pages.fault_detection import show_fault_detection_page
 from src.pages.history import show_history_page
+from src.pages.pv_system_config import render_pv_system_config
 
 
 class AppRouter:
@@ -16,7 +17,7 @@ class AppRouter:
         Converts a gif image to a Base64 encoded string to embed into HTML
         inside the streamlit interface.
 
-        
+
         Args:
             path (str): Path to the GIF image file.
 
@@ -33,7 +34,7 @@ class AppRouter:
 
         Returns:
             str: The selected page name from the sidebar navigation.
-        
+
         """
         data_url = self._gif_to_base64("assets/cloudyRain.gif")
 
@@ -74,6 +75,7 @@ class AppRouter:
                     "Rectification",
                     "Reports",
                     "History",
+                    "PV System Config",
                 ],
                 index=0,
                 format_func=lambda x: f"📍 {x}",
@@ -106,6 +108,9 @@ class AppRouter:
 
         elif page == "History":
             show_history_page()
+
+        elif page == "PV System Config":
+            render_pv_system_config()
 
         else:
             st.title(f"🧩 {page}")
