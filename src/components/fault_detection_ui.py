@@ -12,6 +12,7 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 from typing import List, Dict, Any
+from src.components.colors import *
 
 
 def render_csv_mode(tab1):
@@ -37,7 +38,7 @@ def render_csv_mode(tab1):
     with tab1:
         st.subheader("Batch Process String Data")
 
-        # Keep the upload + action button inside a bordered container for neat UI
+        # Keep the upload + action button inside a bordered container
         with st.container(border=True):
             csv_file = st.file_uploader("Drop your system logs here", type=["csv"])
 
@@ -117,10 +118,10 @@ def render_csv_mode(tab1):
             return
 
         st.divider()
-        render_csv_summary_cards(api_res, df, raw_cols)
+        render_csv_summary_cards(api_res, df)
 
 
-def render_csv_summary_cards(api_res, df, raw_cols):
+def render_csv_summary_cards(api_res, df):
     """
     Render the summary section for CSV analysis.
 
@@ -170,8 +171,7 @@ def render_csv_summary_cards(api_res, df, raw_cols):
     st.session_state.selected_row_idx = int(selected_idx)
 
     records = st.session_state.get("last_records", [])
-    # render_string_comparison(records)
-    # render_radar_chart(records)
+    render_radar_chart(records)
 
     st.markdown("---")
 
@@ -239,7 +239,9 @@ def render_image_mode(tab3):
         with img_col:
             with st.container(border=True):
                 image_file = st.file_uploader(
-                    "Upload Thermal Image", type=["jpg", "png", "jpeg"]
+                    # Allow any type of image
+                    "Upload Thermal Image",
+                    type=["jpg", "png", "jpeg"],
                 )
 
                 # Display the uploaded image if present
@@ -258,7 +260,7 @@ def render_image_mode(tab3):
                     type="primary",
                     use_container_width=True,
                 ):
-                    with st.spinner("Calling API..."):
+                    with st.spinner("Performing Detection..."):
                         try:
 
                             token = st.session_state.get("api_token")
@@ -292,7 +294,7 @@ def render_image_mode(tab3):
                     st.success(f"Detection Complete: **{res.get('fault_type')}**")
                     st.metric("Confidence", f"{float(res.get('confidence', 0.0)):.1%}")
 
-                    # Adapt API dict into an object-like shape for your pie chart function
+                    # Adapt API dict into an object-like shape for the pie chart function
                     class _Obj:
                         pass
 
@@ -350,65 +352,10 @@ def render_session_state() -> None:
         st.session_state.last_records = None
 
 
-BG      = "#0a0c10"
-SURFACE = "#111318"
-BORDER  = "#1e2128"
-ACCENT  = "#f0a500"   # Amber - string 1 / primary
-ACCENT2 = "#3b82f6"   # blue - string 2 / secondary
-GOOD    = "#10b981"   # green  — healthy baseline
-DANGER  = "#ef4444"   # red    — out-of-range indicator
-TEXT    = "#e2e8f0"
-MUTED   = "#64748b"
-
-_BASE_LAYOUT = dict(
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="'JetBrains Mono', monospace", color=TEXT, size=11),
-    margin=dict(l=20, r=20, t=40, b=20),
-    legend=dict(
-        bgcolor="rgba(0,0,0,0)",
-        font=dict(color=MUTED, size=11),
-        orientation="h",
-        yanchor="bottom",
-        y=-0.15,
-        xanchor="center",
-        x=0.5,
-    ),
-)
-
-# Healthy operating baselines (normalised to 0–1 scale per feature)
-_BASELINES: Dict[str, float] = {
-    "vdc1":        1.0,
-    "vdc2":        1.0,
-    "idc1":        1.0,
-    "idc2":        1.0,
-    "irradiance":  1.0,
-    "temperature": 0.7,   # healthy temp is moderate, not max
-}
-
-_RATED: Dict[str, float] = {
-    "vdc1":        600.0,
-    "vdc2":        600.0,
-    "idc1":        10.0,
-    "idc2":        10.0,
-    "irradiance":  1000.0,
-    "temperature": 75.0,
-}
-
-_LABELS: Dict[str, str] = {
-    "vdc1":        "V String 1",
-    "vdc2":        "V String 2",
-    "idc1":        "I String 1",
-    "idc2":        "I String 2",
-    "irradiance":  "Irradiance",
-    "temperature": "Temperature",
-}
-
-
 def _section(title: str) -> None:
     st.markdown(
         f'<p style="font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;'
-        f'color:{MUTED};border-bottom:1px solid {BORDER};padding-bottom:0.4rem;'
+        f"color:{MUTED};border-bottom:1px solid {BORDER};padding-bottom:0.4rem;"
         f'margin:1.5rem 0 1rem;">{title}</p>',
         unsafe_allow_html=True,
     )
@@ -421,5 +368,105 @@ def _chart_wrap(fig, key: str) -> None:
         f'border-radius:4px;padding:1rem;">',
         unsafe_allow_html=True,
     )
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False}, key=key)
+    st.plotly_chart(
+        fig, use_container_width=True, config={"displayModeBar": False}, key=key
+    )
     st.markdown("</div>", unsafe_allow_html=True)
+
+
+def render_radar_chart(
+    records: List[Dict[str, Any]],
+    title: str = "Sensor Readings vs Healthy Baseline",
+) -> None:
+    """
+    Render a radar chart for the selected record from the batch.
+
+    This dynamically updates based on the row selected in the Individual String Analysis table.
+    """
+    features = list(BASELINES.keys())
+    labels = [LABELS[f] for f in features]
+    labels_closed = labels + [labels[0]]  # Close the polygon
+
+    if not records:
+        st.info("No records available for radar chart.")
+        return
+
+    df = pd.DataFrame(records)
+
+    missing = [f for f in features if f not in df.columns]
+    if missing:
+        st.warning(f"Radar chart unavailable — missing columns: {', '.join(missing)}")
+        return
+
+    # Use the selected row from session state
+    selected_idx = st.session_state.get("selected_row_idx", 0)
+    selected_row = df.iloc[selected_idx]
+
+    normalised = [float(np.clip(selected_row[f] / RATED[f], 0, 1.5)) for f in features]
+    normalised_closed = normalised + [normalised[0]]
+
+    baseline = [BASELINES[f] for f in features]
+    baseline_closed = baseline + [baseline[0]]
+
+    fig = go.Figure()
+
+    # Healthy baseline polygon
+    fig.add_trace(
+        go.Scatterpolar(
+            r=baseline_closed,
+            theta=labels_closed,
+            fill="toself",
+            fillcolor=f"rgba(16,185,129,0.08)",
+            line=dict(color=GOOD, width=1.5, dash="dot"),
+            name="Healthy Baseline",
+        )
+    )
+
+    # Selected record polygon
+    fig.add_trace(
+        go.Scatterpolar(
+            r=normalised_closed,
+            theta=labels_closed,
+            fill="toself",
+            fillcolor=f"rgba(240,165,0,0.15)",
+            line=dict(color=ACCENT, width=2),
+            marker=dict(color=ACCENT, size=6),
+            name=f"String #{selected_idx} Readings",
+        )
+    )
+
+    layout = dict(BASE_LAYOUT)
+    layout.update(
+        dict(
+            title=dict(
+                text=title, font=dict(size=13, color=MUTED), x=0.5, xanchor="center"
+            ),
+            polar=dict(
+                bgcolor="rgba(0,0,0,0)",
+                radialaxis=dict(
+                    visible=True,
+                    range=[0, 1.5],
+                    tickfont=dict(color=MUTED, size=9),
+                    gridcolor=BORDER,
+                    linecolor=BORDER,
+                    tickvals=[0.25, 0.5, 0.75, 1.0, 1.25],
+                ),
+                angularaxis=dict(
+                    tickfont=dict(color=TEXT, size=11),
+                    gridcolor=BORDER,
+                    linecolor=BORDER,
+                ),
+            ),
+        )
+    )
+    fig.update_layout(**layout)
+
+    _section("Sensor Health Radar")
+    col1, col2, col3 = st.columns([1, 3, 1])
+    with col2:
+        _chart_wrap(fig, key=f"radar_chart_{selected_idx}")
+
+    st.caption(
+        f"String #{selected_idx} readings normalised against rated values. "
+        "Deviation from the green baseline indicates anomaly."
+    )
