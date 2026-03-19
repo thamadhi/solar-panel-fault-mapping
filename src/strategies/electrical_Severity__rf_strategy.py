@@ -6,6 +6,7 @@ import joblib
 from src.strategies.base_strategy import FaultDetectionStrategy
 from src.core.logger import LoggerFactory
 
+
 class SeverityStrategy(FaultDetectionStrategy):
     """
     Random Forest strategy for assessing fault severity level and confidence.
@@ -19,19 +20,26 @@ class SeverityStrategy(FaultDetectionStrategy):
             encoder_path (str): Path to the saved LabelEncoder (to decode level names).
         """
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
-        
+
         try:
-            if not all(os.path.exists(p) for p in [model_path, scaler_path, encoder_path]):
+            if not all(
+                os.path.exists(p) for p in [model_path, scaler_path, encoder_path]
+            ):
                 raise FileNotFoundError("One or more model artifacts are missing.")
-            
+
             self.__model = joblib.load(model_path)
             self.__scaler = joblib.load(scaler_path)
             self.__encoder = joblib.load(encoder_path)
-            
+
             # Feature order must match the training script exactly
             self.__feature_order = [
-                "vdc1", "vdc2", "idc1", "idc2", "irradiance", "temperature",
-                "power_loss_ratio"
+                "vdc1",
+                "vdc2",
+                "idc1",
+                "idc2",
+                "irradiance",
+                "temperature",
+                "power_loss_ratio",
             ]
         except Exception as e:
             self.__logger.error(f"Initialization error for Severity component: {e}")
@@ -42,10 +50,14 @@ class SeverityStrategy(FaultDetectionStrategy):
         Predicts the severity level and the model's confidence in that prediction.
         """
         if self.__model is None:
-            return {'fault_severity_level': 'Unknown', 'confidence': 0.0, 'error': 'Model not loaded'}
-        
+            return {
+                "fault_severity_level": "Unknown",
+                "confidence": 0.0,
+                "error": "Model not loaded",
+            }
+
         if data is None or data.empty:
-            return {'fault_severity_level': 'Normal', 'confidence': 0.0}
+            return {"fault_severity_level": "Normal", "confidence": 0.0}
 
         try:
             # 1. Prepare and Scale features
@@ -65,18 +77,18 @@ class SeverityStrategy(FaultDetectionStrategy):
             return {
                 "fault_severity_level": str(level_name),
                 "confidence": round(conf, 4),
-                "status": "Success"
+                "status": "Success",
             }
 
         except Exception as e:
             self.__logger.error(f"Severity prediction error: {e}")
             return {
-                "fault_severity_level": "Error", 
-                "confidence": 0.0, 
+                "fault_severity_level": "Error",
+                "confidence": 0.0,
                 "error": str(e),
-                "status": "Failed"
+                "status": "Failed",
             }
-    
+
     @property
     def model(self):
         return self.__model
