@@ -20,7 +20,7 @@ class FaultSeverityHandler(Handler):
 
     def __init__(self,
                  electrical_model_path: str = "src/models/solar_xgboost_severity_v1.json",
-                 image_model_path: str = "src/models/weights/best.pt") -> None:
+                 image_model_path: str = "src/models/best.pt") -> None:
 
         super().__init__()
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
