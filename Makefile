@@ -9,7 +9,7 @@ api:
 
 # Run Streamlit dashboard (frontend)
 app:
-	streamlit run app.py
+	python -m streamlit run app.py
 
 # Run unit tests
 test:
