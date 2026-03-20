@@ -4,6 +4,7 @@ from src.pages.dashboard import show_dashboard_page
 from src.pages.fault_detection import show_fault_detection_page
 from src.pages.fault_localisation import show_fault_localisation_page
 from src.pages.history import show_history_page
+from src.pages.fault_severity import show_fault_severity_page
 from src.pages.pv_system_config import render_pv_system_config
 from src.pages.help import render_help_page
 
@@ -107,7 +108,7 @@ class AppRouter:
                 "Dashboard": "📊 Dashboard",
                 "Fault Detection": "🔍 Fault Detection",
                 "Localisation": "📍 Localisation",
-                "Severity": "⚡ Severity Analysis",
+                "Severity": "⚡ Severity",
                 "Rectification": "🛠️ Rectification",
                 "Reports": "📂 Export Reports",
                 "History": "📜 Activity Log",
@@ -136,15 +137,12 @@ class AppRouter:
             show_dashboard_page()
         elif page == "Fault Detection":
             show_fault_detection_page()
-<<<<<<< HEAD
-
         elif page == "Localisation":
             show_fault_localisation_page()
-
-=======
->>>>>>> a925dbad503e6b0185bc1d45ee8bc078c1ea7c26
         elif page == "History":
             show_history_page()
+        elif page == "Severity":
+            show_fault_severity_page()
         elif page == "PV System Config":
             render_pv_system_config()
         elif page == "Help":
