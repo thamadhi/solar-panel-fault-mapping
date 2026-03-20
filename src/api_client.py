@@ -43,7 +43,7 @@ def api_login(username: str, password: str) -> dict:
 
 def predict_electrical(records, token: str) -> dict:
     """
-    Send electrical CSV/JSON records for fault prediction.
+    Send electrical CSV/JSON records to an API for fault prediction.
 
     Args:
         records: Electrical data records.
@@ -64,20 +64,19 @@ def predict_electrical(records, token: str) -> dict:
 
 def predict_image(uploaded_file, token: str) -> dict:
     """
-    Send thermal image for hotspot fault detection.
+    Send a single thermal image to the backend for hotspot fault detection.
 
     Args:
-        uploaded_fle: Uploaded file from Streamlit.
-        token (str): JWT access token.
+        uploaded_file: Streamlit UploadedFile object (jpg/png/jpeg).
+        token (str): JWT access token for the Authroization header.
 
     Returns:
-        dict: Image prediction results.
+        dict: Prediction result containing 'fault_type' and 'confidence'.
 
     Raises:
-        HTTPError: If request fails.
+        HTTPError: If the server returns a non 200 response.
     """
 
-    # Prepare multipart/form-data (convert UploadFile object into multipart)
     files = {
         "image": (
             uploaded_file.name,
@@ -85,12 +84,14 @@ def predict_image(uploaded_file, token: str) -> dict:
             uploaded_file.type or "image/jpeg",
         )
     }
+
     r = requests.post(
         f"{API_BASE_URL}/predict-image",
         files=files,
         headers=_headers(token),
         timeout=180,
     )
+
     r.raise_for_status()
     return r.json()
 
