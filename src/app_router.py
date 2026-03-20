@@ -2,6 +2,7 @@ import base64
 import streamlit as st
 from src.pages.dashboard import show_dashboard_page
 from src.pages.fault_detection import show_fault_detection_page
+from src.pages.fault_localisation import show_fault_localisation_page
 from src.pages.history import show_history_page
 from src.pages.pv_system_config import render_pv_system_config
 
@@ -105,6 +106,9 @@ class AppRouter:
 
         elif page == "Fault Detection":
             show_fault_detection_page()
+
+        elif page == "Localisation":
+            show_fault_localisation_page()
 
         elif page == "History":
             show_history_page()
