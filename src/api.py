@@ -18,6 +18,7 @@ from src.database.db import init_db, insert_prediction, get_user_by_username
 from src.authentication.jwt_utils import create_token, verify_token
 from src.authentication.security import verify_password
 from src.services.detection_service import build_handler
+from src.services.localization_service import build_localisation_handler
 import os
 import tempfile
 import json
@@ -38,6 +39,7 @@ init_db()
 
 # Load handler once at startup
 handler = build_handler()
+localisation_handler = build_localisation_handler()
 
 
 def require_auth(fn):
@@ -324,6 +326,155 @@ def api_login():
         ),
         200,
     )
+
+@app.route("/localise", methods=["POST"])
+@require_auth
+def localise():
+    """
+    Localize faults from thermal images or electrical CSV data.
+ 
+    For images:
+        Multipart/form-data with 'image' file (JPEG/PNG).
+        Returns: fault_type, confidence, location, bounding_box,
+                 annotated_image (base64)
+ 
+    For electrical data:
+        JSON body with list of inverter reading dicts.
+        Returns: fault_type, confidence, faulty_strings list
+    """
+    temp_path = None
+ 
+    try:
+        # ── Image path ────────────────────────────────────────────────
+        if "image" in request.files:
+            file = request.files["image"]
+            if file.filename == "":
+                return jsonify({"error": "No selected file."}), 400
+ 
+            with tempfile.NamedTemporaryFile(
+                    delete=False, suffix=".jpg") as tmp:
+                file.save(tmp.name)
+                temp_path = tmp.name
+ 
+            result = localisation_handler.start_flow(
+                image_data=temp_path)
+ 
+            # Debug logging — remove once image localization is confirmed working
+            logger = LoggerFactory.get_logger("localise_route")
+            logger.info(f"[DEBUG] result object: {result}")
+            logger.info(f"[DEBUG] result.result: "
+                        f"{getattr(result, 'result', 'MISSING')}")
+            logger.info(f"[DEBUG] result.image_confidence: "
+                        f"{getattr(result, 'image_confidence', 'MISSING')}")
+            logger.info(f"[DEBUG] result.details: "
+                        f"{getattr(result, 'details', 'MISSING')}")
+            logger.info(f"[DEBUG] result.result_images count: "
+                        f"{len(result.result_images) if result and result.result_images else 0}")
+ 
+            if result is None:
+                return jsonify({
+                    "status" : "error",
+                    "message": "Handler returned None result. "
+                               "Check server logs for the exact failure point."
+                }), 500
+ 
+            insert_prediction(
+                source="api",
+                mode="hotspot_localization",
+                fault_type=str(result.result),
+                confidence=float(result.image_confidence or 0.0),
+                image_path=temp_path,
+                location=result.location,
+            )
+ 
+            response = {
+                "status"     : "success",
+                "fault_type" : result.result,
+                "confidence" : float(result.image_confidence or 0.0),
+                "location"   : result.location,
+            }
+ 
+            details = result.details or {}
+            if details.get("bounding_box"):
+                response["bounding_box"] = details["bounding_box"]
+ 
+            if result.result_images:
+                import base64
+                import cv2
+                annotated = result.result_images[0]
+                if annotated is not None:
+                    _, buf = cv2.imencode(".jpg", annotated)
+                    response["annotated_image"] = (
+                        base64.b64encode(buf).decode("utf-8"))
+ 
+            return jsonify(response), 200
+ 
+        # ── Electrical path ───────────────────────────────────────────
+        elif "file" in request.files:
+            import pandas as pd
+            file = request.files["file"]
+            if file.filename.lower().endswith((".xlsx", ".xls")):
+                df = pd.read_excel(file)
+            else:
+                df = pd.read_csv(file)
+            data = df.to_dict(orient="records")
+            
+        elif request.is_json:
+            data = request.get_json(silent=True)
+            if not data:
+                return jsonify(
+                    {"error": "No JSON body provided."}), 400
+ 
+            result = localisation_handler.start_flow(
+                string_data=data)
+ 
+            if result is None:
+                return jsonify({
+                    "status" : "error",
+                    "message": "Handler returned None result. "
+                               "Check server logs."
+                }), 500
+ 
+            faulty_strings = result.result_readings or []
+            details        = result.details or {}
+ 
+            insert_prediction(
+                source="api",
+                mode="string_localization",
+                fault_type=str(result.result),
+                confidence=float(result.reading_confidence or 0.0),
+                location=result.location,
+            )
+ 
+            return jsonify({
+                "status"          : "success",
+                "fault_type"      : result.result,
+                "confidence"      : float(
+                    result.reading_confidence or 0.0),
+                "faulty_strings"  : faulty_strings,
+                "location"        : result.location,
+                "string_reliable" : details.get("string_reliable", False),
+            }), 200
+ 
+        else:
+            return jsonify({
+                "error": "Send either an 'image' file or a JSON body."
+            }), 400
+ 
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "status" : "error",
+            "message": str(e)
+        }), 500
+ 
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
 
 
 # Application entry point
