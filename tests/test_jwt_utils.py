@@ -21,8 +21,8 @@ def test_create_and_verify_token_success():
     assert decoded["sub"] == "1"
     assert decoded["username"] == "alice"
     assert decoded["role"] == "Admin"
-    assert "iat" in decoded     # Issued-at timestamp exists
-    assert "exp" in decoded     # Expiration timestamp exists
+    assert "iat" in decoded  # Issued-at timestamp exists
+    assert "exp" in decoded  # Expiration timestamp exists
 
 
 def test_invalid_token_raises():
