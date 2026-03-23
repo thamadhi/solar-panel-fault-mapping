@@ -209,10 +209,22 @@ Start the Flask API first from the project root in one terminal:
 make run
 ```
 
+or
+
+```bash
+python -m src.api
+```
+
 ### ▶️ Running the Streamlit Dashboard
 
 Open a new terminal, activate the same .venv, then run:
 
 ```bash
 make app
+```
+
+or
+
+```bash
+streamlit run app.py
 ```
