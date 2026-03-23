@@ -2,7 +2,15 @@ import streamlit as st
 from src.services.detection_service import build_handler
 
 
-def init_state():
+def init_state() -> None:
+    """
+    Initializes the session state for the application.
+
+    This function ensures that all required keys are present in
+    `st.session_state` with appropriate default values. It is used
+    to maintain user session data, UI state, and cached objects
+    across interactions in the Streamlit app.
+    """
     # Session state
     if "user" not in st.session_state:
         st.session_state.user = None

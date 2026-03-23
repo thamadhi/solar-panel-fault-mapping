@@ -135,9 +135,6 @@ The project follows Agile methodology with the Scrum framework, which is managed
 
 -   [solar-pv-fault-detection](./)
     -   [src](./src) - Source code of the entire application
-        -   [core](./src/core) - Core files
-        -   [handlers](./src/handlers) - Main component handlers
-        -   [models](./src/models) - Business related classes
     -   [datasets](./datasets) - Electrical & image datasets
     -   [diagrams](./diagrams) - UML diagrams used for designing
     -   [docs](./docs) - Documents aligned with the project
@@ -162,9 +159,9 @@ The project follows Agile methodology with the Scrum framework, which is managed
 | Component           | Model / Algorithm               |
 |---------------------|---------------------------------|
 | Fault Detection     | Random Forest / DenseNet201     |
-| Fault Localization  | CNN + LSTM                      |
-| Fault Severity      | Random Forest                   |
-| Fault Rectification | Decision Tree                   |
+| Fault Localization  | DenseNet121 + CNN Bi-LSTM       |
+| Fault Severity      | Random Forest Regressor / YOLO  |
+| Fault Rectification | Random Forest / Deep-Q Learning |
 
 
 ## 🚀 How to Run the Application
@@ -186,12 +183,12 @@ cd solar-panel-fault-mapping
 
 For mac:
 ```bash
-python -m venv .venv
+python3.11 -m venv .venv
 source .venv/bin/activate
 ```
 For windows (PowerShell):
 ```bash
-python -m venv .venv
+python3.11 -m venv .venv
 .venv\Scripts\Activate.ps1
 ```
 

@@ -73,6 +73,9 @@ class AppRouter:
         except: return ""
 
     def render_side_bar(self) -> str:
+        """
+        Renders the sidebar once the user logs into the system.
+        """
         data_url = self._gif_to_base64("assets/cloudyRain.gif")
         user = st.session_state.get("user")
 
@@ -132,7 +135,14 @@ class AppRouter:
         return st.session_state.current_page
 
     def route(self, page: str) -> None:
-        """Route the user to the selected page."""
+        """Route the user to the selected page.
+        
+        Args:
+            page (str): The page being directed to.
+
+        Returns:
+            None
+        """
         if page == "Dashboard":
             show_dashboard_page()
         elif page == "Fault Detection":
