@@ -40,6 +40,7 @@ def show_fault_severity_page():
     # --- 2. INITIALIZATION ---
     MODEL_PATH = "src/models/solar_xgboost_severity_v1.pkl"
     WEIGHTS_PATH = "src/models/best.pt"
+    WEIGHTS_PATH = "src/models/weights/best.pt"
 
     try:
         handler = FaultSeverityHandler(
