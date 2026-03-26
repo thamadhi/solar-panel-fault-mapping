@@ -2,6 +2,7 @@ import streamlit as st
 from src.services.detection_service import build_handler
 
 
+<<<<<<< HEAD
 def init_state() -> None:
     """
     Initializes the session state for the application.
@@ -11,6 +12,9 @@ def init_state() -> None:
     to maintain user session data, UI state, and cached objects
     across interactions in the Streamlit app.
     """
+=======
+def init_state():
+>>>>>>> 6eff90f54c890b74289264dea9185dc73382dc31
     # Session state
     if "user" not in st.session_state:
         st.session_state.user = None
