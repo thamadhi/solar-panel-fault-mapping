@@ -19,6 +19,10 @@ def build_handler() -> FaultDetectionHandler:
 
     handler = FaultDetectionHandler(
         electrical_model_path=hf_hub_download(HF_REPO_ID, "tuned_random_forest.pkl"),
+<<<<<<< HEAD
         image_model_path=hf_hub_download(HF_REPO_ID, "base_model.keras"),
+=======
+        image_model_path=hf_hub_download(HF_REPO_ID, "tuned_model.keras"),
+>>>>>>> 6eff90f54c890b74289264dea9185dc73382dc31
     )
     return handler
