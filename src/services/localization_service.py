@@ -23,16 +23,16 @@ def build_localisation_handler() -> FaultLocalisationHandler:
     """
     handler = FaultLocalisationHandler(
         localisation_image_model_path=hf_hub_download(
-            HF_REPO_ID_L, "final_model.keras"),
+            HF_REPO_ID_L, "final_model.keras"
+        ),
         electrical_fault_model_path=hf_hub_download(
-            HF_REPO_ID_L, "model_fault_classifier.keras"),
+            HF_REPO_ID_L, "model_fault_classifier.keras"
+        ),
         electrical_loc_model_path=hf_hub_download(
-            HF_REPO_ID_L, "model_string_localizer.keras"),
-        scaler_string_path=hf_hub_download(
-            HF_REPO_ID_L, "scaler_string.pkl"),
-        scaler_meta_path=hf_hub_download(
-            HF_REPO_ID_L, "scaler_meta.pkl"),
-        best_threshold_path=hf_hub_download(
-            HF_REPO_ID_L, "best_threshold.pkl"),
+            HF_REPO_ID_L, "model_string_localizer.keras"
+        ),
+        scaler_string_path=hf_hub_download(HF_REPO_ID_L, "scaler_string.pkl"),
+        scaler_meta_path=hf_hub_download(HF_REPO_ID_L, "scaler_meta.pkl"),
+        best_threshold_path=hf_hub_download(HF_REPO_ID_L, "best_threshold.pkl"),
     )
     return handler

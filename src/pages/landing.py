@@ -4,14 +4,18 @@ import streamlit.components.v1 as components
 import base64
 from pathlib import Path
 
+
 def img_to_base64(path: str) -> str:
     try:
         return base64.b64encode(Path(path).read_bytes()).decode()
-    except: return ""
+    except:
+        return ""
+
 
 def inject_dynamic_background():
     """Injects Teal-to-Obsidian moving gradient with Solar Yellow hover accents."""
-    st.markdown("""
+    st.markdown(
+        """
         <style>
             .stApp {
                 background: linear-gradient(-45deg, #020617, #064e3b, #020617, #101b27);
@@ -66,7 +70,10 @@ def inject_dynamic_background():
             /* Metric Styling */
             [data-testid="stMetricValue"] { color: #10b981 !important; }
         </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
+
 
 def show_landing_page() -> None:
     inject_dynamic_background()
@@ -74,12 +81,15 @@ def show_landing_page() -> None:
     # Top navigation
     nav_l, nav_r = st.columns([7, 3])
     with nav_l:
-        st.markdown("### 💠 <span class='brand-text'>PVInsight AI</span>", unsafe_allow_html=True)
+        st.markdown(
+            "### 💠 <span class='brand-text'>PVInsight AI</span>",
+            unsafe_allow_html=True,
+        )
     with nav_r:
         if st.button("Operator Log In", use_container_width=True, key="signin"):
             st.session_state.show_auth = True
             st.session_state.auth_view = "login"
-            st.session_state.scroll_to = "auth" 
+            st.session_state.scroll_to = "auth"
             st.rerun()
 
     st.write("##")
@@ -88,7 +98,8 @@ def show_landing_page() -> None:
     hero_l, hero_r = st.columns([6, 4], gap="large", vertical_alignment="center")
 
     with hero_l:
-        st.markdown("""
+        st.markdown(
+            """
             <h1 style='font-size: 4.2rem; line-height: 1.0; font-weight: 800; color: white;'>
                 Future-Proof <br>
                 <span style='color: #10b981;'>Solar Assets.</span>
@@ -96,9 +107,13 @@ def show_landing_page() -> None:
             <p style='font-size: 1.3rem; color: #94a3b8; margin: 30px 0;'>
 PVInsight helps you detect, locate, and fix solar panel faults quickly and accurately.
             </p>
-        """, unsafe_allow_html=True)
-        
-        if st.button("Enter Dashboard →", use_container_width=True, key="landing_launch_btn"):
+        """,
+            unsafe_allow_html=True,
+        )
+
+        if st.button(
+            "Enter Dashboard →", use_container_width=True, key="landing_launch_btn"
+        ):
             st.session_state.show_auth = True
             st.session_state.auth_view = "register"
             st.session_state.scroll_to = "auth"
@@ -107,12 +122,15 @@ PVInsight helps you detect, locate, and fix solar panel faults quickly and accur
     with hero_r:
         img_b64 = img_to_base64("assets/array.jpg")
         if img_b64:
-            st.markdown(f"""
+            st.markdown(
+                f"""
                 <div style='position: relative;'>
                     <div style='position: absolute; inset: -15px; background: radial-gradient(#10b981, transparent 70%); opacity: 0.2; filter: blur(30px);'></div>
                     <img src="data:image/jpg;base64,{img_b64}" width="100%" style='border-radius: 40px; border: 1px solid rgba(255,255,255,0.05);'>
                 </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
     st.write("##")
     st.divider()
@@ -120,21 +138,40 @@ PVInsight helps you detect, locate, and fix solar panel faults quickly and accur
     # Features
     f_cols = st.columns(4)
     features = [
-        {"icon": "🛡️", "title": "Fault Detection", "desc": "Instantly spot problems in your solar system."},
-        {"icon": "🗺️", "title": "Localisation", "desc": "See exactly where the issue is on your panels."},
-        {"icon": "📈", "title": "Severity", "desc": "Understand how serious the problem is and its impact."},
-        {"icon": "⚙️", "title": "Rectification", "desc": "Get simple suggestions to fix the issue quickly."}
+        {
+            "icon": "🛡️",
+            "title": "Fault Detection",
+            "desc": "Instantly spot problems in your solar system.",
+        },
+        {
+            "icon": "🗺️",
+            "title": "Localisation",
+            "desc": "See exactly where the issue is on your panels.",
+        },
+        {
+            "icon": "📈",
+            "title": "Severity",
+            "desc": "Understand how serious the problem is and its impact.",
+        },
+        {
+            "icon": "⚙️",
+            "title": "Rectification",
+            "desc": "Get simple suggestions to fix the issue quickly.",
+        },
     ]
 
     for col, feat in zip(f_cols, features):
         with col:
-            st.markdown(f"""
+            st.markdown(
+                f"""
                 <div class='feature-card'>
                     <div style='font-size: 3.5rem; margin-bottom: 20px;'>{feat['icon']}</div>
                     <h3 style='color: white; font-weight: 700;'>{feat['title']}</h3>
                     <p style='color: #94a3b8; font-size: 0.95rem;'>{feat['desc']}</p>
                 </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
     # Auth section with JS
     if st.session_state.get("show_auth"):
@@ -142,8 +179,10 @@ PVInsight helps you detect, locate, and fix solar panel faults quickly and accur
         st.write("---")
         # Anchor point for JS scroll
         st.markdown("<div id='auth-section'></div>", unsafe_allow_html=True)
-        
-        st.markdown("<h2 style='color: white;'>System Access</h2>", unsafe_allow_html=True)
+
+        st.markdown(
+            "<h2 style='color: white;'>System Access</h2>", unsafe_allow_html=True
+        )
         render_auth_screen(key_prefix="landing_auth")
 
         if st.session_state.get("scroll_to") == "auth":
@@ -151,12 +190,16 @@ PVInsight helps you detect, locate, and fix solar panel faults quickly and accur
                 with open("assets/scrolls.js", "r") as f:
                     js_code = f.read()
                 components.html(f"<script>{js_code}</script>", height=0)
-                st.session_state.scroll_to = None 
+                st.session_state.scroll_to = None
             except FileNotFoundError:
-                pass # Falls back to manual scroll if JS missing
+                pass  # Falls back to manual scroll if JS missing
 
     st.write("##")
-    st.markdown("<p style='text-align: center; color: #334155; font-size: 0.8rem; letter-spacing: 2px;'>PVINSIGHT INTELLIGENCE HUB</p>", unsafe_allow_html=True)
+    st.markdown(
+        "<p style='text-align: center; color: #334155; font-size: 0.8rem; letter-spacing: 2px;'>PVINSIGHT INTELLIGENCE HUB</p>",
+        unsafe_allow_html=True,
+    )
+
 
 def img_to_base64(path: str) -> str:
     """
