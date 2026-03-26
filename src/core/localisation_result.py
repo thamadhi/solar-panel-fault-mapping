@@ -15,13 +15,13 @@ class LocalisationAnalysisResult:
 
     def __init__(
         self,
-        result              : str,
-        location            : Optional[str]                    = None,
-        reading_confidence  : float                            = 0.0,
-        image_confidence    : float                            = 0.0,
-        result_images       : Optional[List]                   = None,
-        result_readings     : Optional[List]                   = None,
-        details             : Optional[Dict[str, Any]]         = None,
+        result: str,
+        location: Optional[str] = None,
+        reading_confidence: float = 0.0,
+        image_confidence: float = 0.0,
+        result_images: Optional[List] = None,
+        result_readings: Optional[List] = None,
+        details: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         Args:
@@ -48,13 +48,13 @@ class LocalisationAnalysisResult:
                                    threshold_used  : float
                                    per_row_results : List[Dict]
         """
-        self.__result             = result
-        self.__location           = location
+        self.__result = result
+        self.__location = location
         self.__reading_confidence = reading_confidence
-        self.__image_confidence   = image_confidence
-        self.__result_images      = result_images  or []
-        self.__result_readings    = result_readings or []
-        self.__details            = details        or {}
+        self.__image_confidence = image_confidence
+        self.__result_images = result_images or []
+        self.__result_readings = result_readings or []
+        self.__details = details or {}
 
     @property
     def result(self) -> str:
