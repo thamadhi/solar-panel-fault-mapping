@@ -13,8 +13,11 @@ render_page_config()
 render_css("assets/styles.css")
 render_css("assets/landing.css")
 render_css("assets/loc_tab.css")
+<<<<<<< HEAD
 render_css("assets/dashboard_view.css")
 render_css("assets/fault_detection_ui.css")
+=======
+>>>>>>> 6eff90f54c890b74289264dea9185dc73382dc31
 
 # App router to switch between tabs/pages
 app_router = AppRouter()
