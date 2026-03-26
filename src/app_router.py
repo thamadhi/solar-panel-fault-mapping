@@ -8,13 +8,15 @@ from src.pages.fault_severity import show_fault_severity_page
 from src.pages.pv_system_config import render_pv_system_config
 from src.pages.help import render_help_page
 
+
 class AppRouter:
     def __init__(self):
         self._inject_theme_css()
 
     def _inject_theme_css(self):
         """Custom CSS for high-end button navigation and layout."""
-        st.markdown("""
+        st.markdown(
+            """
             <style>
                 /* Sidebar Background */
                 [data-testid="stSidebar"] {
@@ -64,13 +66,16 @@ class AppRouter:
                     color: white !important;
                 }
             </style>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     def _gif_to_base64(self, path: str) -> str:
         try:
             with open(path, "rb") as f:
                 return base64.b64encode(f.read()).decode("utf-8")
-        except: return ""
+        except:
+            return ""
 
     def render_side_bar(self) -> str:
         """
@@ -86,9 +91,15 @@ class AppRouter:
         with st.sidebar:
             # Branding
             if data_url:
-                st.markdown(f'<img src="data:image/gif;base64,{data_url}" style="width:100%; border-radius:12px;">', unsafe_allow_html=True)
-            
-            st.markdown("<div class='nav-header'><h2 style='color:#EAB308; margin-bottom:0;'>PV Guard</h2><p style='color:#8b949e; font-size:12px;'>v2.0 Solar Intelligence</p></div>", unsafe_allow_html=True)
+                st.markdown(
+                    f'<img src="data:image/gif;base64,{data_url}" style="width:100%; border-radius:12px;">',
+                    unsafe_allow_html=True,
+                )
+
+            st.markdown(
+                "<div class='nav-header'><h2 style='color:#EAB308; margin-bottom:0;'>PV Guard</h2><p style='color:#8b949e; font-size:12px;'>v2.0 Solar Intelligence</p></div>",
+                unsafe_allow_html=True,
+            )
             st.divider()
 
             if user is None:
@@ -96,17 +107,20 @@ class AppRouter:
                 return "Login"
 
             # Profile Info
-            st.markdown(f"""
+            st.markdown(
+                f"""
                 <div class="user-box">
                     <small style="color:#8b949e;">Operator</small><br>
                     <strong>{user.username}</strong><br>
                     <code style="color:#238636; font-size:10px;">{getattr(user, 'type', 'Standard')} Mode</code>
                 </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
             # Button-based Navigation
             st.write("MAIN MENU")
-            
+
             nav_items = {
                 "Dashboard": "📊 Dashboard",
                 "Fault Detection": "🔍 Fault Detection",
@@ -116,7 +130,7 @@ class AppRouter:
                 "Reports": "📂 Export Reports",
                 "History": "📜 Activity Log",
                 "PV System Config": "⚙️ System Config",
-                "Help": "💡 Support Center"
+                "Help": "💡 Support Center",
             }
 
             for key, label in nav_items.items():
@@ -130,13 +144,13 @@ class AppRouter:
                 st.session_state.user = None
                 st.session_state.current_page = "Dashboard"
                 st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
         return st.session_state.current_page
 
     def route(self, page: str) -> None:
         """Route the user to the selected page.
-        
+
         Args:
             page (str): The page being directed to.
 
@@ -158,13 +172,16 @@ class AppRouter:
         elif page == "Help":
             render_help_page()
         else:
-            st.markdown(f"""
+            st.markdown(
+                f"""
                 <div style="text-align:center; padding:50px; border:1px solid #30363d; border-radius:20px;">
                     <h1 style="font-size:50px;">🧩</h1>
                     <h3>{page} Module</h3>
                     <p style="color:#8b949e;">This analytics engine is currently being updated for better precision.</p>
                 </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
     def run(self) -> None:
         page = self.render_side_bar()
