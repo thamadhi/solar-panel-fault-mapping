@@ -136,13 +136,10 @@ class AppRouter:
             show_dashboard_page()
         elif page == "Fault Detection":
             show_fault_detection_page()
-<<<<<<< HEAD
 
         elif page == "Localisation":
             show_fault_localisation_page()
 
-=======
->>>>>>> a925dbad503e6b0185bc1d45ee8bc078c1ea7c26
         elif page == "History":
             show_history_page()
         elif page == "PV System Config":
