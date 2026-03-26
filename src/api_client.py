@@ -43,7 +43,7 @@ def api_login(username: str, password: str) -> dict:
 
 def predict_electrical(records, token: str) -> dict:
     """
-    Send electrical CSV/JSON records to an API for fault prediction.
+    Send electrical CSV/JSON records for fault prediction.
 
     Args:
         records: Electrical data records.
@@ -76,7 +76,9 @@ def predict_image(uploaded_file, token: str) -> dict:
     Raises:
         HTTPError: If the server returns a non 200 response.
     """
-
+    
+    """
+    # Prepare multipart/form-data (convert UploadFile object into multipart)
     files = {
         "image": (
             uploaded_file.name,
@@ -94,6 +96,7 @@ def predict_image(uploaded_file, token: str) -> dict:
 
     r.raise_for_status()
     return r.json()
+    """
 
 
 def explain_electrical(records, row_idx: int, token: str) -> dict:
@@ -110,6 +113,7 @@ def explain_electrical(records, row_idx: int, token: str) -> dict:
 
     Raises:
         HTTPError: If request fails.
+    
     """
     payload = {"records": records, "row_idx": int(row_idx)}
     r = requests.post(
