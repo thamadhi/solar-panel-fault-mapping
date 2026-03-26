@@ -24,26 +24,26 @@ class ElectricalLocalisationPreprocessor:
     """
 
     N_STRINGS = 32
-    V_COLS    = [f'Vstr{i}(V)'  for i in range(1, 33)]
-    I_COLS    = [f'Istr{i}(A)'  for i in range(1, 33)]
+    V_COLS = [f"Vstr{i}(V)" for i in range(1, 33)]
+    I_COLS = [f"Istr{i}(A)" for i in range(1, 33)]
     META_COLS = [
-        'Ppv(W)', 'INVTemp(℃)', 'AMTemp1(℃)',
-        'BTTemp(℃)', 'OUTTemp(℃)', 'AMTemp2(℃)'
+        "Ppv(W)",
+        "INVTemp(℃)",
+        "AMTemp1(℃)",
+        "BTTemp(℃)",
+        "OUTTemp(℃)",
+        "AMTemp2(℃)",
     ]
     ALL_FEATURE_COLS = V_COLS + I_COLS + META_COLS
 
-    def __init__(
-        self,
-        scaler_string_path: str,
-        scaler_meta_path  : str
-    ) -> None:
+    def __init__(self, scaler_string_path: str, scaler_meta_path: str) -> None:
         self.__logger = LoggerFactory.get_logger(self.__class__.__name__)
         self.__scaler_string = self.__load_pickle(scaler_string_path)
-        self.__scaler_meta   = self.__load_pickle(scaler_meta_path)
+        self.__scaler_meta = self.__load_pickle(scaler_meta_path)
 
     def __load_pickle(self, path: str):
         try:
-            with open(path, 'rb') as f:
+            with open(path, "rb") as f:
                 obj = pickle.load(f)
             self.__logger.info(f"Loaded: {path}")
             return obj
@@ -54,13 +54,9 @@ class ElectricalLocalisationPreprocessor:
     @property
     def ready(self) -> bool:
         """True if both scalers loaded successfully."""
-        return (self.__scaler_string is not None
-                and self.__scaler_meta is not None)
+        return self.__scaler_string is not None and self.__scaler_meta is not None
 
-    def preprocess(
-        self,
-        data: Any
-    ) -> Optional[Tuple[np.ndarray, np.ndarray]]:
+    def preprocess(self, data: Any) -> Optional[Tuple[np.ndarray, np.ndarray]]:
         """
         Preprocesses raw inverter data into model-ready arrays.
 
@@ -75,8 +71,7 @@ class ElectricalLocalisationPreprocessor:
             Returns None if preprocessing fails.
         """
         if not self.ready:
-            self.__logger.error(
-                "Scalers not loaded — cannot preprocess.")
+            self.__logger.error("Scalers not loaded — cannot preprocess.")
             return None
 
         try:
@@ -84,30 +79,32 @@ class ElectricalLocalisationPreprocessor:
             if df is None:
                 return None
 
-            missing = [c for c in self.ALL_FEATURE_COLS
-                       if c not in df.columns]
+            missing = [c for c in self.ALL_FEATURE_COLS if c not in df.columns]
             if missing:
                 self.__logger.error(
-                    f"Missing {len(missing)} required columns: "
-                    f"{missing[:5]}...")
+                    f"Missing {len(missing)} required columns: " f"{missing[:5]}..."
+                )
                 return None
 
-            X_raw  = df[self.ALL_FEATURE_COLS].apply(
-                pd.to_numeric, errors='coerce').fillna(0).values.astype(
-                np.float32)
+            X_raw = (
+                df[self.ALL_FEATURE_COLS]
+                .apply(pd.to_numeric, errors="coerce")
+                .fillna(0)
+                .values.astype(np.float32)
+            )
 
-            X_str  = self.__scaler_string.transform(X_raw[:, :64])
+            X_str = self.__scaler_string.transform(X_raw[:, :64])
             X_meta = self.__scaler_meta.transform(X_raw[:, 64:])
 
-            X_3d = np.zeros(
-                (len(X_str), self.N_STRINGS, 2), dtype=np.float32)
+            X_3d = np.zeros((len(X_str), self.N_STRINGS, 2), dtype=np.float32)
             for s in range(self.N_STRINGS):
                 X_3d[:, s, 0] = X_str[:, s]
                 X_3d[:, s, 1] = X_str[:, s + self.N_STRINGS]
 
             self.__logger.info(
                 f"Preprocessed {len(df)} rows. "
-                f"X_3d: {X_3d.shape}, X_meta: {X_meta.shape}")
+                f"X_3d: {X_3d.shape}, X_meta: {X_meta.shape}"
+            )
             return X_3d, X_meta
 
         except Exception as e:
@@ -124,8 +121,8 @@ class ElectricalLocalisationPreprocessor:
                 return pd.DataFrame(data, columns=self.ALL_FEATURE_COLS)
             self.__logger.error(
                 f"Array has {data.shape[1]} columns, "
-                f"expected {len(self.ALL_FEATURE_COLS)}.")
+                f"expected {len(self.ALL_FEATURE_COLS)}."
+            )
             return None
-        self.__logger.error(
-            f"Unsupported data type: {type(data)}")
+        self.__logger.error(f"Unsupported data type: {type(data)}")
         return None
