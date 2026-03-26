@@ -4,6 +4,7 @@ from src.pages.dashboard import show_dashboard_page
 from src.pages.fault_detection import show_fault_detection_page
 from src.pages.fault_localisation import show_fault_localisation_page
 from src.pages.history import show_history_page
+from src.pages.fault_severity import show_fault_severity_page
 from src.pages.pv_system_config import render_pv_system_config
 from src.pages.help import render_help_page
 
@@ -72,6 +73,9 @@ class AppRouter:
         except: return ""
 
     def render_side_bar(self) -> str:
+        """
+        Renders the sidebar once the user logs into the system.
+        """
         data_url = self._gif_to_base64("assets/cloudyRain.gif")
         user = st.session_state.get("user")
 
@@ -107,7 +111,7 @@ class AppRouter:
                 "Dashboard": "📊 Dashboard",
                 "Fault Detection": "🔍 Fault Detection",
                 "Localisation": "📍 Localisation",
-                "Severity": "⚡ Severity Analysis",
+                "Severity": "⚡ Severity",
                 "Rectification": "🛠️ Rectification",
                 "Reports": "📂 Export Reports",
                 "History": "📜 Activity Log",
@@ -131,17 +135,24 @@ class AppRouter:
         return st.session_state.current_page
 
     def route(self, page: str) -> None:
-        """Route the user to the selected page."""
+        """Route the user to the selected page.
+        
+        Args:
+            page (str): The page being directed to.
+
+        Returns:
+            None
+        """
         if page == "Dashboard":
             show_dashboard_page()
         elif page == "Fault Detection":
             show_fault_detection_page()
-
         elif page == "Localisation":
             show_fault_localisation_page()
-
         elif page == "History":
             show_history_page()
+        elif page == "Severity":
+            show_fault_severity_page()
         elif page == "PV System Config":
             render_pv_system_config()
         elif page == "Help":
