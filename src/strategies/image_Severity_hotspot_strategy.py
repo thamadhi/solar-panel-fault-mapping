@@ -35,10 +35,14 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
             # Handle Preprocessor Batch Dimension (1, 224, 224, 3) -> (224, 224, 3)
             if isinstance(image_tensor, np.ndarray) and len(image_tensor.shape) == 4:
                 image_tensor = image_tensor[0]
+            PANEL_CONF_MIN = 0.01  # Minimum confidence to show a Solar Panel
+            HOTSPOT_CONF_MIN = 0.090  # Minimum confidence to show a Hotspot
+            MERGE_OVERLAP = 0.3  # Lower = merges more aggressively (removes double boxes)
+                
 
             results = self.__model.predict(
                 source=image_tensor,
-                conf=0.02,
+                conf=0.01,
                 iou=0.2,
                 imgsz=640,
                 device="cuda" if torch.cuda.is_available() else "cpu",
@@ -48,39 +52,74 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                 return {"status": "Error", "message": "No image processed by YOLO"}
 
             img = results[0].orig_img.copy()
-            panel_areas, hotspot_areas, confidences = [], [], []
+            h_img, w_img, _ = img.shape
+
+            raw_detections = {0: [], 1: []}
 
             for box in results[0].boxes:
                 cls_id = int(box.cls[0])
                 conf = float(box.conf[0])
-                x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
-                area = (x2 - x1) * (y2 - y1)
 
-                if cls_id == 1:  # Panel
-                    panel_areas.append(area)
-                    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                elif cls_id == 0:  # Hotspot
-                    hotspot_areas.append(area)
-                    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
-                confidences.append(conf)
+                if cls_id == 1 and conf < PANEL_CONF_MIN:
+                    continue  
+                if cls_id == 0 and conf < HOTSPOT_CONF_MIN:
+                    continue  
 
-            impact_ratio = 0.0
-            if panel_areas and hotspot_areas:
-                avg_panel = sum(panel_areas) / len(panel_areas)
-                if sum(hotspot_areas) == 0:
-                    impact_ratio = 0
-                elif len(panel_areas):
-                    impact_ratio = sum(hotspot_areas)
-                else:
-                    impact_ratio = sum(hotspot_areas) / avg_panel
+                x1, y1, x2, y2 = box.xyxy[0].tolist()
+                w, h = x2 - x1, y2 - y1
+                raw_detections[cls_id].append(([int(x1), int(y1), int(w), int(h)], conf))
 
+            # Final containers for cleaned data
+            final_panels = []
+            final_hotspots = []
+            final_hotspot_confs = [] # New: tracking confidence for the summary
+
+            # 3. Apply Merging (NMS) per category
+            for cls_id, detections in raw_detections.items():
+                if not detections:
+                    continue
+
+                boxes = [d[0] for d in detections]
+                scores = [d[1] for d in detections]
+
+                indices = cv2.dnn.NMSBoxes(boxes, scores, score_threshold=0.0, nms_threshold=MERGE_OVERLAP)
+
+                for i in indices:
+                    idx = i[0] if isinstance(i, (list, tuple)) else i
+                    box = boxes[idx]
+                    x, y, w, h = box
+                    area = w * h
+                    conf_score = scores[idx]
+
+                    if cls_id == 1:  # Solar Panel
+                        pad_w, pad_h = w * 0.05, h * 0.05
+                        nx1, ny1 = max(0, int(x - pad_w)), max(0, int(y - pad_h))
+                        nx2, ny2 = min(w_img, int(x + w + pad_w)), min(h_img, int(y + h + pad_h))
+                        cv2.rectangle(img, (nx1, ny1), (nx2, ny2), (0, 255, 0), 2)
+                        final_panels.append(area)
+
+                    elif cls_id == 0:  # Hotspot
+                        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                        final_hotspots.append(area)
+                        final_hotspot_confs.append(conf_score) # Store confidence
+                        #print(f"Hotspot Confirmed ({conf_score:.2f}): Area = {area:.2f} px²")
+
+            # 4. Summary Calculations
+            if final_panels and final_hotspots:
+                total_hotspot_area = sum(final_hotspots)
+                avg_panel_area = sum(final_panels) / len(final_panels)
+                impact_ratio = (total_hotspot_area / avg_panel_area) * 100
+                
+                # NEW: Calculate Average Confidence of the detected impact
+                avg_impact_conf = (sum(final_hotspot_confs) / len(final_hotspot_confs)) * 100
+            print("returned1",impact_ratio,avg_impact_conf,len(final_panels),len(final_hotspots))
             return {
                 "status": "Success",
-                "numPanels": len(panel_areas),
-                "numHotspot": len(hotspot_areas),
+                "numPanels": len(final_panels),
+                "numHotspot": len(final_hotspots),
                 "panelHotspotRatio": impact_ratio,
                 "confidence": (
-                    sum(confidences) / len(confidences) if confidences else 0.0
+                    avg_impact_conf 
                 ),
                 "image": img,
             }
