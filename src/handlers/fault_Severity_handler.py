@@ -162,7 +162,6 @@ class FaultSeverityHandler(Handler):
             result_images=self.__last_run_details if is_image else {},
             result_readings=[self.__last_run_details] if not is_image else [],
         )
-        self.__logger.info("AnalysisResult successfully constructed.")
 
     @property
     def severity_level(self) -> Any:
