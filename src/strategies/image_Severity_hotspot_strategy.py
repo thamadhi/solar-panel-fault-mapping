@@ -112,7 +112,6 @@ class ImageHotspotStrategy(FaultDetectionStrategy):
                 
                 # NEW: Calculate Average Confidence of the detected impact
                 avg_impact_conf = (sum(final_hotspot_confs) / len(final_hotspot_confs)) * 100
-            print("returned1",impact_ratio,avg_impact_conf,len(final_panels),len(final_hotspots))
             return {
                 "status": "Success",
                 "numPanels": len(final_panels),
