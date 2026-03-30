@@ -77,7 +77,6 @@ def predict_image(uploaded_file, token: str) -> dict:
         HTTPError: If the server returns a non 200 response.
     """
 
-    """
     # Prepare multipart/form-data (convert UploadFile object into multipart)
     files = {
         "image": (
@@ -96,7 +95,6 @@ def predict_image(uploaded_file, token: str) -> dict:
 
     r.raise_for_status()
     return r.json()
-    """
 
 
 def explain_electrical(records, row_idx: int, token: str) -> dict:
