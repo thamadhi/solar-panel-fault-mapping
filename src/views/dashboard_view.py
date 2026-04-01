@@ -4,7 +4,7 @@ import plotly.express as px
 from src.database import fetch_latest, fetch_fault_trend_daily, get_conn
 from typing import List, Tuple, Any
 
-
+st.set_page_config(initial_sidebar_state="expanded")
 class Dashboard:
     def __init__(self):
         pass

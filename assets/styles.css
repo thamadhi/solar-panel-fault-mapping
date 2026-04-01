@@ -1,23 +1,88 @@
-/* Page background */
-.main {
-    background-color: #ffffff;
+/* ============================================================
+   Updated styles.css — Original Text Colors & Light Green Boxes
+   ============================================================ */
+
+/* ── Base ── */
+.main, .stApp {
+    background-color: #e6e6ef;
 }
 
-/* Metric cards */
+html, body, [class*="css"] {
+    color: #055248; /* Reverted to Original Dark Teal */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+#MainMenu, footer, header { visibility: hidden; }
+
+/* ── Headings ── */
+h1, h2, h3, h4 {
+    color: #055248 !important; /* Reverted to Original Dark Teal */
+    font-weight: 700;
+}
+
+p { color: #055248; } /* Reverted to Original Dark Teal */
+
+/* ── Metric cards / Boxes ── */
 .stMetric {
-    background-color: #000000;
-    padding: 15px; 
-    border-radius: 10px
+    background-color: #f0f7f0 !important; /* Kept Light Green Box */
+    padding: 20px;
+    border-radius: 14px;
+    border: 1px solid #d4e6d4;
+    box-shadow: 0 4px 6px -1px rgba(5, 82, 72, 0.06);
 }
 
-/* Buttons */
-.stButton > button {
-    width: 100%;
-    border-radius: 5px;
-    height: 4em
+div[data-testid="stMetricLabel"] {
+    color: #8aab8a; /* Reverted to Original Muted Green */
+    font-size: 0.875rem;
+    font-weight: 500;
 }
 
-/* Success box */
+div[data-testid="stMetricValue"] {
+    color: #499351; /* Reverted to Original Forest Green */
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* ── Alerts / Success Boxes ── */
 .stAlert {
-    border-radius: 10px;
+    background-color: #f0f7f0 !important; /* Kept Light Green */
+    border-radius: 12px !important;
+    border: 1px solid #d4e6d4 !important;
+    border-left: 3px solid #499351 !important;
+    color: #055248 !important;
+}
+
+/* ── Dataframe / Tables ── */
+.stDataFrame,
+div[data-testid="stDataFrame"] {
+    background-color: #f0f7f0 !important; /* Kept Light Green */
+    border-radius: 12px;
+}
+
+[data-testid="stDataFrame"] td {
+    color: #055248 !important; /* Reverted to Original Dark Teal */
+}
+
+/* ── Expander ── */
+[data-testid="stExpander"],
+.streamlit-expanderHeader {
+    background-color: #f0f7f0 !important; /* Kept Light Green */
+    color: #055248 !important;
+}
+
+/* ── Radio buttons ── */
+div[role="radiogroup"] {
+    background-color: #f0f7f0 !important; /* Kept Light Green */
+}
+
+/* ── Plotly chart container ── */
+.js-plotly-plot {
+    background-color: #f0f7f0 !important; /* Kept Light Green */
+    border-radius: 12px;
+}
+
+/* ── Buttons (Maintained Theme) ── */
+.stButton > button {
+    border: 2px solid #499351 !important;
+    color: #055248 !important;
 }
