@@ -455,7 +455,6 @@ class AppRouter:
                 "Localisation": "Localisation",
                 "Severity": "Severity",
                 "Rectification": "Rectification",
-                "Reports": "Export Reports",
                 "History": "Activity Log",
                 "PV System Config": "System Config",
                 "Help": "Support Center",
