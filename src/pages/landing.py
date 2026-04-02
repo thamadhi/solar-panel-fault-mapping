@@ -163,6 +163,26 @@ def inject_dynamic_background():
                 background: #055248 !important;
                 border-color: #055248 !important;
             }
+
+            /* Operator login button (RIGHT SIDE NAVBAR) */
+            .operator-login-btn {
+                background: #499351;
+                color: white;
+                padding: 0.55rem 1.6rem;
+                border-radius: 50px;
+                font-weight: 700;
+                border: none;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-size: 0.9rem;
+            }
+
+            .operator-login-btn:hover {
+                background: #055248;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(5,82,72,0.25);
+            }
+            
         </style>
         
         <!-- Font Awesome CDN for icons -->
@@ -190,17 +210,11 @@ def inject_dynamic_background():
 
 def render_navbar():
     """Render the custom navigation bar"""
-    st.markdown("""
-    <div class="custom-navbar">
-        <div class="nav-logo">PVInsight AI</div>
-        <div class="nav-links">
-            <button class="nav-link" onclick="scrollToSection('home')">Home</button>
-            <button class="nav-link" onclick="scrollToSection('features')">Features</button>
-            <button class="nav-link" onclick="scrollToSection('about')">About</button>
-            <button class="nav-login-btn" onclick="document.querySelector('[data-testid=\"baseButton-secondary\"]')?.click() || document.querySelector('.stButton button')?.click()">Sign In</button>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    if st.button("Operator Log In", key="signin"):
+        st.session_state.show_auth = True
+        st.session_state.auth_view = "login"
+        st.session_state.scroll_to = "auth"
+        st.rerun()
 
 
 def show_landing_page() -> None:

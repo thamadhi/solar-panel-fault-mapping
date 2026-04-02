@@ -178,7 +178,7 @@ class FaultDetectionHandler(Handler):
         if source == "image":
             self.result = AnalysisResult(
                 result=self.__fault_type.get_fault_type,
-                image_confidence=float(self.__last_run_details.get("confidence", 0.0)),
+                image_confidence=float(self.__last_run_details.get("confidence")),
                 reading_confidence=0.0,
                 result_images=[self.__processed_image_path],
                 result_readings=[],
@@ -187,10 +187,10 @@ class FaultDetectionHandler(Handler):
             self.result = AnalysisResult(
                 result=self.__fault_type.get_fault_type,
                 reading_confidence=float(
-                    self.__last_run_details.get("confidence", 0.0)
+                    self.__last_run_details.get("confidence")
                 ),
                 image_confidence=0.0,
-                result_readings=self.__last_run_details.get("detailed_predictions", []),
+                result_readings=self.__last_run_details.get("detailed_predictions"),
                 result_images=[],
             )
         else:
