@@ -14,18 +14,18 @@ class AppRouter:
         # Define access levels for each user type
         self.ROLE_PERMISSIONS = {
             "Technician": [
-                "Dashboard", "Fault Detection", "Localisation","Rectification"   
-                "History", "PV System Config", "Help"
+                "Dashboard", "Fault Detection", "Localisation","Rectification",   
+                "History", "PV System Config"
             ],
             "Admin": [
                 "Dashboard", "Fault Detection", "Localisation", 
-                "Severity", "History", "PV System Config", "Help"
+                "Severity", "History", "PV System Config"
             ],
             "Solar PV Operator": [
                 "Dashboard", "Fault Detection", "Localisation", 
-                "Severity", "History", "PV System Config", "Help"
+                "Severity", "History", "PV System Config"
             ],
-            "Standard": ["Dashboard", "Help"] # Default fallback
+            "Standard": ["Dashboard"] # Default fallback
         }
 
     def _inject_theme_css(self):
