@@ -1,7 +1,7 @@
 from src.database.db import get_user_by_username
 from src.authentication.security import verify_password
 from src.models.user import User
-from src.database.user_repo import create_user, username_exists, email_exists
+from src.database.user_repo import db_create_user, db_username_exists, db_email_exists
 
 
 def login(username: str, password: str) -> User | None:
@@ -67,13 +67,13 @@ def register_user(
     if len(password) < 6:
         return False, "Password must be at least 6 characters."
 
-    if username_exists(username):
+    if db_username_exists(username):
         return False, "Username already exists."
 
-    if email_exists(email):
+    if db_email_exists(email):
         return False, "Email already exists."
 
-    create_user(
+    db_create_user(
         user_type=user_type,
         username=username.strip(),
         email=email.strip(),

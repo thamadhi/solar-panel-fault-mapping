@@ -403,8 +403,6 @@ class AppRouter:
                     padding: 2rem 2.5rem 4rem;
                     max-width: 1400px;
                 }
-
-                #MainMenu, footer, header { visibility: hidden; }
             </style>
         """,
             unsafe_allow_html=True,
@@ -541,5 +539,6 @@ class AppRouter:
             )
 
     def run(self) -> None:
+        self.force_open_sidebar()
         page = self.render_side_bar()
         self.route(page)

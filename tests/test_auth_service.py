@@ -77,8 +77,8 @@ def test_register_user_password_too_short():
 
 
 def test_register_user_username_exists(monkeypatch):
-    monkeypatch.setattr(auth, "username_exists", lambda username: True)
-    monkeypatch.setattr(auth, "email_exists", lambda email: False)
+    monkeypatch.setattr(auth, "db_username_exists", lambda username: True)
+    monkeypatch.setattr(auth, "db_email_exists", lambda email: False)
 
     ok, msg = auth.register_user("User", "alice", "alice@example.com", "secret123")
     assert ok is False
@@ -86,8 +86,8 @@ def test_register_user_username_exists(monkeypatch):
 
 
 def test_register_user_email_exists(monkeypatch):
-    monkeypatch.setattr(auth, "username_exists", lambda username: False)
-    monkeypatch.setattr(auth, "email_exists", lambda email: True)
+    monkeypatch.setattr(auth, "db_username_exists", lambda username: False)
+    monkeypatch.setattr(auth, "db_email_exists", lambda email: True)
 
     ok, msg = auth.register_user("User", "alice", "alice@example.com", "secret123")
     assert ok is False
@@ -95,11 +95,11 @@ def test_register_user_email_exists(monkeypatch):
 
 
 def test_register_user_success_calls_create_user(monkeypatch):
-    monkeypatch.setattr(auth, "username_exists", lambda username: False)
-    monkeypatch.setattr(auth, "email_exists", lambda email: False)
+    monkeypatch.setattr(auth, "db_username_exists", lambda username: False)
+    monkeypatch.setattr(auth, "db_email_exists", lambda email: False)
 
     create_mock = MagicMock()
-    monkeypatch.setattr(auth, "create_user", create_mock)
+    monkeypatch.setattr(auth, "db_create_user", create_mock)
 
     ok, msg = auth.register_user("Admin", " alice ", " alice@example.com ", "secret123")
     assert ok is True
