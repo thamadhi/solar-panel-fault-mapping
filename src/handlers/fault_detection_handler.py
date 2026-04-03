@@ -1,8 +1,5 @@
-# Standard libraries
 from typing import Any, Dict, List, Optional
 from typing_extensions import override
-
-# Local/project imports
 from src.handlers.handler import Handler
 from src.core.analysis_result import AnalysisResult
 from src.strategies.electrical_rf_strategy import ElectricalRF
