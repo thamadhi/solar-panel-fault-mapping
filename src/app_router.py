@@ -14,7 +14,7 @@ class AppRouter:
         # Define access levels for each user type
         self.ROLE_PERMISSIONS = {
             "Technician": [
-                "Dashboard", "Fault Detection", "Localisation", 
+                "Dashboard", "Fault Detection", "Localisation","Rectification"   
                 "History", "PV System Config", "Help"
             ],
             "Admin": [
@@ -164,6 +164,8 @@ class AppRouter:
             show_fault_localisation_page()
         elif page == "Severity":
             show_fault_severity_page()
+        elif page == "Rectification":
+            show_fault_rectification_page()            
         elif page == "History":
             show_history_page()
         elif page == "PV System Config":
