@@ -183,7 +183,7 @@ class FaultDetectionHandler(Handler):
                 result_images=[self.__processed_image_path],
                 result_readings=[],
             )
-        elif source == "electrical":  # Default to electrical
+        elif source == "electrical":
             self.result = AnalysisResult(
                 result=self.__fault_type.get_fault_type,
                 reading_confidence=float(
