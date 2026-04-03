@@ -13,6 +13,21 @@ class AppRouter:
     def __init__(self):
         self._inject_theme_css()
 
+        self.ROLE_PERMISSIONS = {
+            "Technician": [
+                "Dashboard", "Fault Detection", "Localisation", "Rectification",
+                "History", "PV System Config"
+            ],
+            "Admin": [
+                "Dashboard", "Fault Detection", "Localisation",
+                "Severity", "History", "PV System Config"
+            ],
+            "Solar PV Operator": [
+                "Dashboard", "Fault Detection", "Localisation",
+                "Severity", "History", "PV System Config"
+            ],
+            "Standard": ["Dashboard"]  # Default fallback
+        }
     def _inject_theme_css(self):
         """Custom CSS matching the light green landing page theme."""
         st.markdown(
@@ -388,8 +403,6 @@ class AppRouter:
                     padding: 2rem 2.5rem 4rem;
                     max-width: 1400px;
                 }
-
-                #MainMenu, footer, header { visibility: hidden; }
             </style>
         """,
             unsafe_allow_html=True,
@@ -455,17 +468,20 @@ class AppRouter:
                 "Localisation": "Localisation",
                 "Severity": "Severity",
                 "Rectification": "Rectification",
-                "Reports": "Export Reports",
                 "History": "Activity Log",
                 "PV System Config": "System Config",
                 "Help": "Support Center",
             }
 
-            for key, label in nav_items.items():
-                if st.button(label, key=f"nav_{key}"):
-                    st.session_state.current_page = key
-                    st.rerun()
+            # 🔐 Get current user role
+            user_type = getattr(user, 'type', 'Standard')
+            allowed_pages = self.ROLE_PERMISSIONS.get(user_type, self.ROLE_PERMISSIONS["Standard"])
 
+            for key, label in nav_items.items():
+                if key in allowed_pages:  # 👈 filter menu by role
+                    if st.button(label, key=f"nav_{key}"):
+                        st.session_state.current_page = key
+                        st.rerun()
             # Logout
             st.markdown('<div class="logout-btn">', unsafe_allow_html=True)
             if st.button("Terminate Session", key="logout"):
@@ -485,6 +501,17 @@ class AppRouter:
         Returns:
             None
         """
+        # Block manual URL / session hacking
+        user = st.session_state.get("user")
+        if not user:
+            return
+
+        user_type = getattr(user, 'type', 'Standard')
+        allowed_pages = self.ROLE_PERMISSIONS.get(user_type, [])
+
+        if page not in allowed_pages:
+            st.error("Access Denied.")
+            return
         if page == "Dashboard":
             show_dashboard_page()
         elif page == "Fault Detection":
@@ -512,5 +539,6 @@ class AppRouter:
             )
 
     def run(self) -> None:
+        self.force_open_sidebar()
         page = self.render_side_bar()
         self.route(page)
