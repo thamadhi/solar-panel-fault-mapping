@@ -108,9 +108,11 @@ def test_create_user_and_get_user_by_username(monkeypatch, initialized_db):
     suffix = str(id(initialized_db))
     username = f"alice_{suffix}"
     email = f"alice_{suffix}@example.com"
-
-    user_id = db.create_user(
-        user_type="Admin", username=username, email=email, password="secret123"
+    user_id = db.db_create_user(
+        user_type="Admin",
+        username=username,
+        email=email,
+        password="secret123"  # This will get hashed inside db_create_user
     )
     assert user_id > 0
 
