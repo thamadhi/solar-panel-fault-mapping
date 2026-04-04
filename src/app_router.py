@@ -518,10 +518,12 @@ class AppRouter:
             show_fault_detection_page()
         elif page == "Localisation":
             show_fault_localisation_page()
-        elif page == "History":
-            show_history_page()
         elif page == "Severity":
             show_fault_severity_page()
+        elif page == "Rectification":
+            show_fault_rectification_page()            
+        elif page == "History":
+            show_history_page()
         elif page == "PV System Config":
             render_pv_system_config()
         elif page == "Help":
@@ -534,7 +536,7 @@ class AppRouter:
                     <h3 style="color:#055248;">{page} Module</h3>
                     <p style="color:#8aab8a;">This analytics engine is currently being updated for better precision.</p>
                 </div>
-            """,
+                """,
                 unsafe_allow_html=True,
             )
 
