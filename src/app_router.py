@@ -473,12 +473,12 @@ class AppRouter:
                 "Help": "Support Center",
             }
 
-            # 🔐 Get current user role
+            # Get current user role
             user_type = getattr(user, 'type', 'Standard')
             allowed_pages = self.ROLE_PERMISSIONS.get(user_type, self.ROLE_PERMISSIONS["Standard"])
 
             for key, label in nav_items.items():
-                if key in allowed_pages:  # 👈 filter menu by role
+                if key in allowed_pages:  # filter menu by role
                     if st.button(label, key=f"nav_{key}"):
                         st.session_state.current_page = key
                         st.rerun()
