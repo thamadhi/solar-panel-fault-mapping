@@ -8,25 +8,10 @@ from src.pages.fault_severity import show_fault_severity_page
 from src.pages.pv_system_config import render_pv_system_config
 from src.pages.help import render_help_page
 
+
 class AppRouter:
     def __init__(self):
         self._inject_theme_css()
-        # Define access levels for each user type
-        self.ROLE_PERMISSIONS = {
-            "Technician": [
-                "Dashboard", "Fault Detection", "Localisation","Rectification",   
-                "History", "PV System Config"
-            ],
-            "Admin": [
-                "Dashboard", "Fault Detection", "Localisation", 
-                "Severity", "History", "PV System Config"
-            ],
-            "Solar PV Operator": [
-                "Dashboard", "Fault Detection", "Localisation", 
-                "Severity", "History", "PV System Config"
-            ],
-            "Standard": ["Dashboard"] # Default fallback
-        }
 
         self.ROLE_PERMISSIONS = {
             "Technician": [
@@ -419,7 +404,7 @@ class AppRouter:
                     max-width: 1400px;
                 }
             </style>
-            """,
+        """,
             unsafe_allow_html=True,
         )
 
@@ -431,13 +416,18 @@ class AppRouter:
             return ""
 
     def render_side_bar(self) -> str:
+        """
+        Renders the sidebar once the user logs into the system.
+        """
         data_url = self._gif_to_base64("assets/cloudyRain.gif")
         user = st.session_state.get("user")
 
+        # Initialize navigation state if not exists
         if "current_page" not in st.session_state:
             st.session_state.current_page = "Dashboard"
 
         with st.sidebar:
+            # Branding
             if data_url:
                 st.markdown(
                     f'<img src="data:image/gif;base64,{data_url}" style="width:100%; border-radius:12px; margin-bottom:8px;">',
@@ -457,8 +447,7 @@ class AppRouter:
                 st.info("Welcome! Please login.")
                 return "Login"
 
-            user_type = getattr(user, 'type', 'Standard')
-            
+            # Profile Info
             st.markdown(
                 f"""
                 <div class="user-box">
@@ -466,7 +455,7 @@ class AppRouter:
                     <strong>{user.username}</strong><br>
                     <code>{getattr(user, 'type', 'Standard')} Mode</code>
                 </div>
-                """,
+            """,
                 unsafe_allow_html=True,
             )
 
@@ -504,16 +493,10 @@ class AppRouter:
         return st.session_state.current_page
 
     def route(self, page: str) -> None:
-        user = st.session_state.get("user")
-        if not user: return
-        
-        user_type = getattr(user, 'type', 'Standard')
-        allowed_pages = self.ROLE_PERMISSIONS.get(user_type, [])
+        """Route the user to the selected page.
 
-        # Security check: If they manually try to route to a page they can't access
-        if page not in allowed_pages:
-            st.error("Access Denied.")
-            return
+        Args:
+            page (str): The page being directed to.
 
         Returns:
             None
