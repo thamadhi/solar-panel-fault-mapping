@@ -1,0 +1,273 @@
+/* assets/styles.css */
+
+/* ===== BASE STYLES ===== */
+.stApp {
+    background-color: #0F172A;
+}
+
+/* Custom container for alignment */
+.block-container {
+    padding-top: 2rem;
+    max-width: 95%;
+}
+
+/* Headers */
+h1, h2, h3 {
+    color: #F9FAFB;
+    font-weight: 600;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+h1 {
+    font-size: 2.5rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+}
+
+/* ===== METRICS STYLING ===== */
+.stMetric {
+    background-color: #1F2937;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #374151;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.stMetric:hover {
+    transform: translateY(-2px);
+    border-color: #4B5563;
+}
+
+div[data-testid="stMetricLabel"] {
+    color: #9CA3AF;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.025em;
+}
+
+div[data-testid="stMetricValue"] {
+    color: #F9FAFB;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* ===== DIAGNOSTIC CARDS ===== */
+.diagnostic-card {
+    background-color: #1F2937;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #374151;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.diagnostic-card h3 {
+    margin-top: 0;
+    color: #F9FAFB;
+    border-bottom: 1px solid #374151;
+    padding-bottom: 0.75rem;
+}
+
+/* ===== LOCALIZATION PAGE SPECIFIC STYLES ===== */
+.localization-header {
+    background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+    padding: 1.5rem;
+    border-radius: 16px;
+    border-left: 6px solid #3B82F6;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+}
+
+.faulty-string-badge {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 4px;
+    display: inline-block;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.normal-string-badge {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 4px;
+    display: inline-block;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ===== TABS STYLING ===== */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 8px;
+    background-color: #1F2937;
+    padding: 0.5rem;
+    border-radius: 12px;
+    border: 1px solid #374151;
+}
+
+.stTabs [data-baseweb="tab"] {
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    background-color: transparent;
+    color: #9CA3AF;
+}
+
+.stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%) !important;
+    color: white !important;
+}
+
+/* ===== BUTTON STYLING ===== */
+.stButton > button {
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+}
+
+.stButton > button:active {
+    transform: translateY(0);
+}
+
+/* Secondary button */
+.stButton > button[kind="secondary"] {
+    background: transparent;
+    border: 1px solid #4B5563;
+    color: #F9FAFB;
+}
+
+/* ===== FILE UPLOADER ===== */
+.stFileUploader {
+    background-color: #1F2937;
+    border: 2px dashed #4B5563;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.stFileUploader:hover {
+    border-color: #3B82F6;
+}
+
+/* ===== DATAFRAME STYLING ===== */
+div[data-testid="stDataFrame"] {
+    background-color: #1F2937;
+    border-radius: 12px;
+    border: 1px solid #374151;
+    padding: 1rem;
+}
+
+/* ===== PLOTLY CHART CONTAINER ===== */
+.js-plotly-plot {
+    background-color: #1F2937;
+    border-radius: 12px;
+    border: 1px solid #374151;
+    padding: 1rem;
+}
+
+/* ===== SUCCESS/ERROR/INFO MESSAGES ===== */
+.stAlert {
+    border-radius: 10px;
+    border-left-width: 4px;
+}
+
+div[data-baseweb="notification"] {
+    background-color: #1F2937;
+    border: 1px solid #374151;
+    border-radius: 10px;
+}
+
+/* ===== SPINNER ===== */
+div[data-testid="stSpinner"] {
+    text-align: center;
+}
+
+div[data-testid="stSpinner"] > div {
+    border-color: #3B82F6 #3B82F6 transparent transparent;
+}
+
+/* ===== SIDEBAR ===== */
+section[data-testid="stSidebar"] {
+    background-color: #111827;
+    border-right: 1px solid #374151;
+}
+
+section[data-testid="stSidebar"] .stRadio > div {
+    background-color: #1F2937;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid #374151;
+}
+
+/* ===== RADIO BUTTONS ===== */
+div[role="radiogroup"] {
+    background-color: #1F2937;
+    padding: 0.5rem;
+    border-radius: 10px;
+    border: 1px solid #374151;
+}
+
+div[data-testid="stRadio"] label {
+    color: #F9FAFB !important;
+}
+
+/* ===== EXPANDER ===== */
+.streamlit-expanderHeader {
+    background-color: #1F2937;
+    border-radius: 8px;
+    border: 1px solid #374151;
+    color: #F9FAFB;
+}
+
+.streamlit-expanderContent {
+    background-color: #1F2937;
+    border: 1px solid #374151;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1F2937;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4B5563;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #6B7280;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.main > div {
+    animation: fadeIn 0.3s ease-out;
+}

@@ -1,0 +1,170 @@
+html, body, [class*="css"] {
+    background-color: #0a0c10 !important;
+    /* Changed to pure white */
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+#MainMenu, footer, header { visibility: hidden; }
+.block-container { padding: 2rem 2.5rem 4rem; max-width: 1400px; }
+
+/* ── Page header ── */
+.dash-title {
+    font-family: sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    /* Changed to pure white */
+    color: #ffffff;
+    margin: 0 0 0.2rem;
+}
+.dash-sub {
+    font-size: 0.75rem;
+    /* Changed to pure white */
+    color: #ffffff;
+    letter-spacing: 0.05em;
+    margin-bottom: 2rem;
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+}
+
+/* ── Section label ── */
+.section-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    /* Changed to pure white */
+    color: #ffffff;
+    border-bottom: 1px solid #1e2128;
+    padding-bottom: 0.4rem;
+    margin: 1.75rem 0 0.75rem;
+}
+.section-desc {
+    font-size: 0.72rem;
+    /* Changed to pure white */
+    color: #ffffff;
+    line-height: 1.6;
+    margin: 0 0 1rem;
+    font-family: -apple-system, 'Segoe UI', sans-serif !important;
+    letter-spacing: 0 !important;
+}
+
+/* ── Metric cards ── */
+.metric-card {
+    background: #111318;
+    border: 1px solid #1e2128;
+    border-top: 2px solid #f0a500;
+    padding: 1.1rem 1.4rem;
+    border-radius: 4px;
+}
+.metric-card.blue  { border-top-color: #3b82f6; }
+.metric-card.green { border-top-color: #10b981; }
+.metric-card.red   { border-top-color: #ef4444; }
+
+.metric-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    /* Changed to pure white */
+    color: #ffffff;
+    margin-bottom: 0.4rem;
+}
+.metric-value {
+    font-family: sans-serif;
+    font-size: 1.8rem;
+    font-weight: 800;
+    /* Base value changed to white; specific colored cards below override this if used */
+    color: #ffffff;
+    line-height: 1;
+}
+
+/* Note: If you want these values to ALSO be white instead of blue/green/red, 
+   change the hex codes below to #ffffff. Currently keeping brand colors for status. */
+.metric-card.blue  .metric-value { color: #3b82f6; }
+.metric-card.green .metric-value { color: #10b981; }
+.metric-card.red   .metric-value { color: #ef4444; }
+
+.metric-hint {
+    font-size: 0.6rem;
+    /* Changed to pure white */
+    color: #ffffff;
+    margin-top: 0.35rem;
+    line-height: 1.4;
+    font-family: -apple-system, 'Segoe UI', sans-serif !important;
+    letter-spacing: 0 !important;
+}
+
+/* ── Insight callouts ── */
+.insight-box {
+    background: rgba(240,165,0,0.06);
+    border: 1px solid rgba(240,165,0,0.2);
+    border-left: 3px solid #f0a500;
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    font-size: 0.72rem;
+    /* Changed to pure white */
+    color: #ffffff;
+    line-height: 1.6;
+    font-family: -apple-system, 'Segoe UI', sans-serif !important;
+    letter-spacing: 0 !important;
+}
+
+/* ── Tabs ── */
+[data-baseweb="tab-list"] {
+    background: #111318 !important;
+    border: 1px solid #1e2128;
+    border-radius: 4px;
+    padding: 4px;
+    gap: 4px;
+}
+[data-baseweb="tab"] {
+    font-family: inherit !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.05em;
+    /* Unselected tab text changed to white */
+    color: #ffffff !important;
+    border-radius: 2px !important;
+    padding: 6px 20px !important;
+}
+[aria-selected="true"][data-baseweb="tab"] {
+    background: #f0a500 !important;
+    color: #000 !important; /* Kept black for contrast on yellow background */
+    font-weight: 700 !important;
+}
+
+/* ── Dataframe ── */
+.stDataFrame { border: 1px solid #1e2128 !important; border-radius: 4px; }
+[data-testid="stDataFrame"] th {
+    background: #111318 !important;
+    /* Changed header text to white */
+    color: #ffffff !important;
+    font-size: 0.62rem !important;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+[data-testid="stDataFrame"] td {
+    font-size: 0.8rem !important;
+    /* Changed cell text to white */
+    color: #ffffff !important;
+}
+
+/* ── Slider ── */
+[data-testid="stSlider"] label {
+    font-size: 0.7rem !important;
+    letter-spacing: 0.08em;
+    /* Changed slider label to white */
+    color: #ffffff !important;
+    text-transform: uppercase;
+}
+
+/* ── Alert ── */
+.stAlert {
+    background: #111318 !important;
+    border: 1px solid #1e2128 !important;
+    border-left: 3px solid #f0a500 !important;
+    /* Changed alert text to white */
+    color: #ffffff !important;
+    font-size: 0.78rem;
+    border-radius: 4px;
+}
+hr { border-color: #1e2128 !important; margin: 1.5rem 0; }

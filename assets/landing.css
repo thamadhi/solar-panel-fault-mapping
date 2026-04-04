@@ -1,0 +1,139 @@
+/* Text and background color */
+.stApp {
+    background-color: #111827;
+    color: #F3F4F6;
+}
+
+.brand-text {
+    color: #FBBF24;
+    font-weight: 700;
+}
+
+/* Default button styling */
+div.stButton > button {
+    border-radius: 100px !important;
+    padding: 10px 28px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    border: 2px solid #055248 !important;
+    background-color: transparent !important;
+    color: #D1D5DB !important;
+}
+
+div.stButton > button[kind="primary"] {
+    background: #FBBF24 !important;
+    color: #000000 !important;
+    border: 2px solid #FBBF24 !important;
+    box-shadow: 0px 4px 12px rgba(251, 191, 36, 0.2);
+}
+
+/* Button hover effect*/
+div.stButton > button:hover {
+    transform: translateY(-2px);
+    border-color: #FBBF24 !important;
+    color: white !important;
+}
+
+div.stButton > button[kind="primary"]:hover {
+    color: #000000 !important;
+    background: #FCD34D !important;
+}
+
+/* Feature card styling */
+.feature-card {
+    background: #1F2937;
+    padding: 30px;
+    border-radius: 20px;
+    border: 1px solid #374151;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    height: 100%;
+    min-height: 360px;
+    text-align: center;
+}
+
+/* Make columns stretch properly */
+div[data-testid="column"] > div {
+    height: 100%;
+}
+
+.feature-card h3 {
+    color: #FBBF24 !important;
+    margin-top: 15px !important;
+}
+
+h1 {
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
+}
+
+.hero-sub {
+    color: #9CA3AF !important;
+    font-size: 1.2rem !important;
+    line-height: 1.6 !important;
+}
+
+
+/* Card buttons */
+button[key^="card_"] {
+    width: 100% !important;
+    text-align: left !important;
+    background: #1F2937 !important;
+    border: 1px solid #374151 !important;
+    border-radius: 20px !important;
+    padding: 26px !important;
+    color: #F3F4F6 !important;
+    transition: all 0.2s ease !important;
+    height: 360px !important;
+    white-space: normal !important;
+}
+
+/* Hover */
+button[key^="card_"]:hover {
+    transform: translateY(-4px) !important;
+    border-color: #FBBF24 !important;
+}
+
+/* Interactive Feature Cards */
+div.stButton > button[key^="card_"] {
+    width: 100% !important;
+    height: 360px !important;            /* card height */
+    border-radius: 20px !important;      /* card corners */
+    padding: 26px !important;            /* card padding */
+    background: #1F2937 !important;      /* card bg */
+    border: 1px solid #374151 !important;
+    color: #F3F4F6 !important;
+    text-align: left !important;
+    white-space: normal !important;      /* allow wrap */
+    line-height: 1.4 !important;
+    display: flex !important;            /* enables vertical layout */
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+}
+
+/* Hover */
+div.stButton > button[key^="card_"]:hover {
+    transform: translateY(-4px) !important;
+    border-color: #FBBF24 !important;
+}
+
+/* Remove focus glow if any */
+div.stButton > button[key^="card_"]:focus {
+    box-shadow: none !important;
+}
+.circle-image {
+    display: flex;
+    justify-content: center;
+}
+
+.circle-image img {
+    width: 400px;              /* size */
+    height: 400px;             /* must be equal for perfect circle */
+    border-radius: 50%;        /* makes it circular */
+    object-fit: cover;         /* crop properly */
+    border: 4px solid #FBBF24;  /* Premium border */
+}

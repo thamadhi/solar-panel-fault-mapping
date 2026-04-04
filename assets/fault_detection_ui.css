@@ -1,0 +1,256 @@
+:root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --border: #1e2128;
+    --accent: #f0a500;
+    --accent2: #3b82f6;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --good: #10b981;
+    --danger: #ef4444;
+}
+
+/* Base */
+html, body, [class*="css"] {
+    background-color: var(--bg) !important;
+    color: var(--text);
+    font-family: sans-serif;
+}
+
+#MainMenu, footer, header { visibility: hidden; }
+
+.block-container {
+    padding: 2rem 2.5rem 4rem;
+    max-width: 1400px;
+}
+
+/* Page title */
+.page-title {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin: 0 0 0.2rem;
+}
+
+.page-sub {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 2rem;
+}
+
+/* Section label */
+.section-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.4rem;
+    margin: 1.75rem 0 1rem;
+}
+
+/* Fault badge */
+.fault-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(240,165,0,0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 2px;
+    margin-bottom: 1.25rem;
+}
+
+.fault-badge.normal {
+    background: rgba(16,185,129,0.1);
+    border-color: var(--good);
+    color: var(--good);
+}
+
+/* Metric cards */
+.metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    padding: 1.1rem 1.4rem;
+    border-radius: 4px;
+}
+
+.metric-card.blue  { border-top-color: var(--accent2); }
+.metric-card.green { border-top-color: var(--good); }
+.metric-card.red   { border-top-color: var(--danger); }
+
+.metric-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+}
+
+.metric-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+}
+
+.metric-card.blue  .metric-value { color: var(--accent2); }
+.metric-card.green .metric-value { color: var(--good); }
+.metric-card.red   .metric-value { color: var(--danger); }
+
+/* Upload zone */
+[data-testid="stFileUploader"] {
+    background: var(--surface) !important;
+    border: 1px dashed var(--border) !important;
+    border-radius: 4px !important;
+    padding: 0.5rem !important;
+}
+
+[data-testid="stFileUploader"] label {
+    font-size: 0.72rem !important;
+    letter-spacing: 0.08em;
+    color: var(--muted) !important;
+    text-transform: uppercase;
+}
+
+/* Tabs */
+[data-baseweb="tab-list"] {
+    background: var(--surface) !important;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px;
+    gap: 4px;
+}
+
+[data-baseweb="tab"] {
+    font-size: 0.72rem !important;
+    letter-spacing: 0.05em;
+    color: var(--muted) !important;
+    border-radius: 2px !important;
+    padding: 6px 20px !important;
+}
+
+[aria-selected="true"][data-baseweb="tab"] {
+    background: var(--accent) !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+}
+
+/* Button */
+[data-testid="baseButton-primary"] {
+    background: var(--accent) !important;
+    color: #000 !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: none !important;
+    border-radius: 2px !important;
+}
+
+[data-testid="baseButton-primary"]:hover {
+    background: #d49200 !important;
+}
+
+/* Dataframe */
+.stDataFrame {
+    border: 1px solid var(--border) !important;
+    border-radius: 4px;
+}
+
+[data-testid="stDataFrame"] th {
+    background: var(--surface) !important;
+    color: var(--muted) !important;
+    font-size: 0.62rem !important;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+[data-testid="stDataFrame"] td {
+    font-size: 0.8rem !important;
+    color: var(--text) !important;
+}
+
+/* Expander */
+[data-testid="stExpander"] {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 4px !important;
+}
+
+[data-testid="stExpander"] summary {
+    font-size: 0.72rem !important;
+    letter-spacing: 0.08em;
+    color: var(--muted) !important;
+    text-transform: uppercase;
+}
+
+/* Alerts */
+.stAlert {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-left: 3px solid var(--accent) !important;
+    color: var(--muted) !important;
+    font-size: 0.78rem;
+    border-radius: 4px;
+}
+
+/* Progress bar */
+[data-testid="stProgressBar"] > div > div {
+    background: var(--accent) !important;
+}
+
+/* Spinner */
+[data-testid="stSpinner"] {
+    color: var(--accent) !important;
+}
+
+/* Steps */
+.step-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.step-row:last-child { border-bottom: none; }
+
+.step-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--muted);
+    font-size: 0.6rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.step-num.done { background: var(--good); color: #000; }
+.step-num.active { background: var(--accent); color: #000; }
+
+.step-text {
+    font-size: 0.72rem;
+    color: var(--muted);
+}
+
+.step-text.active {
+    color: var(--text);
+    font-weight: 600;
+}
+
+hr {
+    border-color: var(--border) !important;
+    margin: 1.5rem 0;
+}
