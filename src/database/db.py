@@ -93,6 +93,8 @@ def init_db(db_path: str = DB_PATH) -> None:
         )
     """)
 
+    migrate_users_table()
+
     conn.commit()
     conn.close()
 
@@ -262,32 +264,73 @@ def fetch_logs(limit: int = 100, db_path: str = DB_PATH) -> List[Dict[str, Any]]
     return [dict(row) for row in rows]
 
 
-def create_user(user_type: str, username: str, email: str, password: str) -> int:
-    """
-    Creates a new user reord in the Users table.
-
-    The password is hashed using `hash_password()` before being stored.
-
-    Args:
-        user_type (str): User role/type (e.g., "Admin")
-        username (str): Unique username.
-        email (str): Unique email address.
-        password (str): Plaintext password (will be hashed before saving).
-
-    Returns:
-        int: The database ID of the newly creaed user.
-    """
-
+def db_create_user(user_type: str, username: str, email: str, password: str) -> int:
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO Users(type, username, email, password_hash) VALUES (?, ?, ?, ?)",
-        (user_type, username, email, hash_password(password)),
-    )
+
+    created_at = datetime.utcnow().isoformat()
+
+
+    cur.execute("""
+        INSERT INTO Users(type, username, email, password_hash, created_at, is_active)
+        VALUES (?, ?, ?, ?, ?, 1)
+    """, (user_type, username, email, hash_password(password), created_at))
+
     conn.commit()
     user_id = cur.lastrowid
     conn.close()
     return user_id
+
+def migrate_users_table():
+    conn = get_conn()
+    cur = conn.cursor()
+
+    # Add new columns if they don't exist
+    try:
+        cur.execute("ALTER TABLE Users ADD COLUMN created_at TEXT")
+    except:
+        pass
+
+    try:
+        cur.execute("ALTER TABLE Users ADD COLUMN last_login TEXT")
+    except:
+        pass
+
+    try:
+        cur.execute("ALTER TABLE Users ADD COLUMN is_active INTEGER DEFAULT 1")
+    except:
+        pass
+
+    conn.commit()
+    conn.close()
+
+def db_username_exists(username: str) -> bool:
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT 1 FROM Users WHERE username=?", (username,))
+    exists = cur.fetchone() is not None
+    conn.close()
+    return exists
+
+
+def db_email_exists(email: str) -> bool:
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT 1 FROM Users WHERE email=?", (email,))
+    exists = cur.fetchone() is not None
+    conn.close()
+    return exists
+
+
+def db_update_last_login(user_id: int):
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE Users SET last_login=? WHERE id=?",
+        (datetime.utcnow().isoformat(), user_id),
+    )
+    conn.commit()
+    conn.close()
 
 
 def get_user_by_username(username: str) -> sqlite3.Row | None:
@@ -324,16 +367,14 @@ def create_default_admin() -> None:
     Returns:
         None
     """
-
     existing = get_user_by_username("admin")
     if existing is None:
-        create_user(
+        db_create_user(
             user_type="Admin",
             username="admin",
             email="admin@solar.com",
             password="admin123",
         )
-
 
 def fetch_latest_faults(limit: int = 5) -> List[Dict[str, Any]]:
     """
