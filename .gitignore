@@ -65,3 +65,11 @@ notebooks/fault-detection/model-comparisons/metrics_summary.csv
 # Database / Data files
 *.db
 data/
+
+# Ignore everything in this folder
+notebooks/fault-detection/yolo_panel_detection_model/*
+
+# But keep YAML and notebooks and .py files
+!notebooks/fault-detection/yolo_panel_detection_model/*.yaml
+!notebooks/fault-detection/yolo_panel_detection_model/*.ipynb
+!notebooks/fault-detection/yolo_panel_detection_model/*.py
