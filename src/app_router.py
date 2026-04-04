@@ -539,6 +539,6 @@ class AppRouter:
             )
 
     def run(self) -> None:
-        self.force_open_sidebar()
+        #self.force_open_sidebar()
         page = self.render_side_bar()
         self.route(page)
