@@ -3,6 +3,7 @@ import streamlit as st
 from src.pages.dashboard import show_dashboard_page
 from src.pages.fault_detection import show_fault_detection_page
 from src.pages.fault_localisation import show_fault_localisation_page
+from src.pages.fault_rectification import show_fault_rectification_page
 from src.pages.history import show_history_page
 from src.pages.fault_severity import show_fault_severity_page
 from src.pages.pv_system_config import render_pv_system_config
