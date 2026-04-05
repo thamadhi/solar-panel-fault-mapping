@@ -20,7 +20,7 @@ class AppRouter:
                 "History", "PV System Config"
             ],
             "Admin": [
-                "Dashboard", "Fault Detection", "Localisation",
+                "Dashboard", "Fault Detection", "Localisation", "Rectification",
                 "Severity", "History", "PV System Config"
             ],
             "Solar PV Operator": [
