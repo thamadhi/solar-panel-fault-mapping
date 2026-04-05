@@ -99,3 +99,6 @@ data/
 *.rar
 *.mat
 *.csv
+
+# Tuned ANN
+tuner_results/
