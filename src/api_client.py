@@ -122,3 +122,16 @@ def explain_electrical(records, row_idx: int, token: str) -> dict:
     )
     r.raise_for_status()
     return r.json()
+
+def rectify_fault(data: dict, token: str) -> dict:
+    """
+    Send fault data to backend for rectification recommendations.
+    """
+    r = requests.post(
+        f"{API_BASE_URL}/rectify",
+        json=data,
+        headers=_headers(token),
+        timeout=60,
+    )
+    r.raise_for_status()
+    return r.json()
