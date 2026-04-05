@@ -77,7 +77,6 @@ def predict_image(uploaded_file, token: str) -> dict:
         HTTPError: If the server returns a non 200 response.
     """
 
-    """
     # Prepare multipart/form-data (convert UploadFile object into multipart)
     files = {
         "image": (
@@ -96,7 +95,6 @@ def predict_image(uploaded_file, token: str) -> dict:
 
     r.raise_for_status()
     return r.json()
-    """
 
 
 def explain_electrical(records, row_idx: int, token: str) -> dict:
@@ -121,6 +119,19 @@ def explain_electrical(records, row_idx: int, token: str) -> dict:
         json=payload,
         headers=_headers(token),
         timeout=180,
+    )
+    r.raise_for_status()
+    return r.json()
+
+def rectify_fault(data: dict, token: str) -> dict:
+    """
+    Send fault data to backend for rectification recommendations.
+    """
+    r = requests.post(
+        f"{API_BASE_URL}/rectify",
+        json=data,
+        headers=_headers(token),
+        timeout=60,
     )
     r.raise_for_status()
     return r.json()

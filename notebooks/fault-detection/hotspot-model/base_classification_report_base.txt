@@ -1,0 +1,8 @@
+                precision    recall  f1-score   support
+
+         clean       0.98      1.00      0.99       250
+single_hotspot       1.00      0.99      0.99       400
+
+      accuracy                           0.99       650
+     macro avg       0.99      0.99      0.99       650
+  weighted avg       0.99      0.99      0.99       650

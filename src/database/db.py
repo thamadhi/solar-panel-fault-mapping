@@ -93,6 +93,8 @@ def init_db(db_path: str = DB_PATH) -> None:
         )
     """)
 
+    migrate_users_table()
+
     conn.commit()
     conn.close()
 
@@ -209,7 +211,6 @@ def insert_log(
 
     Returns:
         int: ID of the newly inserted log record.
-
     """
 
     conn = get_conn(db_path)
@@ -240,12 +241,130 @@ def insert_log(
     conn.close()
     return int(row_id)
 
+def db_create_user(user_type: str, username: str, email: str, password: str) -> int:
+    """
+    Creates a new user in the database.
+
+    Hashes the provided password and inserts the user record
+    into the `Users` table with creation timestamp.
+
+    Args:
+        user_type (str): Type of user (e.g., "Admin").
+        username (str): Unique username for the account.
+        email (str): Unique email address for the user.
+        password (str): Plain-text password to be hashed and stored.
+
+    Returns:
+        int: ID of the newly created user record.
+    """
+    conn = get_conn()
+    cur = conn.cursor()
+    created_at = datetime.utcnow().isoformat()
+    cur.execute("""
+        INSERT INTO Users(type, username, email, password_hash, created_at, is_active)
+        VALUES (?, ?, ?, ?, ?, 1)
+    """, (user_type, username, email, hash_password(password), created_at))
+    conn.commit()
+    user_id = cur.lastrowid
+    conn.close()
+    return user_id
+
+
+def migrate_users_table() -> None:
+    """
+    Adds new columns to the `Users` table if they do not exist.
+
+    Columns added:
+        - created_at (TEXT): Timestamp of user creation.
+        - last_login (TEXT): Timestamp of last login.
+        - is_active (INTEGER): Account active flag (1=active, 0=inactive).
+
+    This function ensures schema compatibility for older databases.
+    """
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        cur.execute("ALTER TABLE Users ADD COLUMN created_at TEXT")
+    except:
+        pass
+    try:
+        cur.execute("ALTER TABLE Users ADD COLUMN last_login TEXT")
+    except:
+        pass
+    try:
+        cur.execute("ALTER TABLE Users ADD COLUMN is_active INTEGER DEFAULT 1")
+    except:
+        pass
+    conn.commit()
+    conn.close()
+
+
+def db_username_exists(username: str) -> bool:
+    """
+    Checks if a username already exists in the database.
+
+    Args:
+        username (str): Username to check.
+
+    Returns:
+        bool: True if username exists, False otherwise.
+    """
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT 1 FROM Users WHERE username=?", (username,))
+    exists = cur.fetchone() is not None
+    conn.close()
+    return exists
+
+
+def db_email_exists(email: str) -> bool:
+    """
+    Checks if an email address is already registered in the database.
+
+    Args:
+        email (str): Email address to check.
+
+    Returns:
+        bool: True if email exists, False otherwise.
+    """
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT 1 FROM Users WHERE email=?", (email,))
+    exists = cur.fetchone() is not None
+    conn.close()
+    return exists
+
+
+def db_update_last_login(user_id: int) -> None:
+    """
+    Updates the last login timestamp for a user.
+
+    Args:
+        user_id (int): ID of the user whose login timestamp is updated.
+    """
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE Users SET last_login=? WHERE id=?",
+        (datetime.utcnow().isoformat(), user_id),
+    )
+    conn.commit()
+    conn.close()
+
 
 def fetch_logs(limit: int = 100, db_path: str = DB_PATH) -> List[Dict[str, Any]]:
     """
-    Fetch latest logs, newest first.
-    """
+    Retrieves the most recent log entries from the database.
 
+    Logs are ordered by newest first.
+
+    Args:
+        limit (int): Maximum number of log records to fetch.
+        db_path (str): Path to the SQLite database file.
+
+    Returns:
+        List[Dict[str, Any]]: List of log records as dictionaries.
+    """
     conn = get_conn(db_path)
     cur = conn.cursor()
     cur.execute(
@@ -254,7 +373,7 @@ def fetch_logs(limit: int = 100, db_path: str = DB_PATH) -> List[Dict[str, Any]]
         FROM Logs
         ORDER BY id DESC
         LIMIT ?
-    """,
+        """,
         (limit,),
     )
     rows = cur.fetchall()
@@ -262,32 +381,93 @@ def fetch_logs(limit: int = 100, db_path: str = DB_PATH) -> List[Dict[str, Any]]
     return [dict(row) for row in rows]
 
 
-def create_user(user_type: str, username: str, email: str, password: str) -> int:
+def save_pv_system(
+    user_id: int,
+    system_type: str,
+    modules_per_string: int,
+) -> tuple[bool, str]:
     """
-    Creates a new user reord in the Users table.
+    Inserts or updates a user's PV system record in the database.
 
-    The password is hashed using `hash_password()` before being stored.
+    If a PV system already exists for the user, it is updated;
+    otherwise, a new record is created.
 
     Args:
-        user_type (str): User role/type (e.g., "Admin")
-        username (str): Unique username.
-        email (str): Unique email address.
-        password (str): Plaintext password (will be hashed before saving).
+        user_id (int): ID of the user.
+        system_type (str): Type of PV system.
+        modules_per_string (int): Number of modules in each string.
 
     Returns:
-        int: The database ID of the newly creaed user.
+        tuple[bool, str]: (success flag, message)
     """
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("SELECT id FROM PVSystems WHERE user_id = ?", (user_id,))
+        row = cur.fetchone()
+        if row:
+            cur.execute(
+                """
+                UPDATE PVSystems
+                SET system_type = ?, num_strings = 2, modules_per_string = ?
+                WHERE user_id = ?
+                """,
+                (system_type, modules_per_string, user_id),
+            )
+        else:
+            cur.execute(
+                """
+                INSERT INTO PVSystems (user_id, system_type, num_strings, modules_per_string)
+                VALUES (?, ?, 2, ?)
+                """,
+                (user_id, system_type, modules_per_string),
+            )
+        conn.commit()
+        conn.close()
+        return True, "PV system saved successfully."
+    except Exception as e:
+        return False, f"Failed to save PV system: {e}"
 
+
+def get_pv_system_by_user_id(user_id: int) -> Optional[dict[str, Any]]:
+    """
+    Retrieves the PV system configuration for a specific user.
+
+    Args:
+        user_id (int): ID of the user.
+
+    Returns:
+        Optional[dict[str, Any]]: PV system details if found, else None.
+            Example:
+            {
+                "id": 1,
+                "user_id": 1,
+                "system_type": "string",
+                "num_strings": 2,
+                "modules_per_string": 24
+            }
+    """
     conn = get_conn()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO Users(type, username, email, password_hash) VALUES (?, ?, ?, ?)",
-        (user_type, username, email, hash_password(password)),
+        """
+        SELECT id, user_id, system_type, num_strings, modules_per_string
+        FROM PVSystems
+        WHERE user_id = ?
+        """,
+        (user_id,),
     )
-    conn.commit()
-    user_id = cur.lastrowid
+    row = cur.fetchone()
     conn.close()
-    return user_id
+    if row is None:
+        return None
+    return {
+        "id": row["id"],
+        "user_id": row["user_id"],
+        "system_type": row["system_type"],
+        "num_strings": row["num_strings"],
+        "modules_per_string": row["modules_per_string"],
+    }
 
 
 def get_user_by_username(username: str) -> sqlite3.Row | None:
@@ -324,16 +504,14 @@ def create_default_admin() -> None:
     Returns:
         None
     """
-
     existing = get_user_by_username("admin")
     if existing is None:
-        create_user(
+        db_create_user(
             user_type="Admin",
             username="admin",
             email="admin@solar.com",
             password="admin123",
         )
-
 
 def fetch_latest_faults(limit: int = 5) -> List[Dict[str, Any]]:
     """
@@ -387,75 +565,3 @@ def fetch_fault_trend_daily(days: int = 30) -> List[Dict[str, Any]]:
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
-
-
-def save_pv_system(
-    user_id: int,
-    system_type: str,
-    modules_per_string: int,
-) -> tuple[bool, str]:
-    """
-    Insert or update a PV system for a user.
-    """
-    try:
-        conn = get_conn()
-        cur = conn.cursor()
-
-        cur.execute("SELECT id FROM PVSystems WHERE user_id = ?", (user_id,))
-        row = cur.fetchone()
-
-        if row:
-            cur.execute(
-                """
-                UPDATE PVSystems
-                SET system_type = ?, num_strings = 2, modules_per_string = ?
-                WHERE user_id = ?
-                """,
-                (system_type, modules_per_string, user_id),
-            )
-        else:
-            cur.execute(
-                """
-                INSERT INTO PVSystems (user_id, system_type, num_strings, modules_per_string)
-                VALUES (?, ?, 2, ?)
-                """,
-                (user_id, system_type, modules_per_string),
-            )
-
-        conn.commit()
-        conn.close()
-        return True, "PV system saved successfully."
-
-    except Exception as e:
-        return False, f"Failed to save PV system: {e}"
-
-
-def get_pv_system_by_user_id(user_id: int) -> Optional[dict[str, Any]]:
-    """
-    Return the PV system for a given user, if available.
-    """
-    conn = get_conn()
-    cur = conn.cursor()
-
-    cur.execute(
-        """
-        SELECT id, user_id, system_type, num_strings, modules_per_string
-        FROM PVSystems
-        WHERE user_id = ?
-        """,
-        (user_id,),
-    )
-
-    row = cur.fetchone()
-    conn.close()
-
-    if row is None:
-        return None
-
-    return {
-        "id": row["id"],
-        "user_id": row["user_id"],
-        "system_type": row["system_type"],
-        "num_strings": row["num_strings"],
-        "modules_per_string": row["modules_per_string"],
-    }

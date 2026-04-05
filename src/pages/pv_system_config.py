@@ -58,8 +58,3 @@ def render_pv_system_config() -> None:
         st.write(f"**System Type:** {pv_system.get_system_type}")
         st.write(f"**Strings:** {pv_system.get_num_strings}")
         st.write(f"**Modules per String:** {pv_system.get_modules_per_string}")
-
-        # Iterate over each string in the system abd list its child nodes
-        for string in pv_system.get_strings:
-            st.write(f"**{string}**")
-            st.write(", ".join(str(module) for module in string.get_modules))
