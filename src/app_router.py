@@ -473,12 +473,12 @@ class AppRouter:
                 "Help": "Support Center",
             }
 
-            # 🔐 Get current user role
+            # Get current user role
             user_type = getattr(user, 'type', 'Standard')
             allowed_pages = self.ROLE_PERMISSIONS.get(user_type, self.ROLE_PERMISSIONS["Standard"])
 
             for key, label in nav_items.items():
-                if key in allowed_pages:  # 👈 filter menu by role
+                if key in allowed_pages:  # filter menu by role
                     if st.button(label, key=f"nav_{key}"):
                         st.session_state.current_page = key
                         st.rerun()
@@ -518,10 +518,12 @@ class AppRouter:
             show_fault_detection_page()
         elif page == "Localisation":
             show_fault_localisation_page()
-        elif page == "History":
-            show_history_page()
         elif page == "Severity":
             show_fault_severity_page()
+        elif page == "Rectification":
+            show_fault_rectification_page()            
+        elif page == "History":
+            show_history_page()
         elif page == "PV System Config":
             render_pv_system_config()
         elif page == "Help":
@@ -534,11 +536,10 @@ class AppRouter:
                     <h3 style="color:#055248;">{page} Module</h3>
                     <p style="color:#8aab8a;">This analytics engine is currently being updated for better precision.</p>
                 </div>
-            """,
+                """,
                 unsafe_allow_html=True,
             )
 
     def run(self) -> None:
-        #self.force_open_sidebar()
         page = self.render_side_bar()
         self.route(page)
