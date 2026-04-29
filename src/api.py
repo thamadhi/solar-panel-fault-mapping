@@ -19,6 +19,7 @@ from src.authentication.jwt_utils import create_token, verify_token
 from src.authentication.security import verify_password
 from src.services.detection_service import build_handler
 from src.services.localization_service import build_localisation_handler
+from src.services.rectification_service import build_rectification_handler
 import os
 import tempfile
 import json
@@ -40,6 +41,7 @@ init_db()
 # Load handler once at startup
 handler = build_handler()
 localisation_handler = build_localisation_handler()
+rectification_handler = build_rectification_handler()
 
 
 def require_auth(fn):
@@ -493,6 +495,32 @@ def localise():
             except OSError:
                 pass
 
+@app.route("/rectify", methods=["POST"])
+@require_auth
+def rectify():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "No JSON body provided"}), 400
+    try:
+        result = rectification_handler.start_flow(string_data=data)
+        if result is None or not result.result_readings:
+            return jsonify({"status": "error", "message": "No prediction returned"}), 500
+        prediction = result.result_readings[0]
+        return jsonify({
+            "status":          "success",
+            "fault_type":      prediction["fault_type"],
+            "location":        prediction["location"],
+            "severity":        prediction["severity"],
+            "confidence":      prediction["confidence"],
+            "recommendations": prediction["recommendations"],
+            "best_action":     prediction["best_action"],
+            "best_cost":       prediction["best_cost"],
+            "best_downtime":   prediction["best_downtime"],
+        }), 200
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 # Application entry point
 if __name__ == "__main__":
