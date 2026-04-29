@@ -38,14 +38,12 @@ def show_fault_localisation_page():
         with open(css_path) as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
+    # Clean header without box
     st.markdown(
         """
         <div class="localization-header">
-            <h1>FAULT LOCALIZATION</h1>
-            <p style="color: #9CA3AF; margin: 0;">
-                Identify faulty strings via electrical data or
-                hotspot regions via thermal images
-            </p>
+            <h1>Fault Localization</h1>
+            <p>Identify faulty strings via electrical data or hotspot regions via thermal images</p>
         </div>
     """,
         unsafe_allow_html=True,
@@ -56,35 +54,13 @@ def show_fault_localisation_page():
         st.warning("Please log in to access fault localization.")
         return
 
-    m1, m2, m3 = st.columns(3)
-    with m1:
-        st.metric("Total System Output", "14.2 MW", delta="2.3%")
-    with m2:
-        st.metric("Overall System Health", "91%", delta="-1.2%")
-    with m3:
-        st.metric("String Health Summary", "98.2% Active", delta="0.5%")
-
     tab1, tab2 = st.tabs(["32-String Analysis", "System Overview"])
 
     with tab1:
-        st.markdown('<div class="diagnostic-card">', unsafe_allow_html=True)
-        st.subheader("Fault Localization")
+        st.subheader("Fault Detection")
 
-        # Fetch handler once here and pass it down to every helper
+        # Fetch handler
         handler = get_localisation_handler()
-
-        # Show model readiness so user knows what is available
-        col_r1, col_r2 = st.columns(2)
-        with col_r1:
-            if handler.image_ready:
-                st.success("Image model ready")
-            else:
-                st.error("Image model not loaded")
-        with col_r2:
-            if handler.electrical_ready:
-                st.success("Electrical model ready")
-            else:
-                st.warning("Electrical model not loaded")
 
         upload_mode = st.radio(
             "Select input type",
@@ -93,31 +69,86 @@ def show_fault_localisation_page():
             key="localisation_mode",
         )
 
+        # Add "How It Works" section based on selected mode
+        with st.expander("📖 How It Works", expanded=False):
+            if upload_mode == "Electrical data (CSV / Excel)":
+                _render_electrical_how_it_works()
+            else:
+                _render_thermal_how_it_works()
+
         if upload_mode == "Electrical data (CSV / Excel)":
             _render_csv_upload(handler)
         else:
             _render_image_upload(handler)
-            # temporary debug — remove after fixing
-            with st.expander("Debug info (remove after fix)"):
-                st.write("active_mode:", handler._FaultLocalisationHandler__active_mode)
-                st.write(
-                    "image_tensor:",
-                    handler._FaultLocalisationHandler__processed_image_tensor
-                    is not None,
-                )
-                st.write(
-                    "hotspot_localizer:",
-                    handler._FaultLocalisationHandler__hotspot_localizer is not None,
-                )
-                st.write(
-                    "last_run_details:",
-                    handler._FaultLocalisationHandler__last_run_details,
-                )
-
-        st.markdown("</div>", unsafe_allow_html=True)
 
     with tab2:
         _render_system_overview()
+
+
+def _render_electrical_how_it_works():
+    """Renders the how-it-works explanation for electrical data analysis."""
+    st.markdown("""
+        ### 🔍 How Electrical Fault Localization Works
+        
+        **Step 1: Upload Data**  
+        Upload a CSV or Excel file containing 32-string sensor readings including voltage (Vstr1-32), current (Istr1-32), and environmental parameters.
+        
+        **Step 2: Model Processing**  
+        Our CNN-BiLSTM (Convolutional Neural Network + Bidirectional Long Short-Term Memory) model analyzes the sequential patterns in your string data to detect anomalies.
+        
+        **Step 3: Fault Detection**  
+        The model identifies one of five fault types:
+        - **Open Circuit** - Complete disconnection in a string
+        - **Short Circuit** - Unintentional connection causing current bypass
+        - **Shadowing** - Partial or full shading affecting output
+        - **String Break** - Physical break in the string connection
+        - **General Fault** - Other anomalies not fitting specific categories
+        
+        **Step 4: Localization**  
+        The system pinpoints exactly which strings (1-32) are affected and provides confidence scores for each prediction.
+        
+        **Step 5: Results Review**  
+        View per-string fault status, confidence metrics, and detailed analysis of each affected string.
+        
+        ### 📊 What You'll Get
+        - Fault type classification
+        - List of faulty string numbers
+        - Confidence percentage for predictions
+        - Per-row prediction details (if available)
+    """)
+
+
+def _render_thermal_how_it_works():
+    """Renders the how-it-works explanation for thermal image analysis."""
+    st.markdown("""
+        ### 🔥 How Thermal Hotspot Localization Works
+        
+        **Step 1: Upload Image**  
+        Upload a thermal image (JPEG or PNG) of your solar panel array showing temperature variations.
+        
+        **Step 2: Image Processing**  
+        The image is pre-processed and passed through our deep learning model trained on thermal fault patterns.
+        
+        **Step 3: Score-CAM Analysis**  
+        We use **Score-CAM** (Score-based Class Activation Mapping) to identify which regions of the image most influence the model's decision. This creates a heatmap overlay showing:
+        - Hotspot locations (red/orange regions)
+        - Temperature anomaly areas
+        - Potential fault zones
+        
+        **Step 4: Hotspot Detection**  
+        The model determines if a hotspot exists and draws a bounding box around the affected area with confidence scoring.
+        
+        **Step 5: Location Estimation**  
+        Based on the bounding box position, the system estimates where on the panel array the fault is located (e.g., "Top-left quadrant", "Center-right").
+        
+        ### 📊 What You'll Get
+        - Hotspot presence/absence判定
+        - Confidence percentage
+        - Bounding box coordinates (x, y, width, height)
+        - Estimated location on panel
+        - Visual output with bounding box overlay
+        - Score-CAM heatmap visualization
+    """)
 
 
 def _render_csv_upload(handler):
@@ -149,9 +180,15 @@ def _render_csv_upload(handler):
         else:
             df = pd.read_csv(uploaded_file)
 
-        st.write("Data preview:")
-        st.dataframe(df.head(), use_container_width=True)
-        st.caption(f"{len(df)} rows, {len(df.columns)} columns")
+        # Data preview as dropdown
+        with st.expander("📊 Preview Uploaded Data", expanded=False):
+            st.write("**First 5 rows of data:**")
+            st.dataframe(df.head(), use_container_width=True)
+            st.caption(f"**File info:** {len(df)} rows, {len(df.columns)} columns")
+            
+            # Optional: Show column names
+            st.write("**Column names:**")
+            st.write(", ".join(df.columns.tolist()[:10]) + ("..." if len(df.columns) > 10 else ""))
 
     except Exception as e:
         st.error(f"Could not read file: {e}")
@@ -180,7 +217,7 @@ def _render_csv_upload(handler):
             else:
                 st.error(
                     "Localization returned no result. Check that:\n"
-                    "1. The electrical model loaded (status shown above)\n"
+                    "1. The electrical model loaded\n"
                     "2. Your file has all 70 required columns\n"
                     "3. Check the Flask API logs for the exact error"
                 )
@@ -246,7 +283,7 @@ def _render_image_upload(handler):
             else:
                 st.error(
                     "Localization returned no result. Check that:\n"
-                    "1. The image model loaded (status shown above)\n"
+                    "1. The image model loaded\n"
                     "2. Check the Flask API logs for the exact error"
                 )
 
@@ -259,8 +296,8 @@ def _display_string_results(result):
     if details.get("error"):
         st.error(f"Localization error: {details['error']}")
         return
-    """Displays electrical string localization results."""
-    st.success("Analysis complete.")
+    
+    st.success("✓ Analysis complete")
 
     details = result.details or {}
     fault_code = details.get("fault_type_code", 0)
@@ -278,51 +315,29 @@ def _display_string_results(result):
 
     if not reliable and fault_code > 0:
         st.warning(
-            "String localization confidence is low for this fault type. "
+            "⚠ String localization confidence is low for this fault type. "
             "Strings shown are indicative only."
         )
 
     if faulty_strings:
-        st.markdown("### Faulty Strings Detected")
-
-        cols = st.columns(8)
-        for s in range(1, 33):
-            col_idx = (s - 1) % 8
-            with cols[col_idx]:
-                if s in faulty_strings:
-                    st.markdown(
-                        f'<span class="faulty-string-badge">S{s}</span>',
-                        unsafe_allow_html=True,
-                    )
-                else:
-                    st.markdown(
-                        f'<span class="normal-string-badge">S{s}</span>',
-                        unsafe_allow_html=True,
-                    )
-
-        string_status = [1 if (i + 1) in faulty_strings else 0 for i in range(32)]
-
-        fig = go.Figure()
-        fig.add_trace(
-            go.Heatmap(
-                z=[string_status],
-                x=[f"S{i+1}" for i in range(32)],
-                y=["Status"],
-                colorscale=[[0, "#10B981"], [1, "#EF4444"]],
-                showscale=False,
-                text=[[("Faulty" if v == 1 else "Normal") for v in string_status]],
-                texttemplate="%{text}",
-                textfont={"size": 10, "color": "white"},
-            )
+        # Display faulty strings as a simple comma-separated list
+        st.markdown("### 📋 Faulty Strings Detected")
+        
+        # Create a clean summary without bubbles
+        faulty_list = ", ".join([f"S{s}" for s in faulty_strings])
+        
+        # Display in a nice formatted box
+        st.markdown(
+            f"""
+            <div style="background-color: #f0f7f0; padding: 15px; border-radius: 10px; border-left: 4px solid #EF4444; margin: 10px 0;">
+                <strong style="color: #055248;">🔴 Faulty Strings:</strong><br>
+                <span style="color: #055248; font-size: 16px; font-weight: 500;">{faulty_list}</span>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
-        fig.update_layout(
-            title="String Fault Status (Red = Faulty)",
-            height=150,
-            xaxis={"side": "bottom", "tickangle": 45},
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        
+        st.markdown(f"**Total faulty strings:** {len(faulty_strings)} out of 32")
 
         per_row = details.get("per_row_results", [])
         if per_row:
@@ -347,7 +362,18 @@ def _display_string_results(result):
             st.dataframe(results_df, use_container_width=True)
 
     else:
-        st.success("No faulty strings detected — " "all strings operating normally.")
+        st.success("✓ No faulty strings detected — all strings operating normally.")
+        
+        # Show a clean success message
+        st.markdown(
+            """
+            <div style="background-color: #f0f7f0; padding: 15px; border-radius: 10px; border-left: 4px solid #10B981; margin: 10px 0;">
+                <strong style="color: #055248;">✅ All Systems Normal</strong><br>
+                <span style="color: #055248;">All 32 strings are operating within expected parameters.</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     if "pipeline" in st.session_state:
         st.session_state.pipeline.localization_result = result
@@ -360,9 +386,9 @@ def _display_image_results(result):
     location = result.location
 
     if is_hotspot:
-        st.error(f"Hotspot detected ({confidence:.1%} confidence)")
+        st.error(f"⚠ Hotspot detected ({confidence:.1%} confidence)")
     else:
-        st.success(f"No hotspot detected ({confidence:.1%} confidence)")
+        st.success(f"✓ No hotspot detected ({confidence:.1%} confidence)")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -371,7 +397,7 @@ def _display_image_results(result):
         st.metric("Confidence", f"{confidence:.1%}")
 
     if location:
-        st.info(f"Estimated location: {location}")
+        st.info(f"📍 Estimated location: {location}")
 
     details = result.details or {}
     if details.get("bounding_box"):
@@ -409,7 +435,6 @@ def _display_image_results(result):
 
 def _render_system_overview():
     """Renders the system overview tab."""
-    st.markdown('<div class="diagnostic-card">', unsafe_allow_html=True)
     st.subheader("Energy Produced vs. Consumption")
 
     chart_data = pd.DataFrame(
@@ -421,41 +446,86 @@ def _render_system_overview():
     )
 
     fig = go.Figure()
+    
+    # Add Produced line
     fig.add_trace(
         go.Scatter(
             x=chart_data["Month"],
             y=chart_data["Produced"],
             name="Produced",
-            line=dict(color="#10B981", width=3),
+            line=dict(color="#499351", width=3),
+            mode="lines+markers",
+            marker=dict(size=8, color="#499351", symbol="circle"),
+            hovertemplate="<b>Month: %{x}</b><br>Produced: %{y} kWh<br><extra></extra>",
         )
     )
+    
+    # Add Consumed line
     fig.add_trace(
         go.Scatter(
             x=chart_data["Month"],
             y=chart_data["Consumed"],
             name="Consumed",
             line=dict(color="#3B82F6", width=3),
+            mode="lines+markers",
+            marker=dict(size=8, color="#3B82F6", symbol="square"),
+            hovertemplate="<b>Month: %{x}</b><br>Consumed: %{y} kWh<br><extra></extra>",
         )
     )
+    
+    # Update layout with darker, more visible text
     fig.update_layout(
-        template="plotly_dark",
-        height=400,
-        margin=dict(l=10, r=10, t=10, b=10),
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
+        title=dict(
+            text="Monthly Energy Overview",
+            font=dict(size=18, color="#055248", weight="bold"),
+            x=0.05,
+        ),
+        xaxis=dict(
+            title=dict(text="Month", font=dict(size=14, color="#055248", weight="bold")),
+            tickfont=dict(size=12, color="#055248"),
+            gridcolor="#d4e6d4",
+            showgrid=True,
+            gridwidth=1,
+        ),
+        yaxis=dict(
+            title=dict(text="Energy (kWh)", font=dict(size=14, color="#055248", weight="bold")),
+            tickfont=dict(size=12, color="#055248"),
+            gridcolor="#d4e6d4",
+            showgrid=True,
+            gridwidth=1,
+        ),
+        legend=dict(
+            title=dict(text="Energy Type", font=dict(size=12, color="#055248")),
+            font=dict(size=11, color="#055248"),
+            bgcolor="rgba(240, 247, 240, 0.9)",
+            bordercolor="#d4e6d4",
+            borderwidth=1,
+            x=0.02,
+            y=0.98,
+        ),
+        hoverlabel=dict(
+            bgcolor="#f0f7f0",
+            font_size=12,
+            font_color="#055248",
+            bordercolor="#499351",
+        ),
+        plot_bgcolor="rgba(240, 247, 240, 0.5)",
+        paper_bgcolor="rgba(240, 247, 240, 0)",
+        height=450,
+        margin=dict(l=60, r=40, t=60, b=50),
+        hovermode="x unified",
     )
+    
+    # Add a horizontal line at average produced
+    avg_produced = chart_data["Produced"].mean()
+    fig.add_hline(
+        y=avg_produced,
+        line_dash="dash",
+        line_color="#499351",
+        opacity=0.5,
+        annotation_text=f"Avg Production: {avg_produced:.0f} kWh",
+        annotation_font=dict(size=10, color="#499351"),
+        annotation_position="bottom right",
+    )
+    
     st.plotly_chart(fig, use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    col_left, col_right = st.columns(2)
-    with col_left:
-        st.markdown('<div class="diagnostic-card">', unsafe_allow_html=True)
-        st.subheader("Electrical Diagnostics")
-        st.info("Run 32-string analysis to see string-level fault details.")
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with col_right:
-        st.markdown('<div class="diagnostic-card">', unsafe_allow_html=True)
-        st.subheader("Visual Diagnostics")
-        st.info("Upload a thermal image to enable hotspot localization.")
-        st.markdown("</div>", unsafe_allow_html=True)
