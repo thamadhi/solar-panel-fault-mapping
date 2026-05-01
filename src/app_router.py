@@ -17,15 +17,15 @@ class AppRouter:
         self.ROLE_PERMISSIONS = {
             "Technician": [
                 "Dashboard", "Fault Detection", "Localisation", "Rectification",
-                "History", "PV System Config"
+                "History", "PV System Config", "Help"
             ],
             "Admin": [
                 "Dashboard", "Fault Detection", "Localisation", "Rectification",
-                "Severity", "History", "PV System Config"
+                "Severity", "History", "PV System Config", "Help"
             ],
             "Solar PV Operator": [
                 "Dashboard", "Fault Detection", "Localisation",
-                "Severity", "History", "PV System Config"
+                "Severity", "History", "PV System Config", "Help"
             ],
             "Standard": ["Dashboard"]  # Default fallback
         }

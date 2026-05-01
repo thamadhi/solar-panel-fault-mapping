@@ -10,7 +10,7 @@ def test_build_detection_handler_success(mock_handler_cls, mock_download):
     and initializes FaultDetectionHandler correctly.
     """
     # Mock download paths
-    mock_download.side_effect = ["/tmp/tuned_rf.pkl", "/tmp/base_model.keras"]
+    mock_download.side_effect = ["/tmp/tuned_rf.pkl", "/tmp/tuned_model.keras"]
     
     # Execute the service function
     handler = build_handler()
@@ -19,12 +19,12 @@ def test_build_detection_handler_success(mock_handler_cls, mock_download):
     repo_id = "seyeddd/solar-pv-fault-detection-models"
     assert mock_download.call_count == 2
     mock_download.assert_any_call(repo_id, "tuned_random_forest.pkl")
-    mock_download.assert_any_call(repo_id, "base_model.keras")
+    mock_download.assert_any_call(repo_id, "tuned_model.keras")
     
     # Verify Handler initialization
     mock_handler_cls.assert_called_once_with(
         electrical_model_path="/tmp/tuned_rf.pkl",
-        image_model_path="/tmp/base_model.keras"
+        image_model_path="/tmp/tuned_model.keras"
     )
     
     assert handler == mock_handler_cls.return_value
