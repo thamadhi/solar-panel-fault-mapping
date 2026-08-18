@@ -13,6 +13,8 @@ and the machine learning models.
 """
 
 from flask import Flask, request, jsonify
+from dotenv import load_dotenv
+from flask_cors import CORS
 from src.core.logger import LoggerFactory
 from src.database.db import init_db, insert_prediction, get_user_by_username
 from src.authentication.jwt_utils import create_token, verify_token
@@ -20,6 +22,7 @@ from src.authentication.security import verify_password
 from src.services.detection_service import build_handler
 from src.services.localization_service import build_localisation_handler
 from src.services.rectification_service import build_rectification_handler
+from src.assistant.service import handle_chat, chat_history_for_api
 import os
 import tempfile
 import json
@@ -29,11 +32,19 @@ from src.authentication.jwt_utils import verify_token
 import numpy as np
 import shap
 
+# Load optional environment configuration (API keys, provider selection, ...).
+load_dotenv()
+
 # Application setup
 LoggerFactory.setup(db_path="data/app.db")
 
 # Setup flask instance
 app = Flask(__name__)
+
+# The AI assistant widget runs in the browser and talks to this API directly,
+# so the API must accept cross-origin requests. Every route below is protected
+# by a JWT, so permissive CORS does not expose data without a valid token.
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Initialize database
 init_db()
@@ -521,6 +532,68 @@ def rectify():
         import traceback
         traceback.print_exc()
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route("/assistant/chat", methods=["POST"])
+@require_auth
+def assistant_chat():
+    """
+    Handle a message sent to the Solar PV AI Assistant.
+
+    Body:
+        {
+          "message": "What faults were detected?",
+          "page": "Fault Detection",
+          "page_data": { ... optional frontend context ... }
+        }
+
+    The message is sanitized, relevant application context is attached, and the
+    configured LLM provider (server side only) produces the reply. The whole
+    exchange is persisted per user so the widget can restore it after reruns.
+    """
+    body = request.get_json(silent=True)
+    if not body or not isinstance(body, dict):
+        return jsonify({"error": "No JSON body provided"}), 400
+
+    try:
+        user_id = int(request.user.get("sub") or 0)
+    except (TypeError, ValueError):
+        user_id = 0
+
+    try:
+        result = handle_chat(
+            user_id=user_id,
+            message=body.get("message"),
+            page=body.get("page", ""),
+            page_data=body.get("page_data"),
+            username=request.user.get("username"),
+        )
+        return jsonify({"status": "success", **result}), 200
+    except ValueError as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+    except Exception as e:
+        import traceback
+
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/assistant/history", methods=["GET"])
+@require_auth
+def assistant_history():
+    """
+    Return the operator's recent assistant conversation (oldest first).
+
+    Used by the chat widget to restore the conversation after a Streamlit
+    rerun reloads the widget iframe.
+    """
+    try:
+        user_id = int(request.user.get("sub") or 0)
+    except (TypeError, ValueError):
+        user_id = 0
+
+    messages = chat_history_for_api(user_id)
+    return jsonify({"status": "success", "messages": messages}), 200
+
 
 # Application entry point
 if __name__ == "__main__":

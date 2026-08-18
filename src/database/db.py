@@ -3,6 +3,7 @@ import sqlite3
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from src.authentication.security import hash_password
+from src.database.chat_repo import init_chat_table
 
 DB_PATH = "data/app.db"
 
@@ -94,6 +95,7 @@ def init_db(db_path: str = DB_PATH) -> None:
     """)
 
     migrate_users_table()
+    init_chat_table(db_path)
 
     conn.commit()
     conn.close()
