@@ -85,6 +85,10 @@ Using decision trees, this component provides actionable repair guidance by givi
 
 A Streamlit-based dashboard provides a user-friendly interface for operators to monitor system health, view fault reports, analyze historical trends, and access maintenance recommendations.
 
+### AI Assistant
+
+A floating "Solar PV AI Assistant" (bottom-right) answers questions about detected faults, fault types, severity, thermal imagery, I-V characteristics, model predictions, localization, and rectification recommendations. It is context-aware — each question receives a compact snapshot of the current page and recent predictions — and fully modular: it can connect to OpenAI, Gemini, Claude, a local Ollama instance, or any OpenAI-compatible endpoint via server-side environment variables (see `.env.example`). No provider is required to use the chat UI; without one it shows a friendly "not configured" message.
+
 ## 🛠 Tech Stack
 
 ### 💻 Backend
@@ -196,6 +200,19 @@ python3.11 -m venv .venv
 ```bash
 pip install -r requirements.txt
 ```
+
+### ⚙️ Configure the AI Assistant (not required)
+
+Copy `.env.example` to `.env`, pick a provider, and set its credentials:
+
+```bash
+AI_PROVIDER=openai        # openai | openai-compatible | gemini | claude | ollama
+OPENAI_API_KEY=sk-...     # provider-specific key (kept on the server only)
+```
+
+The chat button always appears; without a configured provider it replies with a
+"provider not configured" message. API keys are read exclusively on the Flask
+backend and are never sent to the browser.
 
 
 ### ▶️ Running the Backend API (Flask)
