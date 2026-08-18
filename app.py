@@ -4,6 +4,7 @@ from src.database.db import init_db
 from src.app_state import init_state
 from src.app_router import AppRouter
 from src.pages.landing import show_landing_page
+from src.assistant.widget import render_assistant_widget
 
 # Make the database
 init_db()
@@ -24,3 +25,6 @@ if st.session_state.user is None:
     show_landing_page()
 else:
     app_router.run()
+
+# Floating AI assistant
+render_assistant_widget()
