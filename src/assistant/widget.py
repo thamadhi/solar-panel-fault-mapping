@@ -16,12 +16,19 @@ generated iframe into the fixed bottom-right corner).
 
 import base64
 import json
+import os
 from pathlib import Path
 
 import streamlit as st
 import streamlit.components.v1 as components
 
 from src.api_client import API_BASE_URL
+
+# The widget's embedded JavaScript runs in the *browser*, so it needs an API
+# base URL that the browser can reach. In Docker this can differ from the
+# server-side API_BASE_URL (e.g. "http://api:8000" internally vs
+# "http://localhost:8000" from the browser).
+WIDGET_API_BASE_URL = os.getenv("WIDGET_API_BASE_URL", API_BASE_URL)
 
 # The widget is rendered as a small 62x62 iframe; the embedded JS grows it to
 # the panel size (424x560, mirrored in the JS _PANEL_W/_PANEL_H constants)
@@ -346,7 +353,7 @@ window.__PV_AI__ = __PV_AI_JSON__;
 (function () {
     "use strict";
     var cfg = window.__PV_AI__ || {};
-    var apiBase = cfg.apiBase || "http://127.0.0.1:5000";
+    var apiBase = cfg.apiBase || "http://127.0.0.1:8000";
     var token = cfg.token || "";
     var page = cfg.page || "";
     var pageData = cfg.pageData || null;
@@ -579,7 +586,7 @@ def _build_widget_html(
 ) -> str:
     """Assemble the widget document with the current runtime config embedded."""
     config = {
-        "apiBase": API_BASE_URL,
+        "apiBase": WIDGET_API_BASE_URL,
         "token": token,
         "page": page,
         "pageData": page_data,

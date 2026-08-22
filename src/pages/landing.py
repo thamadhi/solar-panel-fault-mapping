@@ -36,20 +36,20 @@ def inject_dynamic_background():
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
                 border-bottom: 2px solid #499351;
             }
-            
+
             .nav-logo {
                 font-size: 1.5rem;
                 font-weight: 800;
                 color: #055248;
                 text-decoration: none;
             }
-            
+
             .nav-links {
                 display: flex;
                 gap: 2rem;
                 align-items: center;
             }
-            
+
             .nav-link {
                 color: #055248;
                 text-decoration: none;
@@ -63,12 +63,12 @@ def inject_dynamic_background():
                 font-size: 1rem;
                 font-family: inherit;
             }
-            
+
             .nav-link:hover {
                 color: #499351;
                 background: rgba(73, 147, 81, 0.1);
             }
-            
+
             .nav-login-btn {
                 background: #499351;
                 color: white;
@@ -80,18 +80,18 @@ def inject_dynamic_background():
                 transition: all 0.3s ease;
                 font-size: 0.9rem;
             }
-            
+
             .nav-login-btn:hover {
                 background: #055248;
                 transform: translateY(-2px);
                 box-shadow: 0 4px 12px rgba(5, 82, 72, 0.2);
             }
-            
+
             /* Add padding to main content to account for fixed navbar */
             .main-content {
                 padding-top: 80px;
             }
-            
+
             .brand-text {
                 color: #055248;
                 font-weight: 800;
@@ -111,7 +111,7 @@ def inject_dynamic_background():
                 height: 100%;
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             }
-            
+
             .feature-card:hover {
                 transform: translateY(-12px);
                 border-color: #499351;
@@ -133,32 +133,32 @@ def inject_dynamic_background():
             }
 
             /* Metric Styling */
-            [data-testid="stMetricValue"] { 
-                color: #499351 !important; 
+            [data-testid="stMetricValue"] {
+                color: #499351 !important;
             }
-            
+
             /* Heading colors */
             h1, h2, h3 {
                 color: #055248 !important;
             }
-            
+
             /* Text colors */
             p, li, span {
                 color: #055248;
             }
-            
+
             /* Divider */
             hr {
                 border-color: #499351;
             }
-            
+
             /* Button primary styling */
             .stButton > button[kind="primary"] {
                 background: #499351 !important;
                 color: white !important;
                 border-color: #499351 !important;
             }
-            
+
             .stButton > button[kind="primary"]:hover {
                 background: #055248 !important;
                 border-color: #055248 !important;
@@ -182,12 +182,12 @@ def inject_dynamic_background():
                 transform: translateY(-2px);
                 box-shadow: 0 4px 12px rgba(5,82,72,0.25);
             }
-            
+
         </style>
-        
+
         <!-- Font Awesome CDN for icons -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-        
+
         <!-- Add JavaScript for smooth scrolling -->
         <script>
             function scrollToSection(sectionId) {
@@ -219,10 +219,10 @@ def render_navbar():
 
 def show_landing_page() -> None:
     inject_dynamic_background()
-    
+
     # Render the navigation bar
     render_navbar()
-    
+
     # Add a container with class for main content to handle padding
     st.markdown('<div class="main-content">', unsafe_allow_html=True)
 
@@ -279,7 +279,7 @@ PVInsight helps you detect, locate, and fix solar panel faults quickly and accur
 
     st.write("##")
     st.divider()
-    
+
     # Features section with anchor
     st.markdown('<div id="features"></div>', unsafe_allow_html=True)
 
@@ -291,7 +291,7 @@ PVInsight helps you detect, locate, and fix solar panel faults quickly and accur
         {"icon": "fas fa-chart-line", "title": "Severity", "desc": "Understand how serious the problem is and its impact."},
         {"icon": "fas fa-tools", "title": "Rectification", "desc": "Get simple suggestions to fix the issue quickly."},
     ]
-    
+
     for col, feat in zip(f_cols, features):
         with col:
             st.markdown(
@@ -310,7 +310,7 @@ PVInsight helps you detect, locate, and fix solar panel faults quickly and accur
     st.write("##")
     st.markdown("<h2 style='color: #055248; text-align: center;'>About PVInsight AI</h2>", unsafe_allow_html=True)
     st.write("")
-    
+
     # About section with Font Awesome icons
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -364,7 +364,7 @@ PVInsight helps you detect, locate, and fix solar panel faults quickly and accur
         "<p style='text-align: center; color: #055248; font-size: 0.8rem; letter-spacing: 2px;'>PVINSIGHT INTELLIGENCE HUB</p>",
         unsafe_allow_html=True,
     )
-    
+
     # Close the main content div
     st.markdown('</div>', unsafe_allow_html=True)
 

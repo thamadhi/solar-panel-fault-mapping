@@ -15,13 +15,13 @@ def _load_css():
     .glass * {
         color: white !important;
     }
-    .card-title { 
-        font-size: 15px; 
+    .card-title {
+        font-size: 15px;
         opacity: 0.9;
         color: white !important;
     }
-    .card-value { 
-        font-size: 26px; 
+    .card-value {
+        font-size: 26px;
         font-weight: bold;
         color: white !important;
     }

@@ -3,7 +3,6 @@ import sqlite3
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from src.authentication.security import hash_password
-from src.database.chat_repo import init_chat_table
 
 DB_PATH = "data/app.db"
 
@@ -52,7 +51,7 @@ def init_db(db_path: str = DB_PATH) -> None:
             created_at TEXT NOT NULL,
             source TEXT,
             mode TEXT,
-            fault_type TEXT NOT NULL,      
+            fault_type TEXT NOT NULL,
             confidence REAL NOT NULL,
             image_path TEXT,
             input_json TEXT
@@ -69,7 +68,7 @@ def init_db(db_path: str = DB_PATH) -> None:
             func_name TEXT,
             line_no INTEGER,
             message TEXT,
-            exception TEXT        
+            exception TEXT
         );
     """)
 
@@ -79,7 +78,7 @@ def init_db(db_path: str = DB_PATH) -> None:
             type TEXT NOT NULL,
             username TEXT NOT NULL UNIQUE,
             email TEXT NOT NULL UNIQUE,
-            password_hash TEXT NOT NULL        
+            password_hash TEXT NOT NULL
         )
     """)
 
@@ -93,6 +92,11 @@ def init_db(db_path: str = DB_PATH) -> None:
             FOREIGN KEY(user_id) REFERENCES Users(id)
         )
     """)
+
+    # Imported lazily to avoid a circular import: chat_repo imports
+    # ``DB_PATH``/``get_conn`` from this module, so it must not be imported
+    # here at module scope before those names are defined.
+    from src.database.chat_repo import init_chat_table
 
     migrate_users_table()
     init_chat_table(db_path)

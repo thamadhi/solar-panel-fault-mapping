@@ -1,0 +1,54 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+.github
+
+# Secrets — never copied into the image
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Test / tooling caches
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.ruff_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Large / local-only assets (models are downloaded at runtime from HuggingFace)
+data/
+models/
+datasets/
+notebooks/
+manuals/
+docs/
+diagrams/
+test_set/
+mlruns/
+mlflow.db
+*.db
+*.pkl
+*.joblib
+*.h5
+*.keras
+*.onnx
+report.html
+*.pdf
+
+# OS files
+.DS_Store
+Thumbs.db

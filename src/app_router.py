@@ -522,7 +522,7 @@ class AppRouter:
         elif page == "Severity":
             show_fault_severity_page()
         elif page == "Rectification":
-            show_fault_rectification_page()            
+            show_fault_rectification_page()
         elif page == "History":
             show_history_page()
         elif page == "PV System Config":
