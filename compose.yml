@@ -16,8 +16,8 @@
 services:
   api:
     build: .
-    image: pv-insight:latest
-    container_name: pv-insight-api
+    image: openpvisor-api:latest
+    container_name: openpvisor-api
     env_file:
       - .env
     ports:
@@ -43,8 +43,8 @@ services:
   frontend:
     build:
       context: ./frontend
-    image: pv-insight-frontend:latest
-    container_name: pv-insight-frontend
+    image: openpvisor-frontend:latest
+    container_name: openpvisor-frontend
     environment:
       # Browser-side calls go straight to the host-mapped API port.
       NEXT_PUBLIC_API_URL: http://localhost:8000

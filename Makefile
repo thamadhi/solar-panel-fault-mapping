@@ -1,4 +1,4 @@
-.PHONY: run api app test lint format install clean
+.PHONY: run api app test lint format install clean docker-build docker-up docker-down docker-logs precommit
 
 # Default target
 run: api
@@ -31,3 +31,20 @@ install:
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
+
+# Docker helpers (see compose.yml)
+docker-build:
+	docker compose build
+
+docker-up:
+	docker compose up -d
+
+docker-down:
+	docker compose down
+
+docker-logs:
+	docker compose logs -f
+
+# Pre-commit hooks
+precommit:
+	pre-commit run --all-files
