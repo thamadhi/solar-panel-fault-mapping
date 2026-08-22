@@ -77,7 +77,7 @@ html, body, [class*="css"] {
     line-height: 1;
 }
 
-/* Note: If you want these values to ALSO be white instead of blue/green/red, 
+/* Note: If you want these values to ALSO be white instead of blue/green/red,
    change the hex codes below to #ffffff. Currently keeping brand colors for status. */
 .metric-card.blue  .metric-value { color: #3b82f6; }
 .metric-card.green .metric-value { color: #10b981; }
