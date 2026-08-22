@@ -1,0 +1,30 @@
+.actionMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--color-muted);
+}
+.actionMeta span { display: inline-flex; align-items: center; gap: 0.35rem; }
+
+.bestCard {
+  background: linear-gradient(90deg, #055248, #1e293b);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  text-align: center;
+  color: #fff;
+  box-shadow: var(--shadow-hover);
+}
+.bestLabel {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin-bottom: 0.5rem;
+}
+.bestAction { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.75rem; }
+.bestMeta   { font-size: 0.85rem; opacity: 0.9; }
+
+@media (max-width: 640px) {
+  .bestAction { font-size: 1.1rem; }
+}

@@ -1,0 +1,22 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  background: var(--color-bg);
+  transition: margin-left 0.3s;
+}
+
+.content {
+  padding: 2rem 2.5rem 4rem;
+  max-width: 1400px;
+}
+
+@media (max-width: 900px) {
+  .main { margin-left: 0; }
+  .content { padding: 1rem 1rem 3rem; }
+}

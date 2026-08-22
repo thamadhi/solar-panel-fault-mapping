@@ -1,0 +1,58 @@
+.uploadActive {
+  border-color: var(--color-accent);
+  background: var(--color-accent-lt);
+}
+
+.resultHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.badgeLg { font-size: 0.95rem; padding: 6px 18px; }
+
+.heatRow td {
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.imgPreview {
+  margin-top: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  max-width: 420px;
+}
+.imgPreview img { width: 100%; height: auto; display: block; }
+
+.annotated {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  max-width: 640px;
+}
+.annotated img { width: 100%; height: auto; display: block; }
+
+.stringGrid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.5rem;
+}
+.stringCell {
+  aspect-ratio: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 700;
+  transition: transform 0.15s;
+}
+.stringCell:hover { transform: scale(1.06); }
+.cellHealthy { background: rgba(73,147,81,0.12); color: var(--color-accent); border: 1px solid var(--color-border); }
+.cellFaulty  { background: rgba(239,68,68,0.14); color: var(--color-danger); border: 1.5px solid var(--color-danger); box-shadow: 0 0 10px rgba(239,68,68,0.25); }
+
+@media (max-width: 640px) {
+  .stringGrid { grid-template-columns: repeat(4, 1fr); }
+}
