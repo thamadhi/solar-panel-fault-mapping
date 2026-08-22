@@ -1,0 +1,39 @@
+# Pre-commit hooks for the Solar PV Fault Localisation and Rectification System.
+#
+# Install:
+#   pip install pre-commit
+#   pre-commit install
+#   pre-commit run --all-files
+#
+# Note: a formatting hook (black / ruff-format) is intentionally NOT enabled
+# because the existing codebase predates it and reformatting would produce a
+# large unrelated diff. Use `make format` (black) when you want to reformat.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Notebooks, model scripts and generated assets are excluded so these
+      # hooks never rewrite large/artefact files (which would create huge
+      # unrelated diffs).
+      - id: trailing-whitespace
+        exclude: '\.ipynb$|^notebooks/|^models/'
+      - id: end-of-file-fixer
+        exclude: '\.ipynb$|^notebooks/|^models/'
+      - id: check-yaml
+        args: [--unsafe] # --unsafe: GitHub Actions `on:` key parses as a YAML 1.1 boolean
+      - id: check-json
+        exclude: '\.ipynb$' # corrupted/legacy notebooks are not valid JSON
+      - id: check-merge-conflict
+      - id: check-ast
+      - id: check-added-large-files
+        args: [--maxkb=10240] # repo already tracks model/dataset files up to ~5 MB
+      - id: debug-statements
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.10
+    hooks:
+      - id: ruff
+        # Rule set + per-file ignores are configured in pyproject.toml so the
+        # existing (pre-formatting) codebase passes without being rewritten.
+        args: [--fix, --exit-non-zero-on-fix]

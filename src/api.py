@@ -23,11 +23,11 @@ from src.services.detection_service import build_handler
 from src.services.localization_service import build_localisation_handler
 from src.services.rectification_service import build_rectification_handler
 from src.assistant.service import handle_chat, chat_history_for_api
+from src.api_docs import register_docs
 import os
 import tempfile
 import json
 from functools import wraps
-from src.authentication.jwt_utils import verify_token
 
 import numpy as np
 import shap
@@ -49,10 +49,37 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 # Initialize database
 init_db()
 
-# Load handler once at startup
-handler = build_handler()
-localisation_handler = build_localisation_handler()
-rectification_handler = build_rectification_handler()
+# OpenAPI / Swagger documentation routes (/docs, /openapi.json)
+register_docs(app)
+
+# Handlers are built lazily on first use instead of at import time so the API
+# can start without downloading the ML models from HuggingFace (and so tests
+# and CI can run without the model files). First request that needs a model
+# will trigger the download.
+handler = None
+localisation_handler = None
+rectification_handler = None
+
+
+def _get_handler():
+    global handler
+    if handler is None:
+        handler = build_handler()
+    return handler
+
+
+def _get_localisation_handler():
+    global localisation_handler
+    if localisation_handler is None:
+        localisation_handler = build_localisation_handler()
+    return localisation_handler
+
+
+def _get_rectification_handler():
+    global rectification_handler
+    if rectification_handler is None:
+        rectification_handler = build_rectification_handler()
+    return rectification_handler
 
 
 def require_auth(fn):
@@ -87,6 +114,18 @@ def require_auth(fn):
     return wrapper
 
 
+@app.route("/health", methods=["GET"])
+def health():
+    """
+    Liveness check for the API.
+
+    Returns:
+        Simple JSON status. Intentionally unauthenticated so that container
+        orchestrators and load balancers can probe the API.
+    """
+    return jsonify({"status": "ok"}), 200
+
+
 @app.route("/predict", methods=["POST"])
 @require_auth
 def predict():
@@ -106,7 +145,7 @@ def predict():
 
     try:
         # Data can be dict or list since handler handles both
-        result = handler.start_flow(string_data=data)
+        result = _get_handler().start_flow(string_data=data)
 
         # Store prediction in database
         insert_prediction(
@@ -165,7 +204,7 @@ def predict_image():
             temp_path = tmp.name
             image_path = tmp.name
 
-        result = handler.start_flow(image_data=temp_path)
+        result = _get_handler().start_flow(image_data=temp_path)
 
         insert_prediction(
             source="api",
@@ -231,10 +270,11 @@ def explain_electrical():
             return jsonify({"error": "row_idx out of range"}), 400
 
         # Build engineered features using the same pipeline as RF strategy
-        X = handler.build_electrical_features(records)
+        detection_handler = _get_handler()
+        X = detection_handler.build_electrical_features(records)
         feature_names = list(X.columns)
 
-        model = handler.electrical_model
+        model = detection_handler.electrical_model
 
         # Predict proba for selected row
         x_row = X.iloc[[row_idx]]
@@ -369,7 +409,7 @@ def localise():
                 file.save(tmp.name)
                 temp_path = tmp.name
 
-            result = localisation_handler.start_flow(image_data=temp_path)
+            result = _get_localisation_handler().start_flow(image_data=temp_path)
 
             # Debug logging — remove once image localization is confirmed working
             logger = LoggerFactory.get_logger("localise_route")
@@ -407,7 +447,6 @@ def localise():
                 fault_type=str(result.result),
                 confidence=float(result.image_confidence or 0.0),
                 image_path=temp_path,
-                location=result.location,
             )
 
             response = {
@@ -448,7 +487,7 @@ def localise():
             if not data:
                 return jsonify({"error": "No JSON body provided."}), 400
 
-            result = localisation_handler.start_flow(string_data=data)
+            result = _get_localisation_handler().start_flow(string_data=data)
 
             if result is None:
                 return (
@@ -470,7 +509,6 @@ def localise():
                 mode="string_localization",
                 fault_type=str(result.result),
                 confidence=float(result.reading_confidence or 0.0),
-                location=result.location,
             )
 
             return (
@@ -513,7 +551,7 @@ def rectify():
     if not data:
         return jsonify({"error": "No JSON body provided"}), 400
     try:
-        result = rectification_handler.start_flow(string_data=data)
+        result = _get_rectification_handler().start_flow(string_data=data)
         if result is None or not result.result_readings:
             return jsonify({"status": "error", "message": "No prediction returned"}), 500
         prediction = result.result_readings[0]
@@ -597,4 +635,4 @@ def assistant_history():
 
 # Application entry point
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=8000, debug=False)

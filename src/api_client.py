@@ -2,7 +2,7 @@ import os
 import requests
 
 # Base URL for the backend API server.
-API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:5000")
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
 
 
 def _headers(token: str | None) -> dict:

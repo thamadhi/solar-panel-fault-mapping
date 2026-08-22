@@ -1,0 +1,61 @@
+# Solar PV Fault Localisation and Rectification System — Docker Compose
+#
+# Orchestrates two services:
+#   - api:      Flask REST API (default Dockerfile entrypoint), port 8000
+#   - frontend: Next.js dashboard, port 3000
+#
+# Environment: variables are read from `.env` (env_file). The SQLite database
+# and the HuggingFace model cache are persisted on named volumes so data and
+# downloaded models survive container restarts.
+#
+# Ollama: not bundled as a compose service. For a local Ollama running on the
+# host, set OLLAMA_BASE_URL=http://host.docker.internal:11434 in `.env`
+# (macOS/Windows) so the API container can reach it. For a Linux host use the
+# host's LAN IP or the `--network host` mode.
+
+services:
+  api:
+    build: .
+    image: openpvisor-api:latest
+    container_name: openpvisor-api
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      # SQLite data and HF model cache.
+      - pv_data:/app/data
+      - hf_cache:/app/.cache/huggingface
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    image: openpvisor-frontend:latest
+    container_name: openpvisor-frontend
+    environment:
+      # Browser-side calls go straight to the host-mapped API port.
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pv_data:
+  hf_cache:

@@ -38,7 +38,7 @@ def test_create_unknown_fault_defaults_to_base():
     """Verify unknown strings default to a base Fault instance."""
     unknown_name = "Alien Interference"
     fault = FaultFactory.create_fault(unknown_name)
-    
+
     assert type(fault) is Fault
     assert fault.get_fault_type() == unknown_name
 
