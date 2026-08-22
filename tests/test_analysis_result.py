@@ -27,7 +27,7 @@ def test_analysis_result_initialization():
 
 def test_analysis_result_default_values():
     """
-    Test that AnalysisResult applies correct defaults when optional 
+    Test that AnalysisResult applies correct defaults when optional
     arguments are omitted.
     """
     analysis = AnalysisResult(result="Normal Operation")
@@ -55,7 +55,7 @@ def test_analysis_result_immutability():
 
 def test_analysis_result_list_handling_none():
     """
-    Verify that passing None to image or reading lists initializes 
+    Verify that passing None to image or reading lists initializes
     them as empty lists.
     """
     analysis = AnalysisResult(
