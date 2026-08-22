@@ -15,6 +15,10 @@
 -   [Models / Algorithms](#models-algorithms)
 -   [Clone the repository](#clone-the-repository)
 -   [Install dependencies](#install-dependencies)
+-   [🐳 Docker](#-docker)
+-   [📖 API Documentation](#-api-documentation)
+-   [🔄 CI/CD](#-cicd)
+-   [🪝 Pre-commit](#-pre-commit)
 
 # Group Members
 
@@ -59,8 +63,8 @@ The core features of the system are summarized as follows:
 
 ### Synthetic Data Generation Resources
 
-- **Paper:** Generating Synthetic Time Series Photovoltaic Data with Real-World Physical Challenges and Noise for Use in Algorithm Test and Validation  
-  Authors: Matthew Muller, Kevin Anderson, Michael Deceglie (National Renewable Energy Laboratory)  
+- **Paper:** Generating Synthetic Time Series Photovoltaic Data with Real-World Physical Challenges and Noise for Use in Algorithm Test and Validation
+  Authors: Matthew Muller, Kevin Anderson, Michael Deceglie (National Renewable Energy Laboratory)
   [Read PDF](https://docs.nrel.gov/docs/fy23osti/86459.pdf)
 
 ## Components
@@ -112,11 +116,22 @@ A floating "Solar PV AI Assistant" (bottom-right) answers questions about detect
 ![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
 
 ### 🛠 Development Tools
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
+![Pytest](https://img.shields.io/badge/Pytest-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white)
+![Ruff](https://img.shields.io/badge/Ruff-D7FF64?style=for-the-badge&logo=ruff&logoColor=black)
+![Pre-commit](https://img.shields.io/badge/Pre--commit-FAB040?style=for-the-badge&logo=pre-commit&logoColor=black)
 ![VSCode](https://img.shields.io/badge/VS_Code-007ACC?style=for-the-badge&logo=visual%20studio%20code&logoColor=white)
 ![PyCharm](https://img.shields.io/badge/PyCharm-000000?style=for-the-badge&logo=pycharm&logoColor=white)
 ![Google Colab](https://img.shields.io/badge/Google_Colab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white)
 ![Git](https://img.shields.io/badge/Git-FF5733?style=for-the-badge&logo=git&logoColor=white)
 ![GitHub](https://img.shields.io/badge/GitHub-121011?style=for-the-badge&logo=github&logoColor=white)
+
+### 📡 API & Integration
+![REST API](https://img.shields.io/badge/REST_API-009688?style=for-the-badge&logo=flask&logoColor=white)
+![OpenAPI](https://img.shields.io/badge/OpenAPI_3-6BA539?style=for-the-badge&logo=swagger&logoColor=white)
+![Swagger UI](https://img.shields.io/badge/Swagger_UI-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
 
 ### 📋 Project Management
 ![Jira](https://img.shields.io/badge/Jira-0052CC?style=for-the-badge&logo=jira&logoColor=white)
@@ -151,6 +166,11 @@ The project follows Agile methodology with the Scrum framework, which is managed
         -   [rectification](./notebooks/fault-rectification) - Rectification recommendation notebooks
     -   [tests](./tests) - Component tests
     -   [.Rhistory](./.Rhistory) - Rhistory
+    -   [.github/workflows](./.github/workflows) - CI/CD (GitHub Actions)
+    -   [Dockerfile](./Dockerfile) - Container image definition
+    -   [compose.yml](./compose.yml) - Docker Compose orchestration
+    -   [.dockerignore](./.dockerignore) - Files excluded from the image
+    -   [.pre-commit-config.yaml](./.pre-commit-config.yaml) - Pre-commit hooks
     -   [README.md](./README.md) - Project documentation
     -   [.gitignore](./.gitignore) - Files to ignore
     -   [.CONTRIBUTING.md](./CONTRIBUTING.md) - Contributions
@@ -174,6 +194,11 @@ The project follows Agile methodology with the Scrum framework, which is managed
 - Python 3.11+
 - pip
 - (Recommended) Virtual environment
+- (Alternative) Docker + Docker Compose — see the [🐳 Docker](#-docker) section
+
+> 💡 **Docker quick start:** if you have Docker installed you can skip the local
+> environment entirely — `docker compose up -d` builds and starts both the API
+> and the dashboard. Configure `.env` first (see the AI Assistant section below).
 
 ---
 
@@ -242,3 +267,109 @@ or
 ```bash
 streamlit run app.py
 ```
+
+---
+
+## 🐳 Docker
+
+Both the Flask API and the Streamlit dashboard are containerized with Docker
+Compose (`compose.yml`). One shared image (`Dockerfile`) is used; the dashboard
+container just overrides the command.
+
+> **Important:** Docker reads environment variables from `.env`. `.env` must be a
+> plain `KEY=VALUE` file. If your local `.env` was created from an older
+> `.env.example` that contained docstring/prose lines, remove those lines first
+> — docker compose rejects them. See `.env.example`.
+
+### Build & run
+
+```bash
+docker compose build        # build the image
+docker compose up -d        # start API + dashboard in the background
+docker compose down         # stop and remove containers
+docker compose logs -f      # follow the logs
+```
+
+Or use the Makefile helpers:
+
+```bash
+make docker-build
+make docker-up
+make docker-down
+make docker-logs
+```
+
+### Accessing the services
+
+| Service   | URL                        | Port |
+|-----------|----------------------------|------|
+| Flask API | http://localhost:8000      | 8000 |
+| API docs  | http://localhost:8000/docs | 8000 |
+| Dashboard | http://localhost:8501      | 8501 |
+
+### Data & models
+
+- The SQLite database is persisted in the `pv_data` volume (`/app/data`), shared
+  by both services.
+- ML models are downloaded from HuggingFace on first use and cached in the
+  `hf_cache` volume (`/app/.cache/huggingface`), so restarts don't re-download.
+
+### Ollama inside Docker
+
+Ollama is **not** bundled in the compose stack. A local Ollama running on your
+host is reached from the API container via:
+
+```bash
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+```
+
+set in `.env` (macOS/Windows). For local non-Docker development the default
+`http://localhost:11434` keeps working unchanged. If Ollama (or any AI provider)
+is unavailable, the assistant falls back to its built-in offline knowledge base.
+
+---
+
+## 📖 API Documentation
+
+The Flask REST API is documented with an **OpenAPI 3.0** specification, rendered
+with **Swagger UI**.
+
+- Interactive docs (Swagger UI): <http://localhost:8000/docs>
+- Raw OpenAPI JSON: <http://localhost:8000/openapi.json>
+
+The specification covers every real endpoint: authentication, electrical/thermal
+fault detection, explainability, localisation, rectification, and the Solar PV AI
+Assistant (chat + history). All protected endpoints are marked with a JWT bearer
+security scheme; no credentials are ever embedded in the docs. Use the green
+"Authorize" button in Swagger UI to paste a token returned by `POST /auth/login`.
+
+---
+
+## 🔄 CI/CD
+
+Continuous integration is configured with **GitHub Actions**
+(`.github/workflows/ci.yml`). It runs on every push to `main`/`master` and on
+every pull request:
+
+1. **Lint** — `ruff` static checks (config in `pyproject.toml`)
+2. **Tests** — `pytest` (AI providers are mocked or use the offline fallback; no
+   API keys, Ollama or large model downloads are needed in CI)
+3. **Docker** — validates `docker compose config` and builds the Docker image
+
+---
+
+## 🪝 Pre-commit
+
+Pre-commit hooks (`pre-commit-config.yaml`) enforce code quality on every commit:
+trailing-whitespace/EOF fixes, YAML/JSON validation, merge-conflict detection,
+large-file detection, and `ruff` linting.
+
+```bash
+pip install pre-commit
+pre-commit install
+pre-commit run --all-files
+```
+
+or `make precommit`. Ruff is configured with per-file allowances for the
+existing (pre-formatting) codebase so it stays green without rewriting it; new
+files are checked against the full rule set.

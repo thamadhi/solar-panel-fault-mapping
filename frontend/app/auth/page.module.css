@@ -1,0 +1,45 @@
+.page {
+  min-height: 100vh;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow-hover);
+}
+
+.brand {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.brand h1 { font-size: 1.6rem; font-weight: 800; margin: 0.5rem 0 0.15rem; }
+.brand p  { font-size: 0.78rem; color: var(--color-muted); letter-spacing: 0.06em; }
+
+.form { display: flex; flex-direction: column; gap: 0; }
+
+.registerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: var(--color-primary);
+}
+
+.back {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.back:hover { color: var(--color-accent); }

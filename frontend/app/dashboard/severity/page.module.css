@@ -1,0 +1,25 @@
+.uploadActive {
+  border-color: var(--color-accent);
+  background: var(--color-accent-lt);
+}
+
+.scoreCard { border-top-width: 4px; }
+
+.low      { border-top-color: #16a34a; }
+.medium   { border-top-color: var(--color-warning); }
+.high     { border-top-color: #ea580c; }
+.critical { border-top-color: var(--color-danger); }
+
+.low      .metric-value { color: #16a34a; }
+.medium   .metric-value { color: var(--color-warning); }
+.high     .metric-value { color: #ea580c; }
+.critical .metric-value { color: var(--color-danger); }
+
+.imgPreview {
+  margin-top: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  max-width: 420px;
+}
+.imgPreview img { width: 100%; height: auto; display: block; }
