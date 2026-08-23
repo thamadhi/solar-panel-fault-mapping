@@ -28,6 +28,15 @@ export async function apiLogin(username: string, password: string) {
   };
 }
 
+export async function apiRegister(username: string, email: string, password: string, userType: string) {
+  const res = await api.post('/auth/register', { username, email, password, user_type: userType });
+  return res.data as {
+    status: string;
+    token: string;
+    user: { id: number; username: string; email: string; type: string };
+  };
+}
+
 /* ── Fault Detection ────────────────────────────────────── */
 export async function predictElectrical(records: object[]) {
   const res = await api.post('/predict', records);

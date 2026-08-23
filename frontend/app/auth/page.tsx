@@ -3,11 +3,19 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
-import { apiLogin } from '@/lib/api';
+import { apiLogin, apiRegister } from '@/lib/api';
 import { Sun, LogIn, UserPlus } from 'lucide-react';
 import styles from './page.module.css';
+import type { AxiosError } from 'axios';
 
 type Tab = 'login' | 'register';
+
+const REGISTRATION_ROLES = ['Standard', 'Solar PV Operator', 'Technician'];
+
+function apiErrorMessage(err: unknown, fallback: string): string {
+  const axiosErr = err as AxiosError<{ message?: string }>;
+  return axiosErr?.response?.data?.message ?? fallback;
+}
 
 export default function AuthPage() {
   const [tab, setTab]         = useState<Tab>('login');
@@ -18,24 +26,49 @@ export default function AuthPage() {
   const { login }   = useAuth();
   const router      = useRouter();
 
+  // Register form state
+  const [regUsername, setRegUsername]   = useState('');
+  const [regEmail, setRegEmail]         = useState('');
+  const [regPassword, setRegPassword]   = useState('');
+  const [regConfirm, setRegConfirm]     = useState('');
+  const [regRole, setRegRole]           = useState('Standard');
+
+  function afterAuth(data: { status: string; token: string; user: Parameters<typeof login>[1] }) {
+    if (data.status === 'success') {
+      login(data.token, data.user);
+      router.replace('/dashboard');
+      return true;
+    }
+    return false;
+  }
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    setError(''); setLoading(true);
     try {
       const data = await apiLogin(username.trim(), password);
-      if (data.status === 'success') {
-        login(data.token, data.user);
-        router.replace('/dashboard');
-      } else {
-        setError('Invalid credentials. Please try again.');
-      }
+      if (!afterAuth(data)) setError('Invalid credentials. Please try again.');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Login failed';
-      setError(msg.includes('401') ? 'Invalid username or password.' : 'Cannot reach the API server. Make sure it is running.');
-    } finally {
-      setLoading(false);
-    }
+      setError(apiErrorMessage(err, 'Cannot reach the API server. Make sure it is running.'));
+    } finally { setLoading(false); }
+  }
+
+  async function handleRegister(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+
+    if (regUsername.trim().length < 3) { setError('Username must be at least 3 characters.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(regEmail.trim())) { setError('Please enter a valid email address.'); return; }
+    if (regPassword.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    if (regPassword !== regConfirm) { setError('Passwords do not match.'); return; }
+
+    setLoading(true);
+    try {
+      const data = await apiRegister(regUsername.trim(), regEmail.trim(), regPassword, regRole);
+      if (!afterAuth(data)) setError('Registration failed. Please try again.');
+    } catch (err: unknown) {
+      setError(apiErrorMessage(err, 'Cannot reach the API server. Make sure it is running.'));
+    } finally { setLoading(false); }
   }
 
   return (
@@ -57,6 +90,8 @@ export default function AuthPage() {
             <UserPlus size={14} style={{ display: 'inline', marginRight: 4 }} /> Register
           </button>
         </div>
+
+        {error && <div className="alert alert-error" style={{ marginBottom: '1rem' }}>{error}</div>}
 
         {tab === 'login' ? (
           <form onSubmit={handleLogin} className={styles.form}>
@@ -83,19 +118,71 @@ export default function AuthPage() {
                 required
               />
             </div>
-            {error && <div className="alert alert-error">{error}</div>}
             <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
               {loading ? <span className="spinner" style={{ width:16, height:16, borderWidth:2 }} /> : <LogIn size={16} />}
               {loading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
         ) : (
-          <div className={styles.registerInfo}>
-            <div className="alert alert-info">
-              New accounts are created by your system administrator. Contact them to receive your credentials.
+          <form onSubmit={handleRegister} className={styles.form}>
+            <div className="form-group">
+              <label className="form-label">Username</label>
+              <input
+                className="form-input"
+                type="text"
+                placeholder="Choose a username (min 3 chars)"
+                value={regUsername}
+                onChange={e => setRegUsername(e.target.value)}
+                required
+                autoFocus
+              />
             </div>
-            <p>Once you have credentials, switch to the <strong>Login</strong> tab to access the dashboard.</p>
-          </div>
+            <div className="form-group">
+              <label className="form-label">Email</label>
+              <input
+                className="form-input"
+                type="email"
+                placeholder="you@example.com"
+                value={regEmail}
+                onChange={e => setRegEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid-2" style={{ gap: '0.75rem' }}>
+              <div className="form-group">
+                <label className="form-label">Password</label>
+                <input
+                  className="form-input"
+                  type="password"
+                  placeholder="Min 8 characters"
+                  value={regPassword}
+                  onChange={e => setRegPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Confirm Password</label>
+                <input
+                  className="form-input"
+                  type="password"
+                  placeholder="Repeat password"
+                  value={regConfirm}
+                  onChange={e => setRegConfirm(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Account Type</label>
+              <select className="form-select" value={regRole} onChange={e => setRegRole(e.target.value)}>
+                {REGISTRATION_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+            <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+              {loading ? <span className="spinner" style={{ width:16, height:16, borderWidth:2 }} /> : <UserPlus size={16} />}
+              {loading ? 'Creating account…' : 'Create Account'}
+            </button>
+          </form>
         )}
 
         <p className={styles.back} onClick={() => router.push('/')}>← Back to Home</p>
