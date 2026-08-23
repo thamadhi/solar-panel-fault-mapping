@@ -143,6 +143,53 @@ def build_openapi_spec() -> dict:
                     },
                 }
             },
+            "/auth/register": {
+                "post": {
+                    "tags": ["Authentication"],
+                    "summary": "Register a new user account",
+                    "description": (
+                        "Creates a Standard / Solar PV Operator / Technician "
+                        "account (never Admin) and returns a signed JWT bearer "
+                        "token so the client is logged in immediately. Body is "
+                        "LoginRequest plus 'email' and optional 'user_type'."
+                    ),
+                    "security": [],
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/LoginRequest"}
+                            }
+                        },
+                    },
+                    "responses": {
+                        "201": {
+                            "description": "Registration successful",
+                            "content": {
+                                "application/json": {
+                                    "schema": {"$ref": "#/components/schemas/LoginResponse"}
+                                }
+                            },
+                        },
+                        "400": {
+                            "description": "Validation error",
+                            "content": {
+                                "application/json": {
+                                    "schema": {"$ref": "#/components/schemas/Error"}
+                                }
+                            },
+                        },
+                        "409": {
+                            "description": "Username or email already taken",
+                            "content": {
+                                "application/json": {
+                                    "schema": {"$ref": "#/components/schemas/Error"}
+                                }
+                            },
+                        },
+                    },
+                }
+            },
             "/predict": {
                 "post": {
                     "tags": ["Fault Detection"],

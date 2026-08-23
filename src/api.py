@@ -16,7 +16,7 @@ from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 from flask_cors import CORS
 from src.core.logger import LoggerFactory
-from src.database.db import init_db, insert_prediction, get_user_by_username
+from src.database.db import init_db, insert_prediction, get_user_by_username, db_create_user
 from src.authentication.jwt_utils import create_token, verify_token
 from src.authentication.security import verify_password
 from src.services.detection_service import build_handler
@@ -27,6 +27,7 @@ from src.api_docs import register_docs
 import os
 import tempfile
 import json
+import sqlite3
 from functools import wraps
 
 import numpy as np
@@ -378,6 +379,99 @@ def api_login():
             }
         ),
         200,
+    )
+
+
+# Roles a new account may self-select. Admin accounts are provisioned by
+# seeding only (see init_db) and can never be created through this endpoint.
+ALLOWED_REGISTRATION_ROLES = ("Standard", "Solar PV Operator", "Technician")
+
+
+@app.route("/auth/register", methods=["POST"])
+def api_register():
+    """
+    Self-service account registration.
+
+    Expects:
+        {
+            "username":  "...",
+            "email":     "...",
+            "password":  "...",
+            "user_type": "Standard" | "Solar PV Operator" | "Technician"
+                         (optional, defaults to "Standard")
+        }
+
+    Returns:
+        JWT token plus the new user's metadata so the client is
+        logged in immediately after registering.
+    """
+    body = request.get_json(silent=True)
+
+    if not body:
+        return jsonify({"error": "No JSON body provided"}), 400
+
+    username = str(body.get("username", "")).strip()
+    email = str(body.get("email", "")).strip().lower()
+    password = str(body.get("password", ""))
+    user_type = str(body.get("user_type", "Standard")).strip()
+
+    if len(username) < 3 or not username.replace("_", "").replace(".", "").isalnum():
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": "Username must be at least 3 characters "
+                    "(letters, numbers, dots, underscores only)",
+                }
+            ),
+            400,
+        )
+
+    if "@" not in email or "." not in email.split("@")[-1]:
+        return (
+            jsonify({"status": "error", "message": "Please provide a valid email address"}),
+            400,
+        )
+
+    if len(password) < 8:
+        return (
+            jsonify({"status": "error", "message": "Password must be at least 8 characters"}),
+            400,
+        )
+
+    if user_type not in ALLOWED_REGISTRATION_ROLES:
+        user_type = "Standard"
+
+    if get_user_by_username(username):
+        return jsonify({"status": "error", "message": "Username is already taken"}), 409
+
+    try:
+        user_id = db_create_user(
+            user_type=user_type, username=username, email=email, password=password
+        )
+    except sqlite3.IntegrityError:
+        # username UNIQUE passed the check above -> the email must be taken
+        return (
+            jsonify({"status": "error", "message": "An account with this email already exists"}),
+            409,
+        )
+
+    token = create_token(user_id=user_id, username=username, role=user_type)
+
+    return (
+        jsonify(
+            {
+                "status": "success",
+                "token": token,
+                "user": {
+                    "id": user_id,
+                    "type": user_type,
+                    "username": username,
+                    "email": email,
+                },
+            }
+        ),
+        201,
     )
 
 
