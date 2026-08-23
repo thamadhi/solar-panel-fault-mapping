@@ -1,16 +1,26 @@
 'use client';
 
 import Link from 'next/link';
-import { Shield, MapPin, BarChart2, Wrench, Sun, ChevronRight, Zap, CheckCircle, Globe } from 'lucide-react';
+import { Shield, MapPin, BarChart2, Wrench, ChevronRight, CheckCircle } from 'lucide-react';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import Logo from '@/components/ui/Logo';
+import Typewriter from '@/components/fx/Typewriter';
 import Reveal from '@/components/fx/Reveal';
 import styles from './page.module.css';
 
+const HEADLINES = [
+  'Find the fault before it finds you.',
+  'Your panels shouldn\u2019t hide problems.',
+  'Detect faults before they become losses.',
+  'See what your solar system is hiding.',
+  'Smarter solar starts with knowing what\u2019s wrong.',
+];
+
 const FEATURES = [
-  { icon: Shield,   title: 'Fault Detection',  desc: 'Instantly spot electrical & thermal problems in your solar system using AI-powered models.' },
-  { icon: MapPin,   title: 'Localisation',     desc: 'See exactly where the issue is — faulty strings or hotspot regions on thermal images.' },
-  { icon: BarChart2,title: 'Severity',          desc: 'Understand how serious the problem is and get a quantified severity score.' },
-  { icon: Wrench,   title: 'Rectification',    desc: 'Receive intelligent recommendations to fix issues with cost and downtime estimates.' },
+  { icon: Shield,    title: 'Fault detection',  desc: 'Two independent readings — electrical signatures and thermal imagery — have to agree before anything gets flagged.' },
+  { icon: MapPin,    title: 'Localisation',     desc: 'Pinpointed to the exact string or hotspot region, so nobody wanders the rows with a multimeter.' },
+  { icon: BarChart2, title: 'Severity',         desc: 'A calibrated score that tells you whether it can wait for the next maintenance window — or can\u2019t.' },
+  { icon: Wrench,    title: 'Rectification',    desc: 'A concrete fix with cost and downtime estimates attached. Not just \u201cinspect panel\u201d.' },
 ];
 
 const STATS = [
@@ -25,10 +35,9 @@ export default function LandingPage() {
     <div className={styles.page}>
       {/* ── Navbar ── */}
       <nav className={styles.nav}>
-        <div className={styles.navBrand}>
-          <Sun size={26} color="var(--color-accent)" strokeWidth={2.5} />
-          <span>OpenPVisor Insight</span>
-        </div>
+        <Link href="/" className={styles.navBrand} aria-label="OpenPVisor home">
+          <Logo fontSize="1.2rem" />
+        </Link>
         <div className={styles.navLinks}>
           <a href="#features" className={styles.navLink}>Features</a>
           <a href="#about"    className={styles.navLink}>About</a>
@@ -44,27 +53,28 @@ export default function LandingPage() {
 
       {/* ── Hero ── */}
       <section className={styles.hero}>
-        <div className={styles.heroBadge}>
-          <Zap size={12} />
-          AI-Powered Solar Intelligence
-        </div>
         <h1 className={styles.heroTitle}>
-          Future-Proof<br />
-          <span className={`gradient-text ${styles.heroAccent}`}>Solar Assets.</span>
+          <span className={styles.visuallyHidden}>
+            Find the fault before it finds you.
+          </span>
+          <span className={styles.heroGhost} aria-hidden="true">
+            {HEADLINES.reduce((a, b) => (b.length > a.length ? b : a))}
+          </span>
+          <Typewriter phrases={HEADLINES} />
         </h1>
         <p className={styles.heroSub}>
-          OpenPVisor Insight helps you detect, locate, and fix solar panel faults quickly and accurately —
-          combining electrical analysis and computer vision in one intelligent dashboard.
+          OpenPVisor keeps an eye on every string in your array — cross-checking electrical
+          signals against thermal imagery — then tells you what failed, where it is,
+          and how much it matters.
         </p>
         <div className={styles.heroCtas}>
           <Link href="/auth" className="btn btn-primary btn-lg">
             Enter Dashboard <ChevronRight size={18} />
           </Link>
           <a href="#features" className="btn btn-outline btn-lg">
-            Learn More
+            See how it works
           </a>
         </div>
-        <div className={styles.heroGlow} />
       </section>
 
       {/* ── Stats ── */}
@@ -82,15 +92,16 @@ export default function LandingPage() {
       {/* ── Features ── */}
       <section className={styles.features} id="features">
         <div className={styles.sectionHeader}>
-          <p className={styles.sectionEyebrow}>What We Do</p>
-          <h2>Everything You Need to Protect Your Solar Investment</h2>
+          <p className={styles.sectionEyebrow}>What we do</p>
+          <h2>Spot it. Place it.<br />Size it up. Fix it.</h2>
         </div>
         <div className="grid-4">
           {FEATURES.map(({ icon: Icon, title, desc }, i) => (
             <Reveal key={title} delay={i * 100}>
               <div className={`card ${styles.featureCard}`}>
-                <div className={styles.featureIcon}>
-                  <Icon size={28} strokeWidth={1.8} />
+                <div className={styles.featureTop}>
+                  <span className={styles.featureIndex}>{String(i + 1).padStart(2, '0')}</span>
+                  <Icon size={20} strokeWidth={1.8} />
                 </div>
                 <h3>{title}</h3>
                 <p>{desc}</p>
@@ -106,15 +117,15 @@ export default function LandingPage() {
           <Reveal>
             <div className={styles.aboutText}>
               <p className={styles.sectionEyebrow}>About OpenPVisor</p>
-              <h2>Built for Solar Engineers, Operators &amp; Technicians</h2>
+              <h2>Built alongside the people who walk the rows.</h2>
               <p>
-                OpenPVisor Insight is an end-to-end fault management platform combining Random Forest
-                electrical classification, CNN-BiLSTM string localisation, XGBoost severity
-                scoring, and Score-CAM thermal hotspot detection — all in one unified dashboard.
+                OpenPVisor Insight grew out of field work on real plants. Every prediction is
+                traced back to its evidence, and every screen was shaped by long conversations
+                with the engineers, operators, and technicians who use it at 7am.
               </p>
               <ul className={styles.checkList}>
-                {['JWT-authenticated multi-role access', 'SHAP explainability for every prediction',
-                  'Real-time AI assistant chatbot', 'Full prediction history & trend analytics'].map(t => (
+                {['Multi-role access, properly authenticated', 'An explanation behind every prediction',
+                  'Answers in plain language, on call', 'Full prediction history & trend analytics'].map(t => (
                   <li key={t}><CheckCircle size={16} color="var(--color-accent)" /> {t}</li>
                 ))}
               </ul>
@@ -123,27 +134,34 @@ export default function LandingPage() {
               </Link>
             </div>
           </Reveal>
-          <div className={styles.aboutCards}>
-            {[
-              { Icon: Globe, title: 'Our Mission', desc: 'Making solar energy more efficient through AI-powered fault detection.' },
-              { Icon: Sun,   title: 'Our Vision',  desc: 'A world where solar energy is maximized through intelligent monitoring.' },
-            ].map(({ Icon, title, desc }, i) => (
-              <Reveal key={title} delay={i * 120}>
-                <div className={`card ${styles.aboutCard}`}>
-                  <Icon size={32} color="var(--color-accent)" strokeWidth={1.8} />
-                  <h3>{title}</h3>
-                  <p>{desc}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+          <Reveal delay={140}>
+            <div className={`card ${styles.missionCard}`}>
+              <div className={styles.missionHead}>
+                <span>Our mission</span>
+                <span className={styles.missionNote}>why OpenPVisor exists</span>
+              </div>
+              <p className={styles.missionStatement}>
+                Solar fails quietly — a hotspot here, a drifting string there,
+                nothing you can see from the ground. We exist to catch those
+                failures while they&rsquo;re still cheap: every panel accounted
+                for, every fault explained in plain language.
+              </p>
+              <ul className={styles.missionValues}>
+                {['No black-box predictions',
+                  'Efficient fault diagnosis',
+                  'Downtime is the real enemy'].map(v => (
+                  <li key={v}>{v}</li>
+                ))}
+              </ul>
+            </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ── Footer ── */}
       <footer className={styles.footer}>
-        <Sun size={18} color="var(--color-accent)" />
-        <span>AN OPENPVISOR PRODUCT</span>
+        <span className={styles.footerRule} aria-hidden="true" />
+        <span>An OpenPVisor product</span>
       </footer>
     </div>
   );

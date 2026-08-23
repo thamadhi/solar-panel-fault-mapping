@@ -1,0 +1,25 @@
+.typed {
+  display: block;
+}
+
+/* A thin accent sliver that breathes rather than blinks — calmer,
+   and it reads as intentional next to the heavy display face. */
+.caret {
+  display: inline-block;
+  width: 0.075em;
+  height: 0.78em;
+  margin-left: 0.09em;
+  border-radius: 999px;
+  background: var(--color-accent);
+  transform: translateY(0.07em);
+  animation: caretBreathe 1.15s ease-in-out infinite;
+}
+
+@keyframes caretBreathe {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.15; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret { display: none; }
+}

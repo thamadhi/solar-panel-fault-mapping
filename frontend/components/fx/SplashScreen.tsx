@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Sun } from 'lucide-react';
+import Logo from '@/components/ui/Logo';
 
 /**
  * Branded splash shown on first page load, fading out once the app has
@@ -22,8 +22,7 @@ export default function SplashScreen() {
   return (
     <div className={`splash ${hidden ? 'splashHide' : ''}`} aria-hidden="true">
       <div className="splashLogo">
-        <Sun size={40} color="var(--color-accent)" strokeWidth={2.2} />
-        OpenPVisor Insight
+        <Logo fontSize="clamp(1.15rem, 4vw, 1.6rem)" />
       </div>
       <div className="splashBar" />
       <div className="splashText">Solar Intelligence Hub</div>

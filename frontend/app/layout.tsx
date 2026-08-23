@@ -3,6 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/lib/AuthContext';
 import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import SplashScreen from '@/components/fx/SplashScreen';
+import SmoothScroll from '@/components/fx/SmoothScroll';
 import CursorGlow from '@/components/fx/CursorGlow';
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <AuthProvider>
+          <SmoothScroll />
           <SplashScreen />
           {children}
           <CursorGlow />
