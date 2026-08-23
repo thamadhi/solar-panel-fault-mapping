@@ -5,10 +5,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { ROLE_PERMISSIONS } from './DashboardLayout';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import LogoWord from '@/components/ui/Logo';
 import styles from './Sidebar.module.css';
 import {
   LayoutDashboard, Zap, MapPin, AlertTriangle, Wrench,
-  History, Settings, HelpCircle, LogOut, Sun,
+  History, Settings, HelpCircle, LogOut,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -41,9 +42,8 @@ export default function Sidebar() {
     <aside className={styles.sidebar}>
       {/* Brand */}
       <div className={styles.brand}>
-        <Sun size={28} color="var(--color-accent)" strokeWidth={2.5} />
         <div>
-          <div className={styles.brandName}>OpenPVisor Insight</div>
+          <LogoWord fontSize="1.05rem" />
           <div className={styles.brandSub}>Solar Intelligence Hub</div>
         </div>
       </div>

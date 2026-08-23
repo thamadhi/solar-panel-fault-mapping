@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { apiLogin, apiRegister } from '@/lib/api';
-import { Sun, LogIn, UserPlus } from 'lucide-react';
+import Logo from '@/components/ui/Logo';
+import { LogIn, UserPlus } from 'lucide-react';
 import styles from './page.module.css';
 import type { AxiosError } from 'axios';
 
@@ -76,8 +77,9 @@ export default function AuthPage() {
       <div className={styles.card}>
         {/* Brand */}
         <div className={styles.brand}>
-          <Sun size={36} color="var(--color-accent)" strokeWidth={2} />
-          <h1>OpenPVisor Insight</h1>
+          <h1>
+            <Logo fontSize="1.6rem" />
+          </h1>
           <p>Solar Intelligence Hub</p>
         </div>
 

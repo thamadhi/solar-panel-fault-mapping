@@ -1,0 +1,48 @@
+.word {
+  position: relative;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--color-primary);
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* The dotless “ı” that carries the eye */
+.iStem {
+  position: relative;
+  display: inline-block;
+}
+
+.eye {
+  position: absolute;
+  left: 50%;
+  bottom: 0.58em;
+  width: 0.74em;
+  height: auto;
+  transform: translateX(-50%);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.iris {
+  transition: transform 0.18s ease-out;
+  will-change: transform;
+}
+
+.blink {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .blink {
+    animation: pvBlink 6s ease-in-out infinite;
+  }
+}
+
+@keyframes pvBlink {
+  0%, 93%, 100% { transform: scaleY(1); }
+  95.5%         { transform: scaleY(0.12); }
+  98%           { transform: scaleY(1); }
+}

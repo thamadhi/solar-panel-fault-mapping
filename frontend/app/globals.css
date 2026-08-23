@@ -52,7 +52,7 @@ html[data-theme="dark"] {
 /* ── Reset ─────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; }
+/* Scrolling is driven by Lenis (see components/fx/SmoothScroll) */
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
@@ -61,6 +61,11 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
+
+/* ── Lenis (smooth scroll) ──────────────────────────────── */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
 
 /* Smooth cross-fade while switching themes — applied only during the switch */
 html.theme-switching body,
@@ -110,11 +115,6 @@ a:hover { text-decoration: underline; }
   white-space: nowrap;
   letter-spacing: -0.02em;
   color: var(--color-primary);
-}
-.splashLogo svg { animation: splashPulse 1.5s ease-in-out infinite; }
-@keyframes splashPulse {
-  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 6px var(--color-glow)); }
-  50%      { transform: scale(1.15) rotate(12deg); filter: drop-shadow(0 0 20px var(--color-glow)); }
 }
 .splashBar {
   width: 190px;

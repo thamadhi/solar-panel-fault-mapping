@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Sun } from 'lucide-react';
+import Logo from '@/components/ui/Logo';
 import { useAuth } from '@/lib/AuthContext';
 import Sidebar from './Sidebar';
 import styles from './DashboardLayout.module.css';
@@ -30,8 +30,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
       <div className="splash">
         <div className="splashLogo">
-          <Sun size={40} color="var(--color-accent)" strokeWidth={2.2} />
-          OpenPVisor Insight
+          <Logo fontSize="clamp(1.15rem, 4vw, 1.6rem)" />
         </div>
         <div className="splashBar" />
         <div className="splashText">Restoring session…</div>
