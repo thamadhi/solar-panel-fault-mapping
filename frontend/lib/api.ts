@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+// If NEXT_PUBLIC_API_URL is set at build time (e.g. Docker), call the API
+// directly. Otherwise use the same-origin Next.js rewrite proxy so deployed
+// builds never fall back to a developer's localhost.
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api-proxy';
 
 const api = axios.create({
   baseURL: API_BASE,

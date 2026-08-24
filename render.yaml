@@ -1,0 +1,49 @@
+# Render Blueprint — Solar PV Fault Localisation and Rectification System
+#
+# Deploys the Flask API as a Docker web service. The Next.js frontend stays
+# on Vercel and reaches this API through its same-origin /api-proxy rewrite
+# (set API_URL in the Vercel project to this service's onrender.com URL).
+#
+# Deploy: push to GitHub, then render.com → New → Blueprint → select the repo.
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  # ── Flask REST API ────────────────────────────────────────────────
+  - type: web
+    name: openpvisor-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # "free" spins down after 15 min idle (cold starts re-download ML models,
+    # so the first request can take ~1-2 min). Use "starter" + disk below for
+    # always-on behaviour.
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      # Generated once, then stable across deploys. Do NOT log or commit it.
+      - key: JWT_SECRET
+        generateValue: true
+      # Optional AI assistant provider ("openai" | "gemini" | "claude" | ...).
+      # Leave blank to run the offline fallback. Set the matching key below.
+      - key: AI_PROVIDER
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Models are fetched from public HuggingFace repos at first request;
+      # no HF token is required.
+
+    # Persistent volume for the SQLite DB (/app/data/app.db). Disks are not
+    # available on the free plan — without one, registrations/history reset on
+    # every deploy or restart. Uncomment together with plan: starter.
+    # disk:
+    #   name: pv-data
+    #   mountPath: /app/data
+    #   sizeGB: 1
