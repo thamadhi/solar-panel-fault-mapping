@@ -1,7 +1,7 @@
 [project]
-name = "pv-insight"
+name = "opensunray-insight"
 version = "0.1.0"
-description = "PV Insight application"
+description = "OpenSunray Insight application"
 requires-python = ">=3.11"
 
 dependencies = [

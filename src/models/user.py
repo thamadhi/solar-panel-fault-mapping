@@ -3,7 +3,7 @@ from src.views.dashboard_view import Dashboard
 
 class User:
     """
-    Domain entity representing a system user in the PVInsight platform.
+    Domain entity representing a system user in the OpenSunray platform.
 
     This class encapsulates user-related attributes and provides
     controlled read-only access via property decorators.

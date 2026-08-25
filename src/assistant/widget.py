@@ -329,7 +329,7 @@ html, body {
             </div>
             <div class="panel-title-wrap">
                 <div class="panel-title">Solar PV AI Assistant</div>
-                <div class="panel-sub"><span class="dot"></span><span id="status-label">PVInsight Intelligence</span></div>
+                <div class="panel-sub"><span class="dot"></span><span id="status-label">OpenSunray Intelligence</span></div>
             </div>
             <button id="close-btn" class="close-btn" type="button" aria-label="Close assistant">&#215;</button>
         </header>

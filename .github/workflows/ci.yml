@@ -99,6 +99,6 @@ jobs:
         with:
           context: .
           push: false
-          tags: openpvisor-api:ci
+          tags: opensunray-api:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max

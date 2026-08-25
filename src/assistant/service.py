@@ -20,7 +20,7 @@ from src.database.chat_repo import (
     get_chat_history_pairs,
 )
 
-logger = logging.getLogger("pv-insight.assistant.service")
+logger = logging.getLogger("opensunray.assistant.service")
 
 MAX_MESSAGE_CHARS = 4000
 CHAT_HISTORY_LIMIT = 12

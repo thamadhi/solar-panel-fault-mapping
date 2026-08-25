@@ -16,8 +16,8 @@
 services:
   api:
     build: .
-    image: openpvisor-api:latest
-    container_name: openpvisor-api
+    image: opensunray-api:latest
+    container_name: opensunray-api
     env_file:
       - .env
     ports:
@@ -43,8 +43,8 @@ services:
   frontend:
     build:
       context: ./frontend
-    image: openpvisor-frontend:latest
-    container_name: openpvisor-frontend
+    image: opensunray-frontend:latest
+    container_name: opensunray-frontend
     environment:
       # Browser-side calls go straight to the host-mapped API port.
       NEXT_PUBLIC_API_URL: http://localhost:8000

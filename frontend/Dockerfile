@@ -1,4 +1,4 @@
-# OpenPVisor Insight — Next.js frontend
+# OpenSunray Insight — Next.js frontend
 # Multi-stage build: install deps → build → slim runtime.
 
 FROM node:20-alpine AS deps

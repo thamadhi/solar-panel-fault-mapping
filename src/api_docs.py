@@ -1,4 +1,4 @@
-"""OpenAPI 3.0 documentation for the PV Insight REST API.
+"""OpenAPI 3.0 documentation for the OpenSunray Insight REST API.
 
 This module keeps a hand-written, dependency-free OpenAPI 3 specification that
 mirrors the actual behaviour of the routes defined in :mod:`src.api`. It is
@@ -17,7 +17,7 @@ _SWAGGER_UI_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>PV Insight API — Swagger UI</title>
+<title>OpenSunray Insight API — Swagger UI</title>
 <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
 </head>
 <body>
@@ -48,7 +48,7 @@ def build_openapi_spec() -> dict:
     return {
         "openapi": "3.0.3",
         "info": {
-            "title": "PV Insight API",
+            "title": "OpenSunray Insight API",
             "description": (
                 "REST API for the Solar PV Fault Localisation and Rectification "
                 "System. Provides JWT-based authentication, electrical and "

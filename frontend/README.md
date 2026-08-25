@@ -1,3 +1,8 @@
+# OpenSunray Insight — Frontend
+
+The Next.js dashboard for OpenSunray Insight. It talks to the Flask API described in
+the [root README](../README.md).
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
