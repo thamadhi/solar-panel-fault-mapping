@@ -1,3 +1,8 @@
+# OpenSunray Insight
+
+**Solar Intelligence Hub** — AI-driven detection, localisation, severity analysis, and
+rectification guidance for solar PV systems.
+
 # Table of Contents
 
 -   [Group Members](#group-members)

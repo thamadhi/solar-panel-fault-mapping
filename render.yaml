@@ -10,7 +10,7 @@
 services:
   # ── Flask REST API ────────────────────────────────────────────────
   - type: web
-    name: openpvisor-api
+    name: opensunray-api
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .

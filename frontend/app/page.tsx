@@ -35,7 +35,7 @@ export default function LandingPage() {
     <div className={styles.page}>
       {/* ── Navbar ── */}
       <nav className={styles.nav}>
-        <Link href="/" className={styles.navBrand} aria-label="OpenPVisor home">
+        <Link href="/" className={styles.navBrand} aria-label="OpenSunray home">
           <Logo fontSize="1.2rem" />
         </Link>
         <div className={styles.navLinks}>
@@ -63,7 +63,7 @@ export default function LandingPage() {
           <Typewriter phrases={HEADLINES} />
         </h1>
         <p className={styles.heroSub}>
-          OpenPVisor keeps an eye on every string in your array — cross-checking electrical
+          OpenSunray keeps an eye on every string in your array — cross-checking electrical
           signals against thermal imagery — then tells you what failed, where it is,
           and how much it matters.
         </p>
@@ -116,10 +116,10 @@ export default function LandingPage() {
         <div className={styles.aboutGrid}>
           <Reveal>
             <div className={styles.aboutText}>
-              <p className={styles.sectionEyebrow}>About OpenPVisor</p>
+              <p className={styles.sectionEyebrow}>About OpenSunray</p>
               <h2>Built alongside the people who walk the rows.</h2>
               <p>
-                OpenPVisor Insight grew out of field work on real plants. Every prediction is
+                OpenSunray Insight grew out of field work on real plants. Every prediction is
                 traced back to its evidence, and every screen was shaped by long conversations
                 with the engineers, operators, and technicians who use it at 7am.
               </p>
@@ -138,7 +138,7 @@ export default function LandingPage() {
             <div className={`card ${styles.missionCard}`}>
               <div className={styles.missionHead}>
                 <span>Our mission</span>
-                <span className={styles.missionNote}>why OpenPVisor exists</span>
+                <span className={styles.missionNote}>why OpenSunray exists</span>
               </div>
               <p className={styles.missionStatement}>
                 Solar fails quietly — a hotspot here, a drifting string there,
@@ -161,7 +161,7 @@ export default function LandingPage() {
       {/* ── Footer ── */}
       <footer className={styles.footer}>
         <span className={styles.footerRule} aria-hidden="true" />
-        <span>An OpenPVisor product</span>
+        <span>An OpenSunray product</span>
       </footer>
     </div>
   );

@@ -2,7 +2,7 @@
 # Multi-purpose image: the Flask API is the default entrypoint; the Streamlit
 # dashboard is started by overriding the command in docker-compose.
 #
-# Build:  docker build -t pv-insight .
+# Build:  docker build -t opensunray-api .
 # Usage:  docker compose up
 
 FROM python:3.11-slim

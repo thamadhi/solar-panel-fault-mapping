@@ -1,4 +1,4 @@
-# System Architecture — OpenPVisor Insight
+# System Architecture — OpenSunray Insight
 
 Post-migration architecture: the Streamlit dashboard has been replaced by a
 Next.js frontend (Vercel) that talks to the Flask API (Render) over HTTPS.

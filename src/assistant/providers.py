@@ -27,7 +27,7 @@ from typing import Any, Dict, List
 
 import requests
 
-logger = logging.getLogger("pv-insight.assistant.providers")
+logger = logging.getLogger("opensunray.assistant.providers")
 
 # Maximum characters allowed per message exchanged with a provider.
 MAX_MESSAGE_CHARS = 4000

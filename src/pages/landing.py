@@ -250,7 +250,7 @@ def show_landing_page() -> None:
                 <span style='color: #499351;'>Solar Assets.</span>
             </h1>
             <p style='font-size: 1.3rem; color: #055248; margin: 30px 0;'>
-PVInsight helps you detect, locate, and fix solar panel faults quickly and accurately.
+OpenSunray helps you detect, locate, and fix solar panel faults quickly and accurately.
             </p>
         """,
             unsafe_allow_html=True,
@@ -308,7 +308,7 @@ PVInsight helps you detect, locate, and fix solar panel faults quickly and accur
     # About section with anchor
     st.markdown('<div id="about"></div>', unsafe_allow_html=True)
     st.write("##")
-    st.markdown("<h2 style='color: #055248; text-align: center;'>About PVInsight AI</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #055248; text-align: center;'>About OpenSunray AI</h2>", unsafe_allow_html=True)
     st.write("")
 
     # About section with Font Awesome icons
@@ -361,7 +361,7 @@ PVInsight helps you detect, locate, and fix solar panel faults quickly and accur
 
     st.write("##")
     st.markdown(
-        "<p style='text-align: center; color: #055248; font-size: 0.8rem; letter-spacing: 2px;'>PVINSIGHT INTELLIGENCE HUB</p>",
+        "<p style='text-align: center; color: #055248; font-size: 0.8rem; letter-spacing: 2px;'>OPENSUNRAY INTELLIGENCE HUB</p>",
         unsafe_allow_html=True,
     )
 

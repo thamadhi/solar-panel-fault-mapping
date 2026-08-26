@@ -7,8 +7,8 @@ import SmoothScroll from '@/components/fx/SmoothScroll';
 import CursorGlow from '@/components/fx/CursorGlow';
 
 export const metadata: Metadata = {
-  title: 'OpenPVisor Insight — Solar Intelligence Hub',
-  description: 'AI-powered solar panel fault detection, localisation, severity analysis, and rectification. An OpenPVisor product.',
+  title: 'OpenSunray Insight — Solar Intelligence Hub',
+  description: 'AI-powered solar panel fault detection, localisation, severity analysis, and rectification. An OpenSunray product.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
