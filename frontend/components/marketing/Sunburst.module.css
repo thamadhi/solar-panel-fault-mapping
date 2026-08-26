@@ -1,0 +1,82 @@
+.wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: 460px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.svg {
+  width: 82%;
+  height: 82%;
+  overflow: visible;
+}
+
+.rays {
+  transform-origin: 100px 100px;
+  animation: spin 70s linear infinite;
+}
+
+.core {
+  fill: var(--color-surface);
+  stroke: var(--color-accent);
+  stroke-width: 3;
+  filter: drop-shadow(0 0 18px var(--color-glow));
+  animation: pulse 3.2s ease-in-out infinite;
+}
+
+.ringOuter, .ringInner {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed var(--color-border);
+  pointer-events: none;
+}
+.ringOuter { inset: 0; animation: pulse 4.5s ease-in-out infinite; }
+.ringInner { inset: 12%; animation: pulse 4.5s ease-in-out infinite 0.6s; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.035); }
+}
+
+/* ── Floating detection chips ─────────────────────────── */
+.chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  color: var(--color-primary);
+  white-space: nowrap;
+  opacity: 0;
+  animation: chipFloat 6.5s ease-in-out infinite;
+}
+.chipDot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.chip_red   .chipDot { background: var(--color-danger); }
+.chip_amber .chipDot { background: var(--color-warning); }
+.chip_green .chipDot { background: var(--color-accent); }
+
+@keyframes chipFloat {
+  0%   { opacity: 0; transform: translateY(10px); }
+  10%  { opacity: 1; transform: translateY(0); }
+  85%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+@media (max-width: 900px) {
+  .chip { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rays, .core, .ringOuter, .ringInner, .chip { animation: none; }
+  .chip { opacity: 1; }
+}
