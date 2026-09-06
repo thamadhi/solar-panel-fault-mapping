@@ -1,21 +1,21 @@
 # OpenSunray Insight
 
-**Solar Intelligence Hub** — AI-driven detection, localisation, severity analysis, and
-rectification guidance for solar PV systems.
+An open-source AI system for automated solar PV fault detection, localization, severity analysis, and rectification guidance.
 
 # Table of Contents
 
--   [Group Members](#group-members)
+-   [Contributors](#contributors)
 -   [📌 Introduction](#introduction)
 -   [🔍 Summary of Key Features](#summary-of-key-features)
+-   [📚 Datasets & Resources](#-datasets--resources)
 -   [Components](#components)
-    -   [Fault Detection](#fault-detection)
-    -   [Fault Localization](#fault-localization)
-    -   [Fault Severity](#fault-severity)
-    -   [Fault Rectification](#fault-rectification)
-    -   [Centralized Dashboard](#centralized-dashboard)
+    - [Fault Detection](#fault-detection)
+    - [Fault Localization](#fault-localization)
+    - [Fault Severity](#fault-severity)
+    - [Fault Rectification](#fault-rectification)
+    - [Centralized Dashboard](#centralized-dashboard)
+    - [AI Assistant](#ai-assistant)
 -   [🛠 Tech Stack](#tech-stack)
--   [Project Management Methodology](#project-management-methodology)
 -   [Folder Structure](#folder-structure)
 -   [Models / Algorithms](#models-algorithms)
 -   [Clone the repository](#clone-the-repository)
@@ -25,18 +25,18 @@ rectification guidance for solar PV systems.
 -   [🔄 CI/CD](#-cicd)
 -   [🪝 Pre-commit](#-pre-commit)
 
-# Group Members
+## Contributors
 
-| Member No. | IIT ID   | RGU ID  | Student Name                  |
-|------------|----------|---------|-------------------------------|
-| 1          | 20241004 | 2425445 | Tamadhi Liyanage              |
-| 2          | 20241705 | 2506730 | Mohamed Razik Seyed Rumaiz    |
-| 3          | 20232954 | 2425574 | R. M. Manuli Maneka Gokarella |
-| 4          | 20241835 | 2506738 | Dion Rasmika                  |
+| Contributor | Name |
+|------------|------|
+| 1 | Tamadhi Liyanage |
+| 2 | Mohamed Razik Seyed Rumaiz |
+| 3 | R. M. Manuli Maneka Gokarella |
+| 4 | Dion Rasmika |
 
 ## 📌 Introduction
 
-This project develops an AI-driven system for automated detection, localisation, and diagnosis of solar photovoltaic (PV) systems. The system utilizes a multi-modal approach, combining both electrical and visual imagery to identify issues, assess the severity and provide actionable rectification guidance. This project aims to enhance the reliability and efficiency of solar farm operations by minimizing the diagnostic time, reduce downtime and preventing significant energy yield losses.
+This project develops an AI-driven system for automated detection, localisation, and diagnosis of faults in solar photovoltaic (PV) systems. The system utilizes a multi-modal approach, combining both electrical and visual imagery to identify issues, assess the severity and provide actionable rectification guidance. This project aims to enhance the reliability and efficiency of solar farm operations by reducing diagnostic time, minimizing downtime, and preventing significant energy yield losses.
 
 ## 🔍 Summary of Key Features
 
@@ -47,6 +47,7 @@ The core features of the system are summarized as follows:
 -   **Severity Assessment** quantifying power loss and economic impact
 -   **AI-Powered Rectification** with optimized repair recommendations
 -   **Interactive Dashboard** enabling fault classification, confidence analysis, and decision support through an intuitive interface.
+-   **Solar PV AI Assistant** providing context-aware explanations of faults, predictions, severity, localization, and rectification recommendations
 
 
 ## 📚 Datasets & Resources
@@ -76,7 +77,7 @@ The core features of the system are summarized as follows:
 
 ### Fault Detection
 
-This component utilizes electrical data and thermal imagery to identify various fault types including open-circuit, short-circuit, shadowing, and hotspot anomalies. It uses a Random Forest for electrical data and a CNN for image analysis.
+This component utilizes electrical data and thermal imagery to identify various fault types including open-circuit, short-circuit, shadowing, and hotspot anomalies. It uses a Random Forest for electrical data and a DenseNet201-based deep learning model for thermal image analysis.
 
 ### Fault Localization
 
@@ -88,7 +89,9 @@ The component quantifies fault impact, predicting power degradation rates, energ
 
 ### Fault Rectification
 
-Using decision trees, this component provides actionable repair guidance by giving step-by-step instructions, required resources, safety protocols, and estimated downtime.
+This component provides actionable repair guidance based on the detected
+fault type and severity, including recommended corrective actions, required
+resources, safety considerations, and estimated downtime.
 
 ### Centralized Dashboard
 
@@ -96,7 +99,7 @@ A Streamlit-based dashboard provides a user-friendly interface for operators to 
 
 ### AI Assistant
 
-A floating "Solar PV AI Assistant" (bottom-right) answers questions about detected faults, fault types, severity, thermal imagery, I-V characteristics, model predictions, localization, and rectification recommendations. It is context-aware — each question receives a compact snapshot of the current page and recent predictions — and fully modular: it can connect to OpenAI, Gemini, Claude, a local Ollama instance, or any OpenAI-compatible endpoint via server-side environment variables (see `.env.example`). No provider is required to use the chat UI; without one it shows a friendly "not configured" message.
+A floating Solar PV AI Assistant provides context-aware explanations of detected faults, model predictions, severity, localization, thermal imagery, I–V characteristics, and rectification recommendations. It supports OpenAI, Gemini, Claude, Ollama, and OpenAI-compatible endpoints through server-side configuration. API keys are never exposed to the browser, and the assistant can operate using a built-in offline knowledge base when no provider is configured.
 
 ## 🛠 Tech Stack
 
@@ -121,7 +124,6 @@ A floating "Solar PV AI Assistant" (bottom-right) answers questions about detect
 ![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
 
 ### 🛠 Development Tools
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
 ![Pytest](https://img.shields.io/badge/Pytest-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white)
@@ -151,10 +153,6 @@ A floating "Solar PV AI Assistant" (bottom-right) answers questions about detect
 ![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)
 
 
-## Project Management Methodology
-
-The project follows Agile methodology with the Scrum framework, which is managed through Jira for sprint planning and task distribution. Regular stand-ups and sprint reviews ensure continuous monitoring and adaptability to changing requirements.
-
 ## Folder Structure
 
 -   [solar-pv-fault-detection](./)
@@ -170,7 +168,6 @@ The project follows Agile methodology with the Scrum framework, which is managed
         -   [severity](./notebooks/fault-severity) - Fault severity analysis notebooks
         -   [rectification](./notebooks/fault-rectification) - Rectification recommendation notebooks
     -   [tests](./tests) - Component tests
-    -   [.Rhistory](./.Rhistory) - Rhistory
     -   [.github/workflows](./.github/workflows) - CI/CD (GitHub Actions)
     -   [Dockerfile](./Dockerfile) - Container image definition
     -   [compose.yml](./compose.yml) - Docker Compose orchestration
@@ -178,9 +175,8 @@ The project follows Agile methodology with the Scrum framework, which is managed
     -   [.pre-commit-config.yaml](./.pre-commit-config.yaml) - Pre-commit hooks
     -   [README.md](./README.md) - Project documentation
     -   [.gitignore](./.gitignore) - Files to ignore
-    -   [.CONTRIBUTING.md](./CONTRIBUTING.md) - Contributions
+    -   [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
     -   [LICENSE](./LICENSE) - Project License
-    -   [README.md](./README.md) - Project documentation
     -   [requirements.txt](./requirements.txt) - Python dependencies
 
 ## Models / Algorithms

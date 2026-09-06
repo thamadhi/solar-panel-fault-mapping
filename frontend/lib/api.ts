@@ -21,6 +21,29 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// If a request that carried a token comes back 401, the token has expired
+// or been revoked server-side. (AuthContext also checks the JWT's own `exp`
+// client-side, which catches expiry while the tab just sits open — this
+// catches it the moment an API call actually fails.) Login/register never
+// attach a token, so a bad-password 401 there is untouched and still lands
+// on the login form's own error handling instead of bouncing the page.
+api.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    const hadToken = Boolean(error.config?.headers?.Authorization);
+    if (typeof window !== 'undefined' && error.response?.status === 401 && hadToken) {
+      try {
+        localStorage.removeItem('pv_token');
+        localStorage.removeItem('pv_user');
+      } catch { /* private mode */ }
+      if (!window.location.pathname.startsWith('/auth')) {
+        window.location.href = '/auth';
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
 /* ── Auth ──────────────────────────────────────────────── */
 export async function apiLogin(username: string, password: string) {
   const res = await api.post('/auth/login', { username, password });

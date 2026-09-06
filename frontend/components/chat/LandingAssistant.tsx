@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Bot, MessageCircle, Send, X } from 'lucide-react';
+import { Send, X } from 'lucide-react';
+import BotAvatar from '@/components/marketing/BotAvatar';
 import styles from './LandingAssistant.module.css';
 
 interface Msg { role: 'user' | 'bot'; content: string }
@@ -84,7 +85,7 @@ export default function LandingAssistant() {
       {!open && (
         <button className={styles.bubble} onClick={() => setOpen(true)} aria-label="Ask about OpenSunray Insight">
           <span className={styles.pulse} aria-hidden="true" />
-          <MessageCircle size={24} />
+          <BotAvatar size={28} />
         </button>
       )}
 
@@ -92,7 +93,7 @@ export default function LandingAssistant() {
         <div className={styles.panel}>
           <div className={styles.header}>
             <div className={styles.headerInfo}>
-              <Bot size={20} />
+              <BotAvatar size={22} />
               <div>
                 <div className={styles.title}>Ask about Insight</div>
                 <div className={styles.subtitle}>Usually answers instantly</div>
