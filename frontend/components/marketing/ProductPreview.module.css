@@ -1,0 +1,115 @@
+.frame {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-hover);
+  overflow: hidden;
+}
+
+.chrome {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1rem;
+  background: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border);
+}
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--color-border); }
+.chromeUrl {
+  margin-left: 0.75rem;
+  font-size: 0.7rem;
+  color: var(--color-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 0.2rem 0.9rem;
+}
+
+.body {
+  display: grid;
+  grid-template-columns: 15rem 1fr;
+  min-height: 320px;
+}
+
+.rail {
+  border-right: 1px solid var(--color-border);
+  padding: 1.1rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  background: var(--color-surface-alt);
+}
+.railItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+.railItem.active {
+  background: var(--color-surface);
+  color: var(--color-accent);
+  box-shadow: var(--shadow-card);
+}
+
+.main {
+  padding: 1.4rem 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.mainHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.mainHead h4 { font-size: 1rem; }
+.mainHead span { font-size: 0.68rem; color: var(--color-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+
+.split {
+  display: grid;
+  grid-template-columns: 13rem 1fr;
+  gap: 1.4rem;
+  align-items: center;
+}
+
+/* Severity gauge */
+.gauge {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1.15;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.gaugeLabel {
+  position: absolute;
+  bottom: 2px;
+  text-align: center;
+}
+.gaugeValue { font-size: 1.7rem; font-weight: 800; color: var(--color-warning); line-height: 1; }
+.gaugeSub { font-size: 0.65rem; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+.rows { display: flex; flex-direction: column; gap: 0.55rem; }
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  background: var(--color-surface);
+}
+.rowMuted { color: var(--color-muted); font-size: 0.7rem; }
+
+@media (max-width: 860px) {
+  .body { grid-template-columns: 1fr; }
+  .rail { display: none; }
+  .split { grid-template-columns: 1fr; }
+}

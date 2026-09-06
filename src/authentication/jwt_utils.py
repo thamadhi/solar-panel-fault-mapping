@@ -4,7 +4,7 @@ import jwt
 
 JWT_SECRET = os.getenv("JWT_SECRET", "a_very_long_random_secret_key_at_least_32_chars")
 JWT_ALGO = "HS256"
-JWT_EXP_SECONDS = 60 * 60 * 24  # 24 hours
+JWT_EXP_SECONDS = 60 * 60 * 24 * 7  # 7 days — a "remembered" session survives closing the tab/browser
 
 
 def create_token(user_id: int, username: str, role: str) -> str:

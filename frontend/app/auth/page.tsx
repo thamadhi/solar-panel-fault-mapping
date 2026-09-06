@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { apiLogin, apiRegister } from '@/lib/api';
@@ -24,8 +24,15 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
-  const { login }   = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const router      = useRouter();
+
+  // Already hold a valid, unexpired session (e.g. the tab was closed and
+  // reopened) — skip the form and go straight to the dashboard instead of
+  // making a returning user log in again.
+  useEffect(() => {
+    if (isAuthenticated) router.replace('/dashboard');
+  }, [isAuthenticated, router]);
 
   // Register form state
   const [regUsername, setRegUsername]   = useState('');
@@ -70,6 +77,20 @@ export default function AuthPage() {
     } catch (err: unknown) {
       setError(apiErrorMessage(err, 'Cannot reach the API server. Make sure it is running.'));
     } finally { setLoading(false); }
+  }
+
+  // Branded hold instead of flashing the login form while the redirect above
+  // takes effect.
+  if (isAuthenticated) {
+    return (
+      <div className="splash">
+        <div className="splashLogo">
+          <Logo fontSize="clamp(1.15rem, 4vw, 1.6rem)" />
+        </div>
+        <div className="splashBar" />
+        <div className="splashText">Already signed in…</div>
+      </div>
+    );
   }
 
   return (

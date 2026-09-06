@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useCallback, useSyncExternalStore } from 'react';
+import React, { createContext, useContext, useCallback, useEffect, useSyncExternalStore } from 'react';
 import { createLocalStore } from './localStore';
 
 interface User {
@@ -27,6 +27,29 @@ const tokenStore = createLocalStore<string>(
   (t) => t,
 );
 
+/**
+ * Reads the `exp` claim out of a JWT — no library needed, just the standard
+ * base64url-decode of its middle segment. The token itself lives in
+ * localStorage (not sessionStorage), so it already survives closing the tab
+ * or the whole browser; this is what makes that persistence actually expire
+ * instead of lasting forever once issued.
+ */
+function getTokenExpiryMs(token: string): number | null {
+  try {
+    const payload = token.split('.')[1];
+    const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    const exp = JSON.parse(json)?.exp;
+    return typeof exp === 'number' ? exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
+function isExpired(token: string): boolean {
+  const expMs = getTokenExpiryMs(token);
+  return expMs !== null && Date.now() >= expMs;
+}
+
 const AuthContext = createContext<AuthState>({
   user: null,
   token: null,
@@ -49,8 +72,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userStore.set(null);
   }, []);
 
+  // A token that outlived its own `exp` doesn't count as logged in, even
+  // though it's still sitting in localStorage.
+  const valid = !!token && !isExpired(token);
+
+  // Clean up a stale token in the background rather than during render.
+  useEffect(() => {
+    if (token && !valid) logout();
+  }, [token, valid, logout]);
+
+  // Catch expiry that happens while the tab is just sitting open and idle
+  // (no API call around to trigger the 401 path in api.ts) by polling.
+  useEffect(() => {
+    if (!token) return;
+    const id = setInterval(() => {
+      if (isExpired(token)) logout();
+    }, 60_000);
+    return () => clearInterval(id);
+  }, [token, logout]);
+
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: valid, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
